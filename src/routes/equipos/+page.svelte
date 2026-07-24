@@ -1,12 +1,13 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
-	import { invalidate } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
+	import FilterBar from '$lib/ui/FilterBar.svelte';
 	import FormField from '$lib/ui/FormField.svelte';
 	import Badge from '$lib/ui/Badge.svelte';
 	import { addToast } from '$lib/stores/toast.svelte';
-	import SearchIcon from '@lucide/svelte/icons/search';
 	import PencilIcon from '@lucide/svelte/icons/pencil';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import PlusIcon from '@lucide/svelte/icons/plus';
@@ -124,21 +125,12 @@
 		if (filterTipo) params.set('tipo', filterTipo);
 		if (currentPage > 1) params.set('page', String(currentPage));
 		const qs = params.toString();
-		await invalidate(qs ? `/${qs}` : '/');
+		const url = qs ? `${$page.url.pathname}?${qs}` : $page.url.pathname;
+		await goto(url, { keepFocus: true, noScroll: true, replaceState: true });
 	}
 
 	async function handleSearch(value: string) {
 		search = value;
-		currentPage = 1;
-		await reload();
-	}
-
-	async function handleEstadoFilter() {
-		currentPage = 1;
-		await reload();
-	}
-
-	async function handleTipoFilter() {
 		currentPage = 1;
 		await reload();
 	}
@@ -158,6 +150,12 @@
 		search = data.search;
 		filterEstado = data.filterEstado;
 		filterTipo = data.filterTipo;
+	});
+
+	onMount(() => {
+		if ($page.url.searchParams.get('nuevo') === 'true') {
+			openCreate();
+		}
 	});
 </script>
 
@@ -185,44 +183,52 @@
 		</p>
 	</div>
 
-	<!-- Filter bar -->
-	<div class="flex flex-wrap items-center gap-3">
-		<div class="relative w-full max-w-xs">
-			<SearchIcon
-				class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-			/>
-			<input
-				type="text"
-				placeholder="Buscar por modelo, marca o serie..."
-				bind:value={search}
-				oninput={() => handleSearch(search)}
-				class="block w-full rounded-xl border border-border bg-card py-2 pr-4 pl-9 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
-			/>
-		</div>
-
-		<select
-			bind:value={filterEstado}
-			onchange={handleEstadoFilter}
-			class="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-		>
-			<option value="">Todos los estados</option>
-			<option value="operativo">Operativo</option>
-			<option value="en_reparacion">En Reparación</option>
-			<option value="dado_de_baja">Dado de Baja</option>
-			<option value="prestado">Prestado</option>
-		</select>
-
-		<select
-			bind:value={filterTipo}
-			onchange={handleTipoFilter}
-			class="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-		>
-			<option value="">Todos los tipos</option>
-			{#each tipos as t}
-				<option value={t.id}>{t.nombre}</option>
-			{/each}
-		</select>
-	</div>
+	<!-- Filter bar with chips + URL params -->
+	<FilterBar
+		search={search}
+		onsearch={handleSearch}
+		values={{
+			estado: filterEstado,
+			tipo: filterTipo
+		}}
+		filters={[
+			{
+				key: 'estado',
+				label: 'Estado',
+				options: [
+					{ value: 'operativo', label: 'Operativo' },
+					{ value: 'en_reparacion', label: 'En Reparación' },
+					{ value: 'dado_de_baja', label: 'Dado de Baja' },
+					{ value: 'prestado', label: 'Prestado' }
+				]
+			},
+			{
+				key: 'tipo',
+				label: 'Tipo',
+				options: tipos.map((t) => ({ value: t.id, label: t.nombre }))
+			}
+		]}
+		onfilterchange={(key, value) => {
+			if (key === 'estado') filterEstado = value;
+			if (key === 'tipo') filterTipo = value;
+			currentPage = 1;
+			reload();
+		}}
+		onremovechip={(key) => {
+			if (key === 'search') { search = ''; handleSearch(''); return; }
+			if (key === 'estado') filterEstado = '';
+			if (key === 'tipo') filterTipo = '';
+			currentPage = 1;
+			reload();
+		}}
+		onclearall={() => {
+			search = '';
+			filterEstado = '';
+			filterTipo = '';
+			currentPage = 1;
+			goto($page.url.pathname, { keepFocus: true, noScroll: true, replaceState: true });
+		}}
+	/>
 
 	<!-- DataTable -->
 	<DataTable

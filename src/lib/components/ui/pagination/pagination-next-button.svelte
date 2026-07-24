@@ -10,16 +10,14 @@
 		children,
 		...restProps
 	}: PaginationPrimitive.NextButtonProps = $props();
-</script>
-
-{#snippet Fallback()}
-	<span>Next</span>
+</script>	{#snippet Fallback()}
+	<span>Siguiente</span>
 	<ChevronRightIcon class={cn('size-4', className)} />
 {/snippet}
 
 <PaginationPrimitive.NextButton
 	bind:ref
-	aria-label="Go to next page"
+	aria-label="Ir a la página siguiente"
 	class={cn(buttonVariants({ variant: 'ghost' }), 'pr-1.5!', className)}
 	{...restProps}
 >

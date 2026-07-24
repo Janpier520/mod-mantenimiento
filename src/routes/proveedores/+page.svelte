@@ -1,11 +1,13 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
-	import { invalidate } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
+	import FilterBar from '$lib/ui/FilterBar.svelte';
+	import FocusTrap from '$lib/ui/FocusTrap.svelte';
 	import FormField from '$lib/ui/FormField.svelte';
 	import ConfirmDialog from '$lib/ui/ConfirmDialog.svelte';
-	import * as Dialog from '$lib/components/ui/dialog';
 	import { fade } from 'svelte/transition';
 	import { addToast } from '$lib/stores/toast.svelte';
 	import Pencil from '@lucide/svelte/icons/pencil';
@@ -24,6 +26,8 @@
 	let totalPages = $state(data.totalPages);
 	// svelte-ignore state_referenced_locally
 	let search = $state(data.search);
+	// svelte-ignore state_referenced_locally
+	let filterEstado = $state(data.filterEstado ?? '');
 
 	let showModal = $state(false);
 	let editingProveedor = $state<Record<string, string> | null>(null);
@@ -80,23 +84,24 @@
 		formError = '';
 	}
 
-	async function handleSearch(value: string) {
-		search = value;
-		currentPage = 1;
+	async function reload() {
 		const params = new URLSearchParams();
 		if (search) params.set('search', search);
 		if (currentPage > 1) params.set('page', String(currentPage));
 		const qs = params.toString();
-		await invalidate(qs ? `/?${qs}` : '/');
+		const url = qs ? `${$page.url.pathname}?${qs}` : $page.url.pathname;
+		await goto(url, { keepFocus: true, noScroll: true, replaceState: true });
+	}
+
+	async function handleSearch(value: string) {
+		search = value;
+		currentPage = 1;
+		await reload();
 	}
 
 	async function handlePageChange(newPage: number) {
 		currentPage = newPage;
-		const params = new URLSearchParams();
-		if (search) params.set('search', search);
-		if (currentPage > 1) params.set('page', String(currentPage));
-		const qs = params.toString();
-		await invalidate(qs ? `/?${qs}` : '/');
+		await reload();
 	}
 
 	$effect(() => {
@@ -105,6 +110,12 @@
 		currentPage = data.page;
 		totalPages = data.totalPages;
 		search = data.search;
+	});
+
+	onMount(() => {
+		if ($page.url.searchParams.get('nuevo') === 'true') {
+			openCreate();
+		}
 	});
 </script>
 
@@ -121,6 +132,19 @@
 		</p>
 	</div>
 
+	<!-- Filter bar with chips + URL params -->
+	<FilterBar
+		search={search}
+		onsearch={handleSearch}
+		filters={[]}
+		values={{}}
+		onclearall={() => {
+			search = '';
+			currentPage = 1;
+			goto($page.url.pathname, { keepFocus: true, noScroll: true, replaceState: true });
+		}}
+	/>
+
 	<!-- DataTable -->
 	<DataTable
 		{columns}
@@ -131,6 +155,7 @@
 		bind:search
 		onsearch={handleSearch}
 		onpagechange={handlePageChange}
+		hideSearch
 	>
 		{#snippet children(item)}
 			<div class="flex items-center gap-1">
@@ -152,8 +177,9 @@
 		{/snippet}
 	</DataTable>
 
-	<!-- Modal form (create/edit) -->
+	<!-- Modal form (create/edit) — with focus trap (a11y) -->
 	{#if showModal}
+	<FocusTrap>
 		<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
 		<div
 			class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
@@ -233,7 +259,8 @@
 				</form>
 			</div>
 		</div>
-	{/if}
+	</FocusTrap>
+{/if}
 
 	<!-- ConfirmDialog for delete -->
 	<ConfirmDialog

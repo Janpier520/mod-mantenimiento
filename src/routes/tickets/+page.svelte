@@ -1,12 +1,13 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
-	import { invalidate } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
+	import FilterBar from '$lib/ui/FilterBar.svelte';
 	import FormField from '$lib/ui/FormField.svelte';
 	import Badge from '$lib/ui/Badge.svelte';
 	import { addToast } from '$lib/stores/toast.svelte';
-	import SearchIcon from '@lucide/svelte/icons/search';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import PencilIcon from '@lucide/svelte/icons/pencil';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
@@ -147,23 +148,12 @@
 		if (filterPrioridad) params.set('prioridad', filterPrioridad);
 		if (currentPage > 1) params.set('page', String(currentPage));
 		const qs = params.toString();
-		await invalidate(qs ? `/${qs}` : '/');
+		const url = qs ? `${$page.url.pathname}?${qs}` : $page.url.pathname;
+		await goto(url, { keepFocus: true, noScroll: true, replaceState: true });
 	}
 
 	async function handleSearch(value: string) {
 		search = value;
-		currentPage = 1;
-		selectedTicket = null;
-		await reload();
-	}
-
-	async function handleEstadoFilter() {
-		currentPage = 1;
-		selectedTicket = null;
-		await reload();
-	}
-
-	async function handlePrioridadFilter() {
 		currentPage = 1;
 		selectedTicket = null;
 		await reload();
@@ -207,6 +197,12 @@
 		if (!e) return '—';
 		return `${e.marca} ${e.modelo}`;
 	}
+
+	onMount(() => {
+		if ($page.url.searchParams.get('nuevo') === 'true') {
+			openCreate();
+		}
+	});
 </script>
 
 {#snippet cell(item: Record<string, any>, col: { key: string })}
@@ -248,44 +244,61 @@
 		</p>
 	</div>
 
-	<!-- Filter bar -->
-	<div class="flex flex-wrap items-center gap-3">
-		<div class="relative w-full max-w-xs">
-			<SearchIcon
-				class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-			/>
-			<input
-				type="text"
-				placeholder="Buscar por ticket, título o descripción..."
-				bind:value={search}
-				oninput={() => handleSearch(search)}
-				class="block w-full rounded-xl border border-border bg-card py-2 pr-4 pl-9 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
-			/>
-		</div>
-
-		<select
-			bind:value={filterEstado}
-			onchange={handleEstadoFilter}
-			class="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-		>
-			<option value="">Todos los estados</option>
-			<option value="abierto">Abierto</option>
-			<option value="en_proceso">En Proceso</option>
-			<option value="resuelto">Resuelto</option>
-			<option value="cerrado">Cerrado</option>
-		</select>
-
-		<select
-			bind:value={filterPrioridad}
-			onchange={handlePrioridadFilter}
-			class="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-		>
-			<option value="">Todas las prioridades</option>
-			<option value="baja">Baja</option>
-			<option value="media">Media</option>
-			<option value="alta">Alta</option>
-			<option value="critica">Crítica</option>
-		</select>
+	<!-- Filter bar with chips + URL params -->
+	<div class="flex flex-wrap items-start gap-3">
+		<FilterBar
+			search={search}
+			onsearch={handleSearch}
+			values={{
+				estado: filterEstado,
+				prioridad: filterPrioridad
+			}}
+			filters={[
+				{
+					key: 'estado',
+					label: 'Estado',
+					options: [
+						{ value: 'abierto', label: 'Abierto' },
+						{ value: 'en_proceso', label: 'En Proceso' },
+						{ value: 'resuelto', label: 'Resuelto' },
+						{ value: 'cerrado', label: 'Cerrado' }
+					]
+				},
+				{
+					key: 'prioridad',
+					label: 'Prioridad',
+					options: [
+						{ value: 'baja', label: 'Baja' },
+						{ value: 'media', label: 'Media' },
+						{ value: 'alta', label: 'Alta' },
+						{ value: 'critica', label: 'Crítica' }
+					]
+				}
+			]}
+			onfilterchange={(key, value) => {
+				if (key === 'estado') filterEstado = value;
+				if (key === 'prioridad') filterPrioridad = value;
+				currentPage = 1;
+				selectedTicket = null;
+				reload();
+			}}
+			onremovechip={(key) => {
+				if (key === 'search') { search = ''; handleSearch(''); return; }
+				if (key === 'estado') filterEstado = '';
+				if (key === 'prioridad') filterPrioridad = '';
+				currentPage = 1;
+				selectedTicket = null;
+				reload();
+			}}
+			onclearall={() => {
+				search = '';
+				filterEstado = '';
+				filterPrioridad = '';
+				currentPage = 1;
+				selectedTicket = null;
+				goto($page.url.pathname, { keepFocus: true, noScroll: true, replaceState: true });
+			}}
+		/>
 
 		<Button onclick={openCreate}>
 			<PlusIcon class="h-4 w-4" />

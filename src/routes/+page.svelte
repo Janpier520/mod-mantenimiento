@@ -149,41 +149,41 @@
 		</p>
 	</div>
 
-	<!-- Stats — 4 cards con trend indicators -->
+	<!-- Stats — 4 cards con trend indicators (bolder) -->
 	<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-		<!-- Featured: Equipos — más grande, ocupa 2 columnas -->
+		<!-- Featured: Equipos — card hero con gradiente brand -->
 		<div
 			bind:this={featuredEl}
-			class="col-span-2 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-5"
+			class="stat-card-featured col-span-2 text-white"
 		>
-			<div class="flex items-start justify-between">
+			<div class="flex items-start justify-between relative z-10">
 				<div>
-					<p class="text-sm font-medium text-primary">Total Equipos</p>
-					<p bind:this={featuredVal} class="mt-1 text-4xl font-bold tracking-tight text-foreground">
+					<p class="text-sm font-medium text-white/80">Total Equipos</p>
+					<p bind:this={featuredVal} class="stat-value mt-1 text-white">
 						—
 					</p>
 					<div
-						class="mt-2 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400"
+						class="mt-2 flex items-center gap-1.5 text-xs text-white/70"
 					>
 						<TrendingUp class="h-3.5 w-3.5" />
 						<span class="font-medium">+12%</span>
-						<span class="text-muted-foreground">vs mes anterior</span>
+						<span class="text-white/50">vs mes anterior</span>
 					</div>
 				</div>
 				<div
-					class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary"
+					class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 text-white"
 				>
 					<Package class="h-6 w-6" />
 				</div>
 			</div>
 		</div>
 
-		<!-- Tickets — card con trend -->
-		<div bind:this={ticketsEl} class="rounded-xl border bg-card p-5">
-			<div class="flex items-center justify-between">
+		<!-- Tickets — stat card con acento -->
+		<div bind:this={ticketsEl} class="stat-card">
+			<div class="flex items-start justify-between">
 				<div>
 					<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">Tickets</p>
-					<p class="mt-0.5 text-2xl font-bold text-foreground">—</p>
+					<p class="stat-value mt-1">—</p>
 					<div
 						class="mt-2 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400"
 					>
@@ -200,14 +200,14 @@
 			</div>
 		</div>
 
-		<!-- Mantenimientos — card con trend + badge -->
-		<div bind:this={mantenimientosEl} class="rounded-xl border bg-card p-5">
-			<div class="flex items-center justify-between">
+		<!-- Mantenimientos — stat card con badge de vencidos -->
+		<div bind:this={mantenimientosEl} class="stat-card">
+			<div class="flex items-start justify-between">
 				<div>
 					<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
 						Mantenimientos
 					</p>
-					<p bind:this={mantenimientosVal} class="mt-0.5 text-2xl font-bold text-foreground">
+					<p class="stat-value mt-1">
 						{data.totalPlans}
 					</p>
 					<div
@@ -234,14 +234,14 @@
 			{/if}
 		</div>
 
-		<!-- Pendientes — con trend -->
-		<div bind:this={pendientesEl} class="rounded-xl border bg-card p-5">
-			<div class="flex items-center justify-between">
+		<!-- Pendientes — stat card con trend down -->
+		<div bind:this={pendientesEl} class="stat-card">
+			<div class="flex items-start justify-between">
 				<div>
 					<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
 						Pendientes
 					</p>
-					<p bind:this={pendientesVal} class="mt-0.5 text-2xl font-bold text-foreground">
+					<p class="stat-value mt-1">
 						{data.pendingCount}
 					</p>
 					<div class="mt-2 flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
@@ -315,10 +315,10 @@
 			</a>
 			<a
 				href="/tickets"
-				class="group flex items-center gap-3 rounded-xl border border-border-light bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-blue-300/50 hover:bg-blue-50/50 hover:shadow-sm hover:shadow-blue-500/10"
+				class="group flex items-center gap-3 rounded-xl border border-border-light bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm hover:shadow-primary/10"
 			>
 				<div
-					class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-600 transition-colors group-hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
+					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20"
 				>
 					<Ticket class="h-4 w-4" />
 				</div>
@@ -326,10 +326,10 @@
 			</a>
 			<a
 				href="/mantenimiento"
-				class="group flex items-center gap-3 rounded-xl border border-border-light bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-emerald-300/50 hover:bg-emerald-50/50 hover:shadow-sm hover:shadow-emerald-500/10"
+				class="group flex items-center gap-3 rounded-xl border border-border-light bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm hover:shadow-primary/10"
 			>
 				<div
-					class="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 transition-colors group-hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400"
+					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20"
 				>
 					<Wrench class="h-4 w-4" />
 				</div>
@@ -337,10 +337,10 @@
 			</a>
 			<a
 				href="/reportes"
-				class="group flex items-center gap-3 rounded-xl border border-border-light bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-purple-300/50 hover:bg-purple-50/50 hover:shadow-sm hover:shadow-purple-500/10"
+				class="group flex items-center gap-3 rounded-xl border border-border-light bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm hover:shadow-primary/10"
 			>
 				<div
-					class="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-100 text-purple-600 transition-colors group-hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400"
+					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20"
 				>
 					<BarChart3 class="h-4 w-4" />
 				</div>

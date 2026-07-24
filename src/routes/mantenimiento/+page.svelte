@@ -4,6 +4,7 @@
 	import { page } from '$app/stores';
 	import Badge from '$lib/ui/Badge.svelte';
 	import ConfirmDialog from '$lib/ui/ConfirmDialog.svelte';
+	import FocusTrap from '$lib/ui/FocusTrap.svelte';
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { fade } from 'svelte/transition';
@@ -329,7 +330,7 @@
 							{#if (plan.tareas ?? []).length === 0}
 								<p class="text-sm text-muted-foreground ">No hay tareas en este plan.</p>
 							{:else}
-								<div class="overflow-hidden rounded-xl border border-border-light">
+								<div class="table-card-mobile overflow-hidden rounded-xl border border-border-light">
 									<table class="w-full text-sm">
 										<thead>
 											<tr class="bg-muted">
@@ -354,15 +355,15 @@
 										<tbody>
 											{#each plan.tareas as task (task.id)}
 												<tr class="border-t border-border-light">
-													<td class="px-4 py-2.5 text-muted-foreground">{task.orden}</td>
-													<td class="px-4 py-2.5 font-medium text-foreground"
+													<td data-label="#" class="px-4 py-2.5 text-muted-foreground">{task.orden}</td>
+													<td data-label="Tarea" class="px-4 py-2.5 font-medium text-foreground"
 														>{task.nombre}</td
 													>
-													<td
+													<td data-label="Descripción"
 														class="hidden px-4 py-2.5 text-muted-foreground sm:table-cell "
 														>{task.descripcion || '—'}</td
 													>
-													<td class="px-4 py-2.5 text-right">
+													<td data-label="Acción" class="px-4 py-2.5 text-right">
 														<button
 															onclick={() => openEditTask(task)}
 															class="inline-flex items-center rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-primary"
@@ -610,8 +611,9 @@
 		</Sheet.Content>
 	</Sheet.Root>
 
-	<!-- Task modal (add/edit) -->
+	<!-- Task modal (add/edit) — with focus trap (a11y) -->
 	{#if showTaskModal}
+	<FocusTrap>
 		<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
 		<div
 			class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
@@ -710,10 +712,12 @@
 				</form>
 			</div>
 		</div>
-	{/if}
+	</FocusTrap>
+{/if}
 
-	<!-- Schedule modal -->
+	<!-- Schedule modal — with focus trap (a11y) -->
 	{#if showScheduleModal}
+	<FocusTrap>
 		<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
 		<div
 			class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
@@ -835,10 +839,12 @@
 				</form>
 			</div>
 		</div>
-	{/if}
+	</FocusTrap>
+{/if}
 
-	<!-- Complete execution modal -->
+	<!-- Complete execution modal — with focus trap (a11y) -->
 	{#if showExecModal && selectedExec}
+	<FocusTrap>
 		<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
 		<div
 			class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
@@ -937,7 +943,8 @@
 				</form>
 			</div>
 		</div>
-	{/if}
+	</FocusTrap>
+{/if}
 
 	<!-- Confirm delete plan -->
 	<ConfirmDialog

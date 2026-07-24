@@ -58,7 +58,6 @@ export const equipment_types = sqliteTable('equipment_types', {
 		.notNull()
 		.$defaultFn(() => new Date().toISOString()),
 	updated_at: text('updated_at')
-		.notNull()
 		.$defaultFn(() => new Date().toISOString())
 		.$onUpdateFn(() => new Date().toISOString())
 });
@@ -296,7 +295,6 @@ export const proveedores = sqliteTable('proveedores', {
 		.notNull()
 		.$defaultFn(() => new Date().toISOString()),
 	updated_at: text('updated_at')
-		.notNull()
 		.$defaultFn(() => new Date().toISOString())
 		.$onUpdateFn(() => new Date().toISOString())
 });

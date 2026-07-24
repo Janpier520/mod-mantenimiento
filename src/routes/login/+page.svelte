@@ -17,8 +17,14 @@
 
 	onMount(() => {
 		const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-		tl.fromTo(logoEl, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.5 })
+		tl.fromTo(logoEl, { opacity: 0, y: -20, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.5 })
 			.fromTo(formEl, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4 }, '-=0.2')
+			.fromTo(
+				formEl.querySelectorAll('input'),
+				{ opacity: 0, x: -8 },
+				{ opacity: 1, x: 0, duration: 0.3, stagger: 0.08 },
+				'-=0.15'
+			)
 			.fromTo(footerEl, { opacity: 0 }, { opacity: 1, duration: 0.3 }, '-=0.15');
 	});
 </script>
@@ -27,7 +33,7 @@
 	<!-- Logo -->
 	<div bind:this={logoEl} class="mb-10 text-center">
 		<div
-			class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25"
+			class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-emerald-700 shadow-lg shadow-primary/30 ring-1 ring-white/10"
 		>
 			<svg
 				class="h-6 w-6 text-white"
@@ -43,8 +49,8 @@
 				/>
 			</svg>
 		</div>
-		<h1 class="text-2xl font-bold tracking-tight text-foreground">EquipLab</h1>
-		<p class="mt-1 text-sm text-muted-foreground">
+		<h1 class="text-3xl font-extrabold tracking-tight text-foreground">EquipLab</h1>
+		<p class="mt-1.5 text-sm text-muted-foreground">
 			Gestioná tu laboratorio, equipos y mantenimiento desde un solo lugar
 		</p>
 	</div>
@@ -85,16 +91,16 @@
 					</div>
 				{/if}
 
-				<Button type="submit" class="w-full">Iniciar Sesión</Button>
+				<Button type="submit" class="w-full shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30">Iniciar Sesión</Button>
 			</div>
 		</form>
 	</div>
 
 	<!-- Footer -->
-	<div bind:this={footerEl} class="mt-6 text-center">
+	<div bind:this={footerEl} class="mt-8 text-center">
 		<a
 			href="/auth/forgot-password"
-			class="text-sm text-muted-foreground transition-colors hover:text-primary"
+			class="text-sm text-muted-foreground transition-colors hover:text-primary hover:underline underline-offset-2"
 		>
 			¿Olvidaste tu contraseña?
 		</a>

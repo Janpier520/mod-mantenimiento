@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
-	import { invalidate } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
+	import FilterBar from '$lib/ui/FilterBar.svelte';
+	import FocusTrap from '$lib/ui/FocusTrap.svelte';
 	import FormField from '$lib/ui/FormField.svelte';
 	import ConfirmDialog from '$lib/ui/ConfirmDialog.svelte';
 	import Badge from '$lib/ui/Badge.svelte';
@@ -15,6 +18,10 @@
 
 	// svelte-ignore state_referenced_locally
 	let usuarios = $state(data.usuarios);
+	// svelte-ignore state_referenced_locally
+	let filterRol = $state(data.filterRol ?? '');
+	// svelte-ignore state_referenced_locally
+	let filterActivo = $state(data.filterActivo ?? '');
 
 	let showModal = $state(false);
 	let editingUser = $state<Record<string, any> | null>(null);
@@ -94,12 +101,26 @@
 		formError = '';
 	}
 
+	async function reload() {
+		const params = new URLSearchParams();
+		if (filterRol) params.set('rol', filterRol);
+		if (filterActivo) params.set('activo', filterActivo);
+		const qs = params.toString();
+		const url = qs ? `${$page.url.pathname}?${qs}` : $page.url.pathname;
+		await goto(url, { keepFocus: true, noScroll: true, replaceState: true });
+	}
+
 	$effect(() => {
 		usuarios = data.usuarios;
+		filterRol = data.filterRol ?? '';
+		filterActivo = data.filterActivo ?? '';
 	});
 
-	let dummySearch = $state('');
-	// ponytail: no search/pagination — user list is small enough to load all at once
+	onMount(() => {
+		if ($page.url.searchParams.get('nuevo') === 'true') {
+			openCreate();
+		}
+	});
 </script>
 
 <svelte:head>
@@ -113,6 +134,50 @@
 		<p class="mt-1 text-sm text-muted-foreground">Gestioná los usuarios del sistema</p>
 	</div>
 
+	<!-- Filter bar with chips + URL params -->
+	<FilterBar
+		search={''}
+		onsearch={() => {}}
+		values={{
+			rol: filterRol,
+			activo: filterActivo
+		}}
+		filters={[
+			{
+				key: 'rol',
+				label: 'Rol',
+				options: [
+					{ value: 'admin', label: 'Administrador' },
+					{ value: 'tecnico', label: 'Técnico' },
+					{ value: 'consultor', label: 'Consultor' }
+				]
+			},
+			{
+				key: 'activo',
+				label: 'Estado',
+				options: [
+					{ value: 'si', label: 'Activo' },
+					{ value: 'no', label: 'Inactivo' }
+				]
+			}
+		]}
+		onfilterchange={(key, value) => {
+			if (key === 'rol') filterRol = value;
+			if (key === 'activo') filterActivo = value;
+			reload();
+		}}
+		onremovechip={(key) => {
+			if (key === 'rol') filterRol = '';
+			if (key === 'activo') filterActivo = '';
+			reload();
+		}}
+		onclearall={() => {
+			filterRol = '';
+			filterActivo = '';
+			goto($page.url.pathname, { keepFocus: true, noScroll: true, replaceState: true });
+		}}
+	/>
+
 	<!-- DataTable -->
 	<DataTable
 		{columns}
@@ -120,7 +185,7 @@
 		page={1}
 		totalPages={1}
 		total={usuarios.length}
-		bind:search={dummySearch}
+		search={''}
 		onsearch={() => {}}
 		onpagechange={() => {}}
 		hideSearch
@@ -155,20 +220,21 @@
 		{/snippet}
 	</DataTable>
 
-	<!-- Modal form (create/edit) -->
+	<!-- Modal form (create/edit) — with focus trap (a11y) -->
 	{#if showModal}
-		<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
-		<div
-			class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
-			onclick={(e) => {
-				if (e.target === e.currentTarget) closeModal();
-			}}
-			onkeydown={(e) => e.key === 'Escape' && closeModal()}
-			transition:fade={{ duration: 200 }}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
+		<FocusTrap>
+			<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
+			<div
+				class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
+				onclick={(e) => {
+					if (e.target === e.currentTarget) closeModal();
+				}}
+				onkeydown={(e) => e.key === 'Escape' && closeModal()}
+				transition:fade={{ duration: 200 }}
+				role="dialog"
+				aria-modal="true"
+				tabindex="-1"
+			>
 			<div
 				class="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-900"
 				transition:fade={{ duration: 200 }}
@@ -298,7 +364,8 @@
 				</form>
 			</div>
 		</div>
-	{/if}
+	</FocusTrap>
+{/if}
 
 	<!-- ConfirmDialog for delete -->
 	<ConfirmDialog

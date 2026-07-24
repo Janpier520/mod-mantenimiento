@@ -39,6 +39,64 @@
 	} = $props();
 </script>
 
+<script lang="ts">
+	import type { Snippet } from 'svelte';
+	import * as Table from '$lib/components/ui/table/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
+	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
+	import SearchIcon from '@lucide/svelte/icons/search';
+	import InboxIcon from '@lucide/svelte/icons/inbox';
+	import gsap from 'gsap';
+
+	let {
+		columns,
+		items,
+		loading = false,
+		search = $bindable(),
+		onsearch,
+		page,
+		totalPages,
+		total,
+		onpagechange,
+		children,
+		empty,
+		cell,
+		hideSearch = false
+	}: {
+		columns: { key: string; label: string; sortable?: boolean }[];
+		items: any[];
+		loading?: boolean;
+		search: string;
+		onsearch: (value: string) => void;
+		page: number;
+		totalPages: number;
+		total: number;
+		onpagechange: (page: number) => void;
+		children?: Snippet<[item: any]>;
+		empty?: Snippet;
+		cell?: Snippet<[item: any, column: { key: string; label: string }]>;
+		hideSearch?: boolean;
+	} = $props();
+
+	let tableBodyEl: HTMLElement;
+
+	// Reactive stagger: re-triggers when items change (pagination, search)
+	$effect(() => {
+		if (items.length > 0 && tableBodyEl) {
+			const rows = tableBodyEl.querySelectorAll('tr');
+			if (rows.length > 0) {
+				gsap.fromTo(
+					rows,
+					{ opacity: 0, y: 6 },
+					{ opacity: 1, y: 0, duration: 0.25, stagger: 0.03, ease: 'power2.out' }
+				);
+			}
+		}
+	});
+</script>
+
 <div class="space-y-4">
 	<!-- Search toolbar -->
 	{#if !hideSearch}
@@ -56,11 +114,11 @@
 		</div>
 	{/if}
 
-	<!-- Table -->
-	<div class="overflow-hidden rounded-xl border border-border">
+	<!-- Table (with horizontal scroll on mobile) -->
+	<div class="table-card-mobile overflow-x-auto rounded-xl border border-border shadow-sm">
 		<Table.Table>
-			<Table.Header>
-				<Table.Row>
+			<Table.Header class="sticky top-0 z-10">
+				<Table.Row class="bg-muted/80 backdrop-blur-sm">
 					{#each columns as col}
 						<Table.Head
 							class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
@@ -75,7 +133,7 @@
 					</Table.Head>
 				</Table.Row>
 			</Table.Header>
-			<Table.Body>
+			<Table.Body bind:this={tableBodyEl}>
 				{#if loading}
 					{#each { length: 5 } as _, i}
 						<Table.Row class="animate-pulse">
@@ -95,19 +153,33 @@
 							{#if empty}
 								{@render empty()}
 							{:else}
-								<div class="mx-auto flex max-w-xs flex-col items-center gap-2">
-									<InboxIcon class="h-10 w-10 text-muted-foreground/40" />
-									<p class="text-sm text-muted-foreground">No hay datos</p>
-									<p class="text-xs text-muted-foreground/60">Agregá un registro para empezar</p>
+								<div class="mx-auto flex max-w-xs flex-col items-center gap-3">
+									<div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 ring-1 ring-border">
+										<InboxIcon class="h-6 w-6 text-muted-foreground/40" />
+									</div>
+									<div>
+										<p class="text-sm font-medium text-foreground">No hay datos</p>
+										<p class="mt-0.5 text-xs text-muted-foreground/60">Agregá un registro para empezar</p>
+									</div>
 								</div>
 							{/if}
 						</Table.Cell>
 					</Table.Row>
 				{:else}
 					{#each items as item}
-						<Table.Row class="hover:bg-primary/5">
+						<Table.Row
+							tabindex="0"
+							class="group cursor-pointer transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary/5 active:scale-[0.999] even:bg-muted/20 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									const firstAction = e.currentTarget.querySelector('button, a, [tabindex]:not([tabindex="-1"])');
+									if (firstAction) (firstAction as HTMLElement).focus();
+								}
+							}}
+						>
 							{#each columns as col}
-								<Table.Cell>
+								<Table.Cell data-label={col.label} class="group-hover:text-foreground transition-colors duration-150">
 									{#if cell}
 										{@render cell(item, col)}
 									{:else}
@@ -115,7 +187,7 @@
 									{/if}
 								</Table.Cell>
 							{/each}
-							<Table.Cell class="text-right">
+							<Table.Cell data-label="Acciones" class="text-right opacity-0 transition-opacity duration-150 group-hover:opacity-100">
 								{#if children}{@render children(item)}{/if}
 							</Table.Cell>
 						</Table.Row>
@@ -141,7 +213,7 @@
 					<ChevronLeftIcon class="h-4 w-4" />
 					<span class="hidden sm:inline">Anterior</span>
 				</Button>
-				<span class="text-sm text-muted-foreground">
+				<span class="rounded-md bg-muted px-3 py-1.5 text-sm text-muted-foreground">
 					Pág {page} de {totalPages}
 				</span>
 				<Button

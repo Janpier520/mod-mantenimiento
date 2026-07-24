@@ -280,7 +280,7 @@
 						{totalTickets}
 					</p>
 				</div>
-				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary">
 					<Ticket class="h-5 w-5" />
 				</div>
 			</div>
@@ -300,7 +300,7 @@
 						{data.maintenanceStats.totalPlans}
 					</p>
 				</div>
-				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary">
 					<Wrench class="h-5 w-5" />
 				</div>
 			</div>
@@ -319,7 +319,7 @@
 						{data.usersByRole.reduce((s, i) => s + i.count, 0)}
 					</p>
 				</div>
-				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
+				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary">
 					<Users class="h-5 w-5" />
 				</div>
 			</div>
@@ -378,7 +378,7 @@
 			<h3 class="mb-3 text-sm font-semibold text-foreground">
 				Top 5 — Equipos con más Tickets
 			</h3>
-			<div class="overflow-x-auto">
+			<div class="table-card-mobile overflow-x-auto">
 				<table class="w-full text-sm">
 					<thead>
 						<tr
@@ -393,14 +393,14 @@
 					<tbody>
 						{#each data.topEquipment as item, i}
 							<tr class="border-b border-border-light last:border-0">
-								<td class="py-2 pr-4 text-muted-foreground">{i + 1}</td>
-								<td class="py-2 pr-4 font-medium text-foreground">
+								<td data-label="#" class="py-2 pr-4 text-muted-foreground">{i + 1}</td>
+								<td data-label="Equipo" class="py-2 pr-4 font-medium text-foreground">
 									{item.marca ?? '—'}
 								</td>
-								<td class="py-2 pr-4 text-muted-foreground">
+								<td data-label="Modelo" class="py-2 pr-4 text-muted-foreground">
 									{item.modelo ?? '—'}
 								</td>
-								<td class="py-2 text-right">
+								<td data-label="Tickets" class="py-2 text-right">
 									<span
 										class="inline-flex items-center justify-center rounded-full bg-primary-light px-2 py-0.5 text-xs font-semibold text-primary"
 									>

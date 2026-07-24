@@ -3,8 +3,18 @@ import { users, tickets } from '$lib/server/db/schema';
 import { hashPassword, requireRole } from '$lib/server/auth';
 import { eq, or, count, and } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
-import type { PageServerLoad, Actions } from './$types';	export const load: PageServerLoad = async ({ locals }) => {
-	if (!locals.user) return { usuarios: [] };
+import type { PageServerLoad, Actions } from './$types';	export const load: PageServerLoad = async ({ url, locals }) => {
+	if (!locals.user) return { usuarios: [], filterRol: '', filterActivo: '' };
+
+	const filterRol = url.searchParams.get('rol') ?? '';
+	const filterActivo = url.searchParams.get('activo') ?? '';
+
+	const conditions: ReturnType<typeof and>[] = [];
+	if (filterRol) conditions.push(eq(users.rol, filterRol as 'admin' | 'tecnico' | 'consultor'));
+	if (filterActivo === 'si') conditions.push(eq(users.activo, true));
+	if (filterActivo === 'no') conditions.push(eq(users.activo, false));
+
+	const where = conditions.length > 0 ? and(...conditions) : undefined;
 
 	const items = await db.query.users.findMany({
 		columns: {
@@ -18,10 +28,11 @@ import type { PageServerLoad, Actions } from './$types';	export const load: Page
 			created_at: true,
 			updated_at: true
 		},
+		where,
 		orderBy: (users, { asc }) => [asc(users.nombre)]
 	});
 
-	return { usuarios: items };
+	return { usuarios: items, filterRol, filterActivo };
 };
 
 export const actions: Actions = {

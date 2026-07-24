@@ -15,6 +15,7 @@
 	import History from '@lucide/svelte/icons/history';
 	import { onNavigate } from '$app/navigation';
 	import Toast from '$lib/ui/Toast.svelte';
+	import CommandPalette from '$lib/ui/CommandPalette.svelte';
 	import { getToasts } from '$lib/stores/toast.svelte';
 	import gsap from 'gsap';
 
@@ -34,7 +35,24 @@
 
 	let sidebarOpen = $state(false);
 	let sidebarEl = $state<HTMLElement | undefined>(undefined);
+	let navEl = $state<HTMLElement | undefined>(undefined);
+	let overlayEl = $state<HTMLElement | undefined>(undefined);
 	let mainEl = $state<HTMLElement | undefined>(undefined);
+
+	let sidebarTl: gsap.core.Timeline | null = null;
+
+	// Collapsible nav groups — persisted in a Set
+	let collapsedGroups = $state<Set<string>>(new Set());
+
+	function toggleGroup(label: string) {
+		const next = new Set(collapsedGroups);
+		if (next.has(label)) {
+			next.delete(label);
+		} else {
+			next.add(label);
+		}
+		collapsedGroups = next;
+	}
 
 	// ponytail: localStorage dark mode persistence, default dark
 	let darkMode = $state(browser ? localStorage.getItem('equip-lab-theme') !== 'light' : true);
@@ -49,30 +67,73 @@
 		localStorage.setItem('equip-lab-theme', darkMode ? 'dark' : 'light');
 	});
 
-	// GSAP sidebar animation on mobile only
+	// GSAP sidebar + overlay + nav-item stagger on mobile only
+	// Emil: stagger delays 35ms, never use ease-in for UI
 	$effect(() => {
 		if (!browser || !sidebarEl) return;
+		// Kill any running timeline to prevent overlap on rapid toggle
+		sidebarTl?.kill();
+
 		const isMobile = window.innerWidth < 1024;
 		if (!isMobile) {
 			gsap.set(sidebarEl, { clearProps: 'all' });
+			if (overlayEl) gsap.set(overlayEl, { clearProps: 'all' });
+			if (navEl) gsap.set(navEl.querySelectorAll('.nav-item, :scope > div > button'), { clearProps: 'all' });
 			return;
 		}
-		gsap.to(sidebarEl, {
-			x: sidebarOpen ? '0%' : '-100%',
-			duration: sidebarOpen ? 0.3 : 0.25,
-			ease: sidebarOpen ? 'power3.out' : 'power2.in'
-		});
+
+		const items = navEl?.querySelectorAll<HTMLElement>('.nav-item, :scope > div > button') ?? [];
+
+		if (sidebarOpen) {
+			// Open: sidebar slides in, then items stagger in with a slight overlap
+			sidebarTl = gsap.timeline({ defaults: { ease: 'cubic-bezier(0.23, 1, 0.32, 1)' } });
+			sidebarTl.to(sidebarEl, { x: '0%', duration: 0.3, ease: 'power3.out' }, 0);
+			if (overlayEl) sidebarTl.to(overlayEl, { opacity: 1, duration: 0.2 }, 0);
+			if (items.length > 0) {
+				sidebarTl.fromTo(
+					items,
+					{ opacity: 0, x: -14 },
+					{ opacity: 1, x: 0, duration: 0.22, stagger: 0.035 },
+					'-=0.08'
+				);
+			}
+		} else {
+			// Close: items out fast, then sidebar slides out
+			sidebarTl = gsap.timeline({ defaults: { ease: 'cubic-bezier(0.23, 1, 0.32, 1)' } });
+			if (items.length > 0) {
+				sidebarTl.to(items, { opacity: 0, x: -14, duration: 0.1, stagger: 0.02 });
+			}
+			if (overlayEl) sidebarTl.to(overlayEl, { opacity: 0, duration: 0.15 }, 0);
+			sidebarTl.to(sidebarEl, { x: '-100%', duration: 0.2, ease: 'power2.out' });
+		}
 	});
 
 	function toggleDarkMode() {
 		darkMode = !darkMode;
 	}
 
+	let activePath = $derived($page.url.pathname);
+
 	function isActive(href: string): boolean {
-		return $page.url.pathname.startsWith(href);
+		return activePath.startsWith(href);
 	}
 
 	const user = $derived(data.user);
+
+	const pageTitles: Record<string, string> = {
+		'/': 'Dashboard',
+		'/equipos': 'Equipos',
+		'/equipos/tipos': 'Tipos de Equipo',
+		'/tickets': 'Tickets',
+		'/mantenimiento': 'Mantenimiento',
+		'/proveedores': 'Proveedores',
+		'/reportes': 'Reportes',
+		'/usuarios': 'Usuarios',
+		'/config': 'Configuración',
+		'/sessions': 'Mis Sesiones'
+	};
+
+	let pageTitle = $derived(Object.entries(pageTitles).find(([path]) => activePath.startsWith(path))?.[1] ?? '');
 
 	const iconMap: Record<string, any> = {
 		dashboard: LayoutDashboard,
@@ -132,11 +193,32 @@
 				].filter((g) => g.items.length > 0)
 			: []
 	);
-</script>
 
-<!-- Toast container -->
+	let pageTitleIcon = $state<typeof LayoutDashboard | undefined>(undefined);
+
+	$effect(() => {
+		for (const group of navGroups) {
+			for (const item of group.items) {
+				if (isActive(item.href)) {
+					pageTitleIcon = iconMap[item.icon];
+					return;
+				}
+			}
+		}
+		pageTitleIcon = undefined;
+	});	</script>
+
+<!-- Skip-link for keyboard users -->
+<a
+	href="#main-content"
+	class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white focus:shadow-lg focus:outline-none"
+>
+	Saltar al contenido
+</a>
+
+<!-- Toast container: bottom-right (more standard) -->
 <div
-	class="pointer-events-none fixed inset-x-0 top-4 z-[999] flex flex-col items-center gap-2 px-4 sm:items-end"
+	class="toast-container pointer-events-none fixed right-4 bottom-4 z-[999] flex flex-col items-end gap-2"
 >
 	{#each toasts as t (t.id)}
 		<Toast toast={t} />
@@ -149,14 +231,15 @@
 	</div>
 {:else}
 	<div class="bg-grain flex min-h-screen bg-surface">
-		<!-- Mobile overlay -->
-		{#if sidebarOpen}
-			<button
-				class="fixed inset-0 z-40 bg-black/30 lg:hidden"
-				onclick={toggleSidebar}
-				aria-label="Cerrar menú"
-			></button>
-		{/if}
+		<!-- Mobile overlay (GSAP-bound for fade transition) -->
+<button
+	bind:this={overlayEl}
+	class="fixed inset-0 z-40 bg-black/50 lg:hidden"
+	class:pointer-events-auto={sidebarOpen}
+	class:pointer-events-none={!sidebarOpen}
+	onclick={toggleSidebar}
+	aria-label="Cerrar menú"
+></button>
 
 		<!-- Sidebar -->
 		<aside
@@ -189,32 +272,47 @@
 			</div>
 
 			<!-- Navigation -->
-			<nav class="flex-1 overflow-y-auto px-3 py-3">
+			<nav bind:this={navEl} class="flex-1 overflow-y-auto px-3 py-3">
 				{#each navGroups as group}
+					{@const isCollapsed = collapsedGroups.has(group.label)}
 					<div class="mb-4">
-						<p
-							class="mb-2 px-3 text-[10px] font-semibold tracking-widest text-sidebar-text/40 uppercase"
+						<!-- Collapsible group header -->
+						<button
+							onclick={() => toggleGroup(group.label)}
+							class="mb-1 flex w-full items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-semibold tracking-widest text-sidebar-text/40 uppercase transition-colors hover:text-sidebar-text-active/60"
 						>
+							<svg
+								class="group-arrow h-3 w-3 {isCollapsed ? 'collapsed' : ''}"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+								stroke-width="2"
+							>
+								<path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+							</svg>
 							{group.label}
-						</p>
-						<ul class="space-y-0.5">
-							{#each group.items as item}
-								{@const IconCmp = iconMap[item.icon]}
-								<li>
-									<a
-										href={item.href}
-										class="nav-item flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors {isActive(
-											item.href
-										)
-											? 'nav-item-active bg-primary-light/15 text-sidebar-text-active'
-											: 'text-sidebar-text hover:bg-white/5 hover:text-sidebar-text-active'}"
-									>
-										<IconCmp class="nav-icon h-4 w-4 flex-shrink-0" />
-										<span>{item.label}</span>
-									</a>
-								</li>
-							{/each}
-						</ul>
+						</button>
+						{#if !isCollapsed}
+							<ul class="space-y-0.5">
+								{#each group.items as item}
+									{@const IconCmp = iconMap[item.icon]}
+									<li>
+										<a
+											href={item.href}
+											aria-current={isActive(item.href) ? 'page' : undefined}
+											class="nav-item flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors {isActive(
+												item.href
+											)
+												? 'nav-item-active bg-primary-light/15 text-sidebar-text-active'
+												: 'text-sidebar-text hover:bg-white/5 hover:text-sidebar-text-active'}"
+																						>
+											<IconCmp class="nav-icon h-4 w-4 flex-shrink-0" />
+											<span>{item.label}</span>
+										</a>
+									</li>
+								{/each}
+							</ul>
+						{/if}
 					</div>
 				{/each}
 			</nav>
@@ -246,12 +344,13 @@
 
 		<!-- Main content -->
 		<div class="flex min-w-0 flex-1 flex-col">
-			<!-- Topbar -->
+			<!-- Topbar with page title + breadcrumb -->
 			<header
-				class="flex h-16 items-center gap-4 border-b border-border-light bg-card px-4 lg:px-6"
+				class="flex h-16 items-center gap-3 border-b border-border-light bg-card px-4 lg:px-6"
 			>
+				<!-- Mobile hamburger -->
 				<button
-					class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 lg:hidden"
+					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-muted lg:hidden"
 					onclick={toggleSidebar}
 					aria-label="Abrir menú"
 				>
@@ -265,11 +364,20 @@
 					</svg>
 				</button>
 
+				<!-- Current page title (desktop) -->
+				<div class="hidden items-center gap-2.5 lg:flex">
+					{#if pageTitleIcon}
+						{@const PTIcon = pageTitleIcon}
+						<PTIcon class="h-5 w-5 text-primary" />
+					{/if}
+					<h2 class="text-base font-bold tracking-tight text-foreground">{pageTitle}</h2>
+				</div>
+
 				<div class="flex-1"></div>
 
 				<!-- Dark mode toggle -->
 				<button
-					class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"
+					class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-muted"
 					onclick={toggleDarkMode}
 					aria-label="Cambiar tema"
 				>
@@ -298,7 +406,7 @@
 				<form action="/login?/logout" method="post">
 					<button
 						type="submit"
-						class="flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-gray-500 hover:bg-gray-100"
+						class="flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-gray-500 hover:bg-muted transition-colors"
 					>
 						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -313,8 +421,11 @@
 				</form>
 			</header>
 
+			<!-- Command palette -->
+			<CommandPalette userRole={user?.rol} />
+
 			<!-- Page content -->
-			<main bind:this={mainEl} class="flex-1 p-4 lg:p-6">
+			<main id="main-content" bind:this={mainEl} class="flex-1 p-4 lg:p-6" tabindex="-1">
 				{@render children()}
 			</main>
 		</div>

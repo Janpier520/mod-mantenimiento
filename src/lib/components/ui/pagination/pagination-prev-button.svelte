@@ -10,16 +10,14 @@
 		children,
 		...restProps
 	}: PaginationPrimitive.PrevButtonProps = $props();
-</script>
-
-{#snippet Fallback()}
+</script>	{#snippet Fallback()}
 	<ChevronLeftIcon class={cn('size-4', className)} />
-	<span>Previous</span>
+	<span>Anterior</span>
 {/snippet}
 
 <PaginationPrimitive.PrevButton
 	bind:ref
-	aria-label="Go to previous page"
+	aria-label="Ir a la página anterior"
 	class={cn(buttonVariants({ variant: 'ghost' }), 'pl-1.5!', className)}
 	{...restProps}
 >
