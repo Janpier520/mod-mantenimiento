@@ -2,11 +2,11 @@ import { db } from '$lib/server/db';
 import { config } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
-import type { PageServerLoad, Actions } from './$types';
-
-export const load: PageServerLoad = async ({ locals }) => {
+import type { PageServerLoad, Actions } from './$types';export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user || locals.user.rol !== 'admin') throw redirect(303, '/');
-	const settings = await db.select().from(config).orderBy(config.key);
+	const settings = await db.query.config.findMany({
+		orderBy: (config, { asc }) => [asc(config.key)]
+	});
 	return { settings };
 };
 

@@ -1,5 +1,6 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
 import { relations } from 'drizzle-orm';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
 // ─── Usuarios ────────────────────────────────────────────────────────────────
 export const users = sqliteTable('users', {
@@ -41,7 +42,9 @@ export const sessions = sqliteTable('sessions', {
 	created_at: text('created_at')
 		.notNull()
 		.$defaultFn(() => new Date().toISOString())
-});
+}, (table) => ({
+	user_id_idx: index('idx_sessions_user_id').on(table.user_id)
+}));
 
 // ─── Tipos de Equipo ─────────────────────────────────────────────────────────
 export const equipment_types = sqliteTable('equipment_types', {
@@ -53,7 +56,11 @@ export const equipment_types = sqliteTable('equipment_types', {
 	icono: text('icono').notNull().default(''),
 	created_at: text('created_at')
 		.notNull()
+		.$defaultFn(() => new Date().toISOString()),
+	updated_at: text('updated_at')
+		.notNull()
 		.$defaultFn(() => new Date().toISOString())
+		.$onUpdateFn(() => new Date().toISOString())
 });
 
 // ─── Equipos ─────────────────────────────────────────────────────────────────
@@ -83,7 +90,11 @@ export const equipment = sqliteTable('equipment', {
 		.notNull()
 		.$defaultFn(() => new Date().toISOString())
 		.$onUpdateFn(() => new Date().toISOString())
-});
+}, (table) => ({
+	tipo_id_idx: index('idx_equipment_tipo_id').on(table.tipo_id),
+	proveedor_id_idx: index('idx_equipment_proveedor_id').on(table.proveedor_id),
+	estado_idx: index('idx_equipment_estado').on(table.estado)
+}));
 
 // ─── Historial de Estados ────────────────────────────────────────────────────
 export const equipment_status_history = sqliteTable('equipment_status_history', {
@@ -99,7 +110,10 @@ export const equipment_status_history = sqliteTable('equipment_status_history', 
 	created_at: text('created_at')
 		.notNull()
 		.$defaultFn(() => new Date().toISOString())
-});
+}, (table) => ({
+	equipo_id_idx: index('idx_equip_status_hist_equipo_id').on(table.equipo_id),
+	cambiado_por_idx: index('idx_equip_status_hist_cambiado_por').on(table.cambiado_por)
+}));
 
 // ─── Tickets ─────────────────────────────────────────────────────────────────
 export const tickets = sqliteTable('tickets', {
@@ -131,7 +145,13 @@ export const tickets = sqliteTable('tickets', {
 		.notNull()
 		.$defaultFn(() => new Date().toISOString())
 		.$onUpdateFn(() => new Date().toISOString())
-});
+}, (table) => ({
+	usuario_reporta_idx: index('idx_tickets_usuario_reporta').on(table.usuario_reporta),
+	tecnico_asignado_idx: index('idx_tickets_tecnico_asignado').on(table.tecnico_asignado),
+	equipo_id_idx: index('idx_tickets_equipo_id').on(table.equipo_id),
+	estado_idx: index('idx_tickets_estado').on(table.estado),
+	prioridad_idx: index('idx_tickets_prioridad').on(table.prioridad)
+}));
 
 // ─── Comentarios de Tickets ──────────────────────────────────────────────────
 export const ticket_comments = sqliteTable('ticket_comments', {
@@ -148,7 +168,10 @@ export const ticket_comments = sqliteTable('ticket_comments', {
 	created_at: text('created_at')
 		.notNull()
 		.$defaultFn(() => new Date().toISOString())
-});
+}, (table) => ({
+	ticket_id_idx: index('idx_ticket_comments_ticket_id').on(table.ticket_id),
+	usuario_id_idx: index('idx_ticket_comments_usuario_id').on(table.usuario_id)
+}));
 
 // ─── Archivos Adjuntos ───────────────────────────────────────────────────────
 export const ticket_attachments = sqliteTable('ticket_attachments', {
@@ -167,7 +190,10 @@ export const ticket_attachments = sqliteTable('ticket_attachments', {
 	created_at: text('created_at')
 		.notNull()
 		.$defaultFn(() => new Date().toISOString())
-});
+}, (table) => ({
+	ticket_id_idx: index('idx_ticket_attachments_ticket_id').on(table.ticket_id),
+	uploaded_by_idx: index('idx_ticket_attachments_uploaded_by').on(table.uploaded_by)
+}));
 
 // ─── Planes de Mantenimiento Preventivo ──────────────────────────────────────
 export const preventive_maintenance_plans = sqliteTable('preventive_maintenance_plans', {
@@ -186,7 +212,10 @@ export const preventive_maintenance_plans = sqliteTable('preventive_maintenance_
 		.notNull()
 		.$defaultFn(() => new Date().toISOString())
 		.$onUpdateFn(() => new Date().toISOString())
-});
+}, (table) => ({
+	equipo_id_idx: index('idx_pm_plans_equipo_id').on(table.equipo_id),
+	tipo_equipo_id_idx: index('idx_pm_plans_tipo_equipo_id').on(table.tipo_equipo_id)
+}));
 
 // ─── Tareas de PM ────────────────────────────────────────────────────────────
 export const pm_tasks = sqliteTable('pm_tasks', {
@@ -199,7 +228,9 @@ export const pm_tasks = sqliteTable('pm_tasks', {
 	nombre: text('nombre').notNull(),
 	descripcion: text('descripcion').notNull().default(''),
 	orden: integer('orden').notNull().default(0)
-});
+}, (table) => ({
+	plan_id_idx: index('idx_pm_tasks_plan_id').on(table.plan_id)
+}));
 
 // ─── Ejecuciones de PM ───────────────────────────────────────────────────────
 export const pm_executions = sqliteTable('pm_executions', {
@@ -224,7 +255,11 @@ export const pm_executions = sqliteTable('pm_executions', {
 	created_at: text('created_at')
 		.notNull()
 		.$defaultFn(() => new Date().toISOString())
-});
+}, (table) => ({
+	plan_id_idx: index('idx_pm_executions_plan_id').on(table.plan_id),
+	tarea_id_idx: index('idx_pm_executions_tarea_id').on(table.tarea_id),
+	ejecutado_por_idx: index('idx_pm_executions_ejecutado_por').on(table.ejecutado_por)
+}));
 
 // ─── Log de Actividad ────────────────────────────────────────────────────────
 export const activity_log = sqliteTable('activity_log', {
@@ -242,7 +277,10 @@ export const activity_log = sqliteTable('activity_log', {
 	created_at: text('created_at')
 		.notNull()
 		.$defaultFn(() => new Date().toISOString())
-});
+}, (table) => ({
+	usuario_id_idx: index('idx_activity_log_usuario_id').on(table.usuario_id),
+	entidad_idx: index('idx_activity_log_entidad').on(table.entidad_tipo, table.entidad_id)
+}));
 
 // ─── Proveedores ─────────────────────────────────────────────────────────────
 export const proveedores = sqliteTable('proveedores', {
@@ -256,7 +294,11 @@ export const proveedores = sqliteTable('proveedores', {
 	direccion: text('direccion').notNull().default(''),
 	created_at: text('created_at')
 		.notNull()
+		.$defaultFn(() => new Date().toISOString()),
+	updated_at: text('updated_at')
+		.notNull()
 		.$defaultFn(() => new Date().toISOString())
+		.$onUpdateFn(() => new Date().toISOString())
 });
 
 // ─── Configuración del Sistema ─────────────────────────────────────────────────
@@ -274,6 +316,51 @@ export const config = sqliteTable('config', {
 });
 // ponytail: key-value settings, no relations needed
 
+// ─── Inferred Types ───────────────────────────────────────────────────────────
+// Type-safe row & insert shapes inferred from the schema
+
+export type User = InferSelectModel<typeof users>;
+export type NewUser = InferInsertModel<typeof users>;
+
+export type Session = InferSelectModel<typeof sessions>;
+export type NewSession = InferInsertModel<typeof sessions>;
+
+export type EquipmentType = InferSelectModel<typeof equipment_types>;
+export type NewEquipmentType = InferInsertModel<typeof equipment_types>;
+
+export type Equipment = InferSelectModel<typeof equipment>;
+export type NewEquipment = InferInsertModel<typeof equipment>;
+
+export type EquipmentStatusHistory = InferSelectModel<typeof equipment_status_history>;
+export type NewEquipmentStatusHistory = InferInsertModel<typeof equipment_status_history>;
+
+export type Ticket = InferSelectModel<typeof tickets>;
+export type NewTicket = InferInsertModel<typeof tickets>;
+
+export type TicketComment = InferSelectModel<typeof ticket_comments>;
+export type NewTicketComment = InferInsertModel<typeof ticket_comments>;
+
+export type TicketAttachment = InferSelectModel<typeof ticket_attachments>;
+export type NewTicketAttachment = InferInsertModel<typeof ticket_attachments>;
+
+export type PMPlan = InferSelectModel<typeof preventive_maintenance_plans>;
+export type NewPMPlan = InferInsertModel<typeof preventive_maintenance_plans>;
+
+export type PMTask = InferSelectModel<typeof pm_tasks>;
+export type NewPMTask = InferInsertModel<typeof pm_tasks>;
+
+export type PMExecution = InferSelectModel<typeof pm_executions>;
+export type NewPMExecution = InferInsertModel<typeof pm_executions>;
+
+export type ActivityLogEntry = InferSelectModel<typeof activity_log>;
+export type NewActivityLogEntry = InferInsertModel<typeof activity_log>;
+
+export type Proveedor = InferSelectModel<typeof proveedores>;
+export type NewProveedor = InferInsertModel<typeof proveedores>;
+
+export type ConfigSetting = InferSelectModel<typeof config>;
+export type NewConfigSetting = InferInsertModel<typeof config>;
+
 // ─── Relations ────────────────────────────────────────────────────────────────
 // Required for db.query.* findFirst/findMany with `with` clause
 
@@ -282,7 +369,8 @@ export const usersRelations = relations(users, ({ many }) => ({
 	tickets_reportados: many(tickets, { relationName: 'reporta' }),
 	tickets_asignados: many(tickets, { relationName: 'asignado' }),
 	comentarios: many(ticket_comments),
-	ejecuciones: many(pm_executions)
+	ejecuciones: many(pm_executions),
+	actividad: many(activity_log)
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -389,6 +477,13 @@ export const pmExecutionsRelations = relations(pm_executions, ({ one }) => ({
 	}),
 	ejecutante: one(users, {
 		fields: [pm_executions.ejecutado_por],
+		references: [users.id]
+	})
+}));
+
+export const activityLogRelations = relations(activity_log, ({ one }) => ({
+	usuario: one(users, {
+		fields: [activity_log.usuario_id],
 		references: [users.id]
 	})
 }));

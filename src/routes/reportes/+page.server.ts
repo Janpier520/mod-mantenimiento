@@ -97,7 +97,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.map((r) => r.equipo_id)
 					.filter((id): id is string => id !== null);
 				if (ids.length === 0) return [];
-				const equipRows = await db.select().from(equipment).where(inArray(equipment.id, ids));
+				const equipRows = await db.query.equipment.findMany({
+					where: inArray(equipment.id, ids)
+				});
 				const equipMap = new Map(equipRows.map((e) => [e.id, e]));
 				return sorted
 					.filter((r): r is typeof r & { equipo_id: string } => r.equipo_id !== null)

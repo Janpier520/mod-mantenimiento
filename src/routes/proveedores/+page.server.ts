@@ -24,13 +24,12 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const currentPage = Math.min(page, totalPages);
 	const offset = (currentPage - 1) * PAGE_SIZE;
 
-	const items = await db
-		.select()
-		.from(proveedores)
-		.where(where)
-		.orderBy(proveedores.nombre)
-		.limit(PAGE_SIZE)
-		.offset(offset);
+	const items = await db.query.proveedores.findMany({
+		where,
+		orderBy: (proveedores, { asc }) => [asc(proveedores.nombre)],
+		limit: PAGE_SIZE,
+		offset
+	});
 
 	return {
 		proveedores: items,

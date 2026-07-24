@@ -1,27 +1,25 @@
 import { db } from '$lib/server/db';
-import { users, tickets, equipment } from '$lib/server/db/schema';
+import { users, tickets } from '$lib/server/db/schema';
 import { hashPassword, requireRole } from '$lib/server/auth';
 import { eq, or, count, and } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
-import type { PageServerLoad, Actions } from './$types';
-
-export const load: PageServerLoad = async ({ locals }) => {
+import type { PageServerLoad, Actions } from './$types';	export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) return { usuarios: [] };
 
-	const items = await db
-		.select({
-			id: users.id,
-			username: users.username,
-			email: users.email,
-			nombre: users.nombre,
-			apellido: users.apellido,
-			rol: users.rol,
-			activo: users.activo,
-			created_at: users.created_at,
-			updated_at: users.updated_at
-		})
-		.from(users)
-		.orderBy(users.nombre);
+	const items = await db.query.users.findMany({
+		columns: {
+			id: true,
+			username: true,
+			email: true,
+			nombre: true,
+			apellido: true,
+			rol: true,
+			activo: true,
+			created_at: true,
+			updated_at: true
+		},
+		orderBy: (users, { asc }) => [asc(users.nombre)]
+	});
 
 	return { usuarios: items };
 };
@@ -115,11 +113,10 @@ export const actions: Actions = {
 			}
 
 			// Prevent deleting last admin
-			const userToDelete = await db
-				.select({ rol: users.rol })
-				.from(users)
-				.where(eq(users.id, id))
-				.then((r) => r[0]);
+			const userToDelete = await db.query.users.findFirst({
+				columns: { rol: true },
+				where: eq(users.id, id)
+			});
 
 			if (userToDelete?.rol === 'admin') {
 				const adminCount = await db
