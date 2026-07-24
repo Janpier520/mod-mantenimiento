@@ -1,0 +1,61 @@
+{
+	"source": {
+		"url": "https://laravel.com/",
+		"extractedAt": "2026-07-24T00:33:01.545Z"
+	},
+	"colors": {
+		"palette": [
+			{ "name": "primary", "hex": "#f53003", "count": 180, "role": "brand" },
+			{ "name": "primary-dark", "hex": "#c42602", "role": "brand" },
+			{ "name": "forge", "hex": "#18b69b", "role": "brand" },
+			{ "name": "forge-green", "hex": "#02eac2", "role": "brand" },
+			{ "name": "cloud", "hex": "#0057ff", "role": "brand" },
+			{ "name": "cloud-light", "hex": "#98c1ff", "role": "brand" },
+			{ "name": "nova", "hex": "#00e5bf", "role": "brand" },
+			{ "name": "vapor", "hex": "#25c4f2", "role": "brand" },
+			{ "name": "nightwatch", "hex": "#68008c", "role": "brand" },
+			{ "name": "background-brand", "hex": "#006aff", "role": "brand" },
+			{ "name": "white", "hex": "#ffffff", "count": 314, "role": "neutral" },
+			{ "name": "sand-light", "hex": "#cfceca", "role": "neutral" },
+			{ "name": "olive-light", "hex": "#c3c8c2", "role": "neutral" },
+			{ "name": "slate", "hex": "#80838d", "role": "neutral" },
+			{ "name": "text-default", "hex": "#687076", "role": "neutral" },
+			{ "name": "slate-dark", "hex": "#363a3f", "role": "neutral" },
+			{ "name": "sand-dark", "hex": "#2a2a28", "role": "neutral" },
+			{ "name": "near-black", "hex": "#101010", "role": "neutral" },
+			{ "name": "black", "hex": "#000000", "count": 60, "role": "neutral" }
+		],
+		"cssVariables": {}
+	},
+	"typography": {
+		"headingFont": "InstrumentSans",
+		"bodyFont": "InstrumentSans",
+		"monoFont": "Geist Mono"
+	},
+	"spacing": {
+		"scale": [
+			"1px",
+			"2px",
+			"3px",
+			"4px",
+			"6px",
+			"8px",
+			"10px",
+			"12px",
+			"16px",
+			"20px",
+			"24px",
+			"28px",
+			"32px",
+			"40px",
+			"48px",
+			"64px",
+			"80px",
+			"96px",
+			"160px",
+			"208px"
+		]
+	},
+	"radius": { "scale": [] },
+	"shadows": { "scale": [] }
+}

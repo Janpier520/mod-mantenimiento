@@ -1,0 +1,21 @@
+# SDD Configuration for EquipLab
+project: equip-lab
+stack:
+  framework: SvelteKit 5
+  language: TypeScript
+  orm: Drizzle ORM with SQLite (libSQL)
+  css: Tailwind CSS v4
+  ui: shadcn-svelte
+  auth: bcryptjs + session tokens
+  database: SQLite via libSQL client
+adapter: '@sveltejs/adapter-node'
+strict_tdd: false
+testing:
+  runner: none detected
+  note: No test runner configured. Tests can be added with vitest.
+formatter: prettier
+linter: eslint
+type_checker: svelte-check
+persistence:
+  mode: openspec
+  path: openspec/

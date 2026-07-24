@@ -1,0 +1,52 @@
+:root {
+	/* Fonts */
+	--font-heading: InstrumentSans, ui-sans-serif, system-ui, sans-serif;
+	--font-body: InstrumentSans, ui-sans-serif, system-ui, sans-serif;
+	--font-mono: 'Geist Mono', ui-monospace, monospace;
+	--font-features: 'ss02', 'ss09';
+
+	/* Brand colors */
+	--color-primary: #f53003;
+	--color-primary-dark: #c42602;
+	--color-forge: #18b69b;
+	--color-forge-green: #02eac2;
+	--color-cloud: #0057ff;
+	--color-cloud-light: #98c1ff;
+	--color-nova: #00e5bf;
+	--color-vapor: #25c4f2;
+	--color-nightwatch: #68008c;
+	--color-background-brand: #006aff;
+
+	/* Neutrals */
+	--color-white: #ffffff;
+	--color-sand-light: #cfceca;
+	--color-olive-light: #c3c8c2;
+	--color-slate: #80838d;
+	--color-text-default: #687076;
+	--color-slate-dark: #363a3f;
+	--color-sand-dark: #2a2a28;
+	--color-near-black: #101010;
+	--color-black: #000000;
+
+	/* Spacing */
+	--space-1: 1px;
+	--space-2: 2px;
+	--space-3: 3px;
+	--space-4: 4px;
+	--space-5: 6px;
+	--space-6: 8px;
+	--space-7: 10px;
+	--space-8: 12px;
+	--space-9: 16px;
+	--space-10: 20px;
+	--space-11: 24px;
+	--space-12: 28px;
+	--space-13: 32px;
+	--space-14: 40px;
+	--space-15: 48px;
+	--space-16: 64px;
+	--space-17: 80px;
+	--space-18: 96px;
+	--space-19: 160px;
+	--space-20: 208px;
+}

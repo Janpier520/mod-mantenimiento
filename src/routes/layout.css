@@ -1,0 +1,430 @@
+@import 'tailwindcss';
+@import '../../design-system/tokens.css' layer(base);
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Custom easing curves (emil-design-eng) ─────────────────────────── */
+@theme {
+	--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-in-out-expo: cubic-bezier(0.77, 0, 0.175, 1);
+	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+	--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+	/* ── Color tokens — Emerald + Slate scheme ────────────────────── */
+	--font-sans:
+		-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+		sans-serif;
+	--font-mono:
+		ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+	/* ── Laravel extracted brand tokens ──────────────────────────────── */
+	--font-laravel: InstrumentSans, ui-sans-serif, system-ui, sans-serif;
+	--font-laravel-mono: 'Geist Mono', ui-monospace, monospace;
+
+	--color-laravel-primary: var(--color-primary);
+	--color-laravel-primary-dark: var(--color-primary-dark);
+	--color-laravel-forge: var(--color-forge);
+	--color-laravel-cloud: var(--color-cloud);
+	--color-laravel-cloud-light: var(--color-cloud-light);
+	--color-laravel-nova: var(--color-nova);
+	--color-laravel-vapor: var(--color-vapor);
+	--color-laravel-nightwatch: var(--color-nightwatch);
+
+	--color-gray-50: var(--gray-50);
+	--color-gray-100: var(--gray-100);
+	--color-gray-200: var(--gray-200);
+	--color-gray-300: var(--gray-300);
+	--color-gray-400: var(--gray-400);
+	--color-gray-500: var(--gray-500);
+	--color-gray-600: var(--gray-600);
+	--color-gray-700: var(--gray-700);
+	--color-gray-800: var(--gray-800);
+	--color-gray-900: var(--gray-900);
+	--color-gray-950: var(--gray-950);
+
+	--color-sidebar: var(--sidebar);
+	--color-sidebar-hover: var(--sidebar-hover);
+	--color-sidebar-active: var(--sidebar-active);
+	--color-sidebar-text: var(--sidebar-text);
+	--color-sidebar-text-active: var(--sidebar-text-active);
+
+	/* ── Brand colors (mapped from our custom vars) ───────────────────── */
+	--color-primary: var(--color-brand);
+	--color-primary-hover: var(--color-brand-hover);
+	--color-primary-light: var(--color-brand-light);
+
+	/* ── Surface & card (mapped from custom vars) ──────────────────── */
+	--color-surface: var(--surface);
+	--color-card: var(--card-hex);
+	--color-card-hover: var(--card-hover);
+	--color-border-light: var(--border-light);
+
+	/* ── Monospace labels & badges ────────────────────────────────────── */
+	--font-label: var(--font-mono);
+
+	/* ── Laravel spacing (extracted 1px–208px scale) ──────────────────── */
+	--space-laravel-1: 1px;
+	--space-laravel-2: 2px;
+	--space-laravel-3: 3px;
+	--space-laravel-4: 4px;
+	--space-laravel-5: 6px;
+	--space-laravel-6: 8px;
+	--space-laravel-7: 10px;
+	--space-laravel-8: 12px;
+	--space-laravel-9: 16px;
+	--space-laravel-10: 20px;
+	--space-laravel-11: 24px;
+	--space-laravel-12: 28px;
+	--space-laravel-13: 32px;
+	--space-laravel-14: 40px;
+	--space-laravel-15: 48px;
+	--space-laravel-16: 64px;
+	--space-laravel-17: 80px;
+	--space-laravel-18: 96px;
+	--space-laravel-19: 160px;
+	--space-laravel-20: 208px;
+
+	/* ── Radius (shadcn-compatible) ───────────────────────────────────── */
+	--radius: 0.5rem;
+
+	/* ── shadcn UI utility mappings (reference HSL vars via hsl()) ──── */
+	--color-background: hsl(var(--background));
+	--color-foreground: hsl(var(--foreground));
+	--color-card-foreground: hsl(var(--card-foreground));
+	--color-popover: hsl(var(--popover));
+	--color-popover-foreground: hsl(var(--popover-foreground));
+	--color-secondary: hsl(var(--secondary));
+	--color-secondary-foreground: hsl(var(--secondary-foreground));
+	--color-muted: hsl(var(--muted));
+	--color-muted-foreground: hsl(var(--muted-foreground));
+	--color-accent: hsl(var(--accent));
+	--color-accent-foreground: hsl(var(--accent-foreground));
+	--color-destructive: hsl(var(--destructive));
+	--color-destructive-foreground: hsl(var(--destructive-foreground));
+	--color-border: hsl(var(--border));
+	--color-input: hsl(var(--input));
+	--color-ring: hsl(var(--ring));
+}
+
+/* ── Light mode tokens ──────────────────────────────────────────────── */
+:root {
+	/* ── shadcn-svelte HSL variables (light) ──────────────────────── */
+	--background: 0 0% 100%;
+	--foreground: 240 10% 3.9%;
+	--card: 0 0% 100%;
+	--card-foreground: 240 10% 3.9%;
+	--popover: 0 0% 100%;
+	--popover-foreground: 240 10% 3.9%;
+	--primary: 160 84% 39%; /* emerald #059669 */
+	--primary-foreground: 0 0% 100%;
+	--secondary: 240 4.8% 95.9%;
+	--secondary-foreground: 240 5.9% 10%;
+	--muted: 240 4.8% 95.9%;
+	--muted-foreground: 240 3.8% 46.1%;
+	--accent: 240 4.8% 95.9%;
+	--accent-foreground: 240 5.9% 10%;
+	--destructive: 0 72.2% 50.6%;
+	--destructive-foreground: 0 0% 98%;
+	--border: 240 5.9% 90%;
+	--input: 240 5.9% 90%;
+	--ring: 160 84% 39%;
+	--chart-1: 12 76% 61%;
+	--chart-2: 173 58% 39%;
+	--chart-3: 197 37% 24%;
+	--chart-4: 43 74% 66%;
+	--chart-5: 27 87% 67%;
+
+	/* ── Our custom hex tokens (overridden by .dark) ──────────────── */
+	--gray-50: #f8fafc;
+	--gray-100: #f1f5f9;
+	--gray-200: #e2e8f0;
+	--gray-300: #cbd5e1;
+	--gray-400: #94a3b8;
+	--gray-500: #64748b;
+	--gray-600: #475569;
+	--gray-700: #334155;
+	--gray-800: #1e293b;
+	--gray-900: #0f172a;
+	--gray-950: #020617;
+
+	--sidebar: #0f172a;
+	--sidebar-hover: #1e293b;
+	--sidebar-active: #334155;
+	--sidebar-text: #64748b;
+	--sidebar-text-active: #f8fafc;
+
+	--color-brand: #059669;
+	--color-brand-hover: #047857;
+	--color-brand-light: #d1fae5;
+	--surface: #f8fafc;
+	--card-hex: #ffffff;
+	--card-hover: #f8fafc;
+	--border-light: #e2e8f0;
+}
+
+/* ── Dark mode tokens ───────────────────────────────────────────────── */
+.dark {
+	/* ── shadcn-svelte HSL variables (dark) ───────────────────────── */
+	--background: 240 10% 3.9%;
+	--foreground: 0 0% 98%;
+	--card: 240 10% 3.9%;
+	--card-foreground: 0 0% 98%;
+	--popover: 240 10% 3.9%;
+	--popover-foreground: 0 0% 98%;
+	--primary: 160 84% 45%; /* lighter emerald for dark bg */
+	--primary-foreground: 0 0% 5%;
+	--secondary: 240 3.7% 15.9%;
+	--secondary-foreground: 0 0% 98%;
+	--muted: 240 3.7% 15.9%;
+	--muted-foreground: 240 5% 64.9%;
+	--accent: 240 3.7% 15.9%;
+	--accent-foreground: 0 0% 98%;
+	--destructive: 0 62.8% 30.6%;
+	--destructive-foreground: 0 0% 98%;
+	--border: 240 3.7% 15.9%;
+	--input: 240 3.7% 15.9%;
+	--ring: 160 84% 45%;
+	--chart-1: 220 70% 50%;
+	--chart-2: 160 60% 45%;
+	--chart-3: 30 80% 55%;
+	--chart-4: 280 65% 60%;
+	--chart-5: 340 75% 55%;
+
+	/* ── Our custom hex tokens (dark) ─────────────────────────────── */
+	--gray-50: #0a0a0a;
+	--gray-100: #111111;
+	--gray-200: #1a1a1a;
+	--gray-300: #222222;
+	--gray-400: #333333;
+	--gray-500: #555555;
+	--gray-600: #888888;
+	--gray-700: #aaaaaa;
+	--gray-800: #cccccc;
+	--gray-900: #e5e5e5;
+	--gray-950: #f5f5f5;
+
+	--color-brand: #059669;
+	--color-brand-hover: #059669;
+	--color-brand-light: #064e3b;
+	--surface: #0a0a0a;
+	--card-hex: #111111;
+	--card-hover: #1a1a1a;
+	--border-light: #1a1a1a;
+
+	--sidebar: #050505;
+	--sidebar-hover: #0a0a0a;
+	--sidebar-active: #111111;
+	--sidebar-text: #666666;
+	--sidebar-text-active: #e5e5e5;
+}
+
+/* ── Base styles ────────────────────────────────────────────────────── */
+/* ponytail: system font stack — no Google Fonts, no external requests */
+body {
+	font-family:
+		-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+		sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+label,
+th,
+.stat-card .stat-label,
+.badge {
+	font-family: var(--font-mono);
+}
+
+/* ── Card component (replaces glassmorphism) ────────────────────────── */
+.card {
+	background: var(--card-hex);
+	border: 1px solid var(--border-light);
+	border-radius: 0.75rem;
+	transition:
+		transform 0.2s var(--ease-out-expo),
+		box-shadow 0.2s var(--ease-out-expo),
+		border-color 0.2s var(--ease-out-expo);
+}
+
+.card:hover {
+	border-color: var(--color-primary);
+	box-shadow: 0 0 20px rgba(5, 150, 105, 0.1);
+}
+
+.dark .card:hover {
+	box-shadow: 0 0 20px rgba(5, 150, 105, 0.15);
+}
+
+/* ── Card variant with shadow (for elevated surfaces) ───────────────── */
+.card-elevated {
+	background: var(--card-hex);
+	border: 1px solid var(--border-light);
+	border-radius: 0.75rem;
+	box-shadow:
+		0 1px 3px rgba(0, 0, 0, 0.06),
+		0 1px 2px rgba(0, 0, 0, 0.04);
+	transition:
+		transform 0.2s var(--ease-out-expo),
+		box-shadow 0.2s var(--ease-out-expo),
+		border-color 0.2s var(--ease-out-expo);
+}
+
+.card-elevated:hover {
+	border-color: var(--color-primary);
+	box-shadow:
+		0 0 30px rgba(5, 150, 105, 0.12),
+		0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Stat card (dashboard metric) ───────────────────────────────────── */
+.stat-card {
+	background: var(--card-hex);
+	border: 1px solid var(--border-light);
+	border-radius: 0.75rem;
+	padding: 1.25rem;
+	transition:
+		transform 0.2s var(--ease-out-expo),
+		box-shadow 0.2s var(--ease-out-expo),
+		border-color 0.2s var(--ease-out-expo);
+}
+
+.stat-card:hover {
+	transform: translateY(-2px);
+	box-shadow:
+		0 8px 24px rgba(0, 0, 0, 0.08),
+		0 0 20px rgba(5, 150, 105, 0.08);
+	border-color: var(--color-primary);
+}
+
+/* ── Grain texture ──────────────────────────────────────────────────── */
+.bg-grain {
+	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+	background-repeat: repeat;
+	background-size: 256px 256px;
+}
+
+/* ── Animations ─────────────────────────────────────────────────────── */
+/* Stagger entry: elements fade in + slide up */
+@keyframes fade-up {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.animate-in {
+	animation: fade-up 0.4s var(--ease-out-expo) forwards;
+}
+
+.animate-in-d1 {
+	animation-delay: 0.035s;
+}
+.animate-in-d2 {
+	animation-delay: 0.07s;
+}
+.animate-in-d3 {
+	animation-delay: 0.105s;
+}
+.animate-in-d4 {
+	animation-delay: 0.14s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-in {
+		animation: none;
+	}
+}
+
+/* ── Sidebar (emil-design-eng: invisible details) ────────────────────── */
+.nav-item {
+	position: relative;
+}
+
+/* ponytail: ::before for the indicator — no extra DOM nodes */
+.nav-item::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 50%;
+	translate: 0 -50%;
+	width: 3px;
+	height: 0;
+	border-radius: 0 3px 3px 0;
+	background: var(--color-primary);
+	transition: height 0.25s var(--ease-out-expo);
+}
+
+.nav-item-active::before {
+	height: 56%;
+}
+
+.nav-item:hover .nav-icon {
+	scale: 1.12;
+}
+
+.nav-icon {
+	display: inline-flex;
+	transition: scale 0.2s var(--ease-spring);
+}
+
+/* ── Interactive states ─────────────────────────────────────────────── */
+button:active {
+	transform: scale(0.97);
+}
+
+/* ── FAB — Floating Action Button ────────────────────────────────────── */
+.fab {
+	transition:
+		transform 0.16s var(--ease-out-expo),
+		background-color 0.15s var(--ease-out-expo),
+		box-shadow 0.15s var(--ease-out-expo);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.fab:hover {
+		transform: scale(1.05);
+	}
+}
+
+.fab:active {
+	transform: scale(0.95);
+}
+
+button,
+a {
+	transition:
+		transform 0.1s var(--ease-out-expo),
+		background-color 0.15s var(--ease-out-expo),
+		color 0.15s var(--ease-out-expo),
+		border-color 0.15s var(--ease-out-expo),
+		box-shadow 0.15s var(--ease-out-expo);
+}
+
+/* ── Scrollbar styling ──────────────────────────────────────────────── */
+::-webkit-scrollbar {
+	width: 6px;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+::-webkit-scrollbar-thumb {
+	background: #cbd5e1;
+	border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+	background: #222222;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+	background: #333333;
+}
