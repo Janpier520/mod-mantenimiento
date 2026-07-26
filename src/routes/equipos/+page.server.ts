@@ -4,12 +4,18 @@ import {
 	equipment_types,
 	equipment_status_history,
 	proveedores,
-	tickets
+	tickets,
+	preventive_maintenance_plans
 } from '$lib/server/db/schema';
 import { eq, like, or, and, count } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import type { EquipmentStatus } from '$lib/types';
+import {
+	isValidTransition,
+	VALID_EQUIPMENT_STATES,
+	type EquipmentState
+} from '$lib/server/state-machines';
+import { validateRequired, escapeLike } from '$lib/server/validators';
 
 const PAGE_SIZE = 10;
 
@@ -35,15 +41,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 	const conditions = [];
 	if (search) {
+		const safeSearch = escapeLike(search);
 		conditions.push(
 			or(
-				like(equipment.modelo, `%${search}%`),
-				like(equipment.marca, `%${search}%`),
-				like(equipment.numero_serie, `%${search}%`)
+				like(equipment.modelo, `%${safeSearch}%`),
+				like(equipment.marca, `%${safeSearch}%`),
+				like(equipment.numero_serie, `%${safeSearch}%`)
 			)
 		);
 	}
-	if (filterEstado) conditions.push(eq(equipment.estado, filterEstado as EquipmentStatus));
+	if (filterEstado) conditions.push(eq(equipment.estado, filterEstado as EquipmentState));
 	if (filterTipo) conditions.push(eq(equipment.tipo_id, filterTipo));
 
 	const where = conditions.length > 0 ? and(...conditions) : undefined;
@@ -110,7 +117,7 @@ export const actions: Actions = {
 		const modelo = (form.get('modelo') as string) ?? '';
 		const marca = (form.get('marca') as string) ?? '';
 		const numero_serie = (form.get('numero_serie') as string) ?? '';
-		const estado = (form.get('estado') as EquipmentStatus) ?? 'operativo';
+		const estado = ((form.get('estado') as string) ?? 'operativo') as EquipmentState;
 		const ubicacion = (form.get('ubicacion') as string) ?? '';
 		const fecha_adquisicion = (form.get('fecha_adquisicion') as string) ?? '';
 		const proveedor_id = (form.get('proveedor_id') as string) ?? '';
@@ -125,6 +132,9 @@ export const actions: Actions = {
 			}
 			if (!tipo_id) {
 				return fail(400, { error: 'El tipo de equipo es obligatorio', _action });
+			}
+			if (!VALID_EQUIPMENT_STATES.includes(estado as any)) {
+				return fail(400, { error: 'Estado no válido', _action });
 			}
 		}
 
@@ -151,6 +161,14 @@ export const actions: Actions = {
 			});
 
 			if (!existing) return fail(400, { error: 'Equipo no encontrado', _action });
+
+			// Validate state transition
+			if (existing.estado !== estado && !isValidTransition(existing.estado, estado, 'equipment')) {
+				return fail(400, {
+					error: `Transición de estado no permitida: ${existing.estado} → ${estado}`,
+					_action
+				});
+			}
 
 			// If estado changed, record status history
 			if (existing.estado !== estado) {
@@ -191,6 +209,17 @@ export const actions: Actions = {
 			if (ref) {
 				return fail(400, {
 					error: 'No se puede eliminar: hay tickets que referencian este equipo',
+					_action
+				});
+			}
+
+			const pmPlanRef = await db.query.preventive_maintenance_plans.findFirst({
+				where: eq(preventive_maintenance_plans.equipo_id, id)
+			});
+
+			if (pmPlanRef) {
+				return fail(400, {
+					error: 'No se puede eliminar: hay planes de mantenimiento que referencian este equipo',
 					_action
 				});
 			}

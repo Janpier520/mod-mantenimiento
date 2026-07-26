@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { sessions } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -31,7 +31,9 @@ export const actions: Actions = {
 		const sessionId = form.get('sessionId') as string;
 		if (!sessionId) return fail(400, { error: 'ID de sesión no proporcionado' });
 
-		await db.delete(sessions).where(eq(sessions.id, sessionId));
+		await db
+			.delete(sessions)
+			.where(and(eq(sessions.id, sessionId), eq(sessions.user_id, locals.user.id)));
 
 		return { success: true };
 	}

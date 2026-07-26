@@ -36,7 +36,7 @@ export async function seed() {
 	console.log('🌱 Seeding database...');
 
 	// Admin user
-	const adminPasswordHash = hashPassword('admin123');
+	const adminPasswordHash = await hashPassword('admin123');
 	const existingAdmin = await db.query.users.findFirst({
 		where: (users, { eq }) => eq(users.username, 'admin')
 	});
@@ -51,9 +51,9 @@ export async function seed() {
 			rol: 'admin',
 			activo: true,
 			security_question_1: '¿Cuál es tu color favorito?',
-			security_answer_hash_1: hashPassword('azul'),
+			security_answer_hash_1: await hashPassword('azul'),
 			security_question_2: '¿Cómo se llamaba tu primera mascota?',
-			security_answer_hash_2: hashPassword('firulais')
+			security_answer_hash_2: await hashPassword('firulais')
 		});
 		console.log('  ✅ Admin user created (admin / admin123)');
 	} else {

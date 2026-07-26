@@ -52,8 +52,8 @@ export const actions: Actions = {
 		}
 
 		if (
-			!verifyPassword(answer1, questions.answerHash1) ||
-			!verifyPassword(answer2, questions.answerHash2)
+			!(await verifyPassword(answer1, questions.answerHash1)) ||
+			!(await verifyPassword(answer2, questions.answerHash2))
 		) {
 			return fail(401, { error: 'Las respuestas de seguridad no son correctas' });
 		}

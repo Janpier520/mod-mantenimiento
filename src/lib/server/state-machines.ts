@@ -1,17 +1,50 @@
-// ─── State machine transitions for PR 2 ───────────────────────────────────────
-// This file is a stub. Valid transitions will be implemented in PR 2.
-// Format: { from: string[], to: string[] }
+// ─── State machine transitions ────────────────────────────────────────────────
 
 export const EQUIPMENT_TRANSITIONS: Record<string, string[]> = {
 	operativo: ['en_reparacion', 'prestado', 'dado_de_baja'],
 	en_reparacion: ['operativo', 'dado_de_baja'],
 	dado_de_baja: [],
 	prestado: ['operativo', 'en_reparacion']
-} as const;
+};
 
 export const TICKET_TRANSITIONS: Record<string, string[]> = {
 	abierto: ['en_proceso', 'cerrado'],
 	en_proceso: ['resuelto', 'cerrado'],
 	resuelto: ['cerrado'],
 	cerrado: ['abierto']
-} as const;
+};
+
+// ─── Valid value constants ────────────────────────────────────────────────────
+
+export const VALID_EQUIPMENT_STATES = [
+	'operativo',
+	'en_reparacion',
+	'prestado',
+	'dado_de_baja'
+] as const;
+export const VALID_TICKET_STATES = ['abierto', 'en_proceso', 'resuelto', 'cerrado'] as const;
+export const VALID_TICKET_PRIORITIES = ['baja', 'media', 'alta', 'critica'] as const;
+const VALID_USER_ROLES = ['admin', 'tecnico', 'consultor'] as const;
+export const VALID_PM_RESULTS = ['pendiente', 'completado', 'fallido', 'omitido'] as const;
+
+export type EquipmentState = (typeof VALID_EQUIPMENT_STATES)[number];
+export type TicketState = (typeof VALID_TICKET_STATES)[number];
+export type TicketPriority = (typeof VALID_TICKET_PRIORITIES)[number];
+export type UserRole = (typeof VALID_USER_ROLES)[number];
+export type PMResult = (typeof VALID_PM_RESULTS)[number];
+
+// ─── Transition enforcement ───────────────────────────────────────────────────
+
+export function isValidTransition(
+	from: string,
+	to: string,
+	machine: 'equipment' | 'ticket'
+): boolean {
+	const transitions = machine === 'equipment' ? EQUIPMENT_TRANSITIONS : TICKET_TRANSITIONS;
+	return transitions[from]?.includes(to) ?? false;
+}
+
+export function getValidTransitions(from: string, machine: 'equipment' | 'ticket'): string[] {
+	const transitions = machine === 'equipment' ? EQUIPMENT_TRANSITIONS : TICKET_TRANSITIONS;
+	return transitions[from] ?? [];
+}

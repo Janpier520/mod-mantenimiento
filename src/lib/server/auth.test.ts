@@ -3,11 +3,11 @@ import { hashPassword, verifyPassword } from './auth';
 
 // ponytail: one test file, covers the core auth flow
 describe('auth', () => {
-	it('should hash and verify passwords correctly', () => {
+	it('should hash and verify passwords correctly', async () => {
 		const password = 'test-password-123';
-		const hash = hashPassword(password);
+		const hash = await hashPassword(password);
 		expect(hash).not.toBe(password);
-		expect(verifyPassword(password, hash)).toBe(true);
-		expect(verifyPassword('wrong-password', hash)).toBe(false);
+		expect(await verifyPassword(password, hash)).toBe(true);
+		expect(await verifyPassword('wrong-password', hash)).toBe(false);
 	});
 });

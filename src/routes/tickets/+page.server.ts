@@ -3,17 +3,25 @@ import { tickets, users, equipment, ticket_comments } from '$lib/server/db/schem
 import { eq, like, or, and, count, asc, desc } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import type { TicketStatus, TicketPriority } from '$lib/types';
+import {
+	isValidTransition,
+	VALID_TICKET_STATES,
+	VALID_TICKET_PRIORITIES
+} from '$lib/server/state-machines';
+import { escapeLike } from '$lib/server/validators';
 import { requireAuth } from '$lib/server/auth';
 
 const PAGE_SIZE = 10;
 
-// ponytail: sequential ticket number from count — fine for internal tool,
-// not safe under concurrent writes; use a sequence if throughput matters
 async function generateTicketNumber(): Promise<string> {
-	const [result] = await db.select({ count: count() }).from(tickets);
+	const now = new Date();
+	const datePart = now.toISOString().slice(0, 10).replace(/-/g, '');
+	const [result] = await db
+		.select({ count: count() })
+		.from(tickets)
+		.where(like(tickets.numero_ticket, `TKT-${datePart}-%`));
 	const nextNum = (result?.count ?? 0) + 1;
-	return `TKT-${String(nextNum).padStart(3, '0')}`;
+	return `TKT-${datePart}-${String(nextNum).padStart(3, '0')}`;
 }
 
 export const load: PageServerLoad = async ({ url, locals }) => {
@@ -38,16 +46,17 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 	const conditions: ReturnType<typeof and>[] = [];
 	if (search) {
+		const safeSearch = escapeLike(search);
 		conditions.push(
 			or(
-				like(tickets.titulo, `%${search}%`),
-				like(tickets.descripcion, `%${search}%`),
-				like(tickets.numero_ticket, `%${search}%`)
+				like(tickets.titulo, `%${safeSearch}%`),
+				like(tickets.descripcion, `%${safeSearch}%`),
+				like(tickets.numero_ticket, `%${safeSearch}%`)
 			)
 		);
 	}
-	if (filterEstado) conditions.push(eq(tickets.estado, filterEstado as TicketStatus));
-	if (filterPrioridad) conditions.push(eq(tickets.prioridad, filterPrioridad as TicketPriority));
+	if (filterEstado) conditions.push(eq(tickets.estado, filterEstado as any));
+	if (filterPrioridad) conditions.push(eq(tickets.prioridad, filterPrioridad as any));
 
 	const where = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -114,13 +123,30 @@ export const actions: Actions = {
 				return fail(400, { error: 'El título del ticket es obligatorio', _action });
 			}
 
+			// Validate enum
+			if (!VALID_TICKET_PRIORITIES.includes(prioridad as any)) {
+				return fail(400, { error: 'Prioridad no válida', _action });
+			}
+
+			// Validate equipment exists and is not decommissioned
+			if (equipo_id) {
+				const equip = await db.query.equipment.findFirst({ where: eq(equipment.id, equipo_id) });
+				if (!equip) return fail(400, { error: 'Equipo no encontrado', _action });
+				if (equip.estado === 'dado_de_baja') {
+					return fail(400, {
+						error: 'No se puede crear un ticket para un equipo dado de baja',
+						_action
+					});
+				}
+			}
+
 			const numero_ticket = await generateTicketNumber();
 
 			await db.insert(tickets).values({
 				numero_ticket,
 				titulo: titulo.trim(),
 				descripcion: descripcion.trim(),
-				prioridad: prioridad as TicketPriority,
+				prioridad: prioridad as any,
 				usuario_reporta: locals.user.id,
 				equipo_id: equipo_id || null
 			});
@@ -131,6 +157,10 @@ export const actions: Actions = {
 		if (_action === 'update') {
 			if (!id) return fail(400, { error: 'ID de ticket no proporcionado', _action });
 
+			// Entity existence check
+			const existing = await db.query.tickets.findFirst({ where: eq(tickets.id, id) });
+			if (!existing) return fail(404, { error: 'Ticket no encontrado', _action });
+
 			const titulo = (form.get('titulo') as string) ?? '';
 			const descripcion = (form.get('descripcion') as string) ?? '';
 			const prioridad = (form.get('prioridad') as string) ?? 'media';
@@ -138,8 +168,46 @@ export const actions: Actions = {
 			const tecnico_asignado = (form.get('tecnico_asignado') as string) ?? '';
 			const equipo_id = (form.get('equipo_id') as string) ?? '';
 
+			// Validate required fields
 			if (!titulo || titulo.trim().length === 0) {
 				return fail(400, { error: 'El título del ticket es obligatorio', _action });
+			}
+
+			// Validate enums
+			if (!VALID_TICKET_PRIORITIES.includes(prioridad as any)) {
+				return fail(400, { error: 'Prioridad no válida', _action });
+			}
+			if (!VALID_TICKET_STATES.includes(estado as any)) {
+				return fail(400, { error: 'Estado no válido', _action });
+			}
+
+			// Validate state transition
+			if (existing.estado !== estado && !isValidTransition(existing.estado, estado, 'ticket')) {
+				return fail(400, {
+					error: `Transición de estado no permitida: ${existing.estado} → ${estado}`,
+					_action
+				});
+			}
+
+			// Validate technician exists and has tech/admin role
+			if (tecnico_asignado) {
+				const tech = await db.query.users.findFirst({ where: eq(users.id, tecnico_asignado) });
+				if (!tech) return fail(400, { error: 'Técnico no encontrado', _action });
+				if (tech.rol !== 'tecnico' && tech.rol !== 'admin') {
+					return fail(400, {
+						error: 'El usuario asignado no es técnico ni administrador',
+						_action
+					});
+				}
+			}
+
+			// Validate equipment exists and is not decommissioned
+			if (equipo_id) {
+				const equip = await db.query.equipment.findFirst({ where: eq(equipment.id, equipo_id) });
+				if (!equip) return fail(400, { error: 'Equipo no encontrado', _action });
+				if (equip.estado === 'dado_de_baja') {
+					return fail(400, { error: 'No se puede asignar un equipo dado de baja', _action });
+				}
 			}
 
 			await db
@@ -147,8 +215,8 @@ export const actions: Actions = {
 				.set({
 					titulo: titulo.trim(),
 					descripcion: descripcion.trim(),
-					prioridad: prioridad as TicketPriority,
-					estado: estado as TicketStatus,
+					prioridad: prioridad as any,
+					estado: estado as any,
 					tecnico_asignado: tecnico_asignado || null,
 					equipo_id: equipo_id || null,
 					updated_at: new Date().toISOString()
@@ -183,6 +251,8 @@ export const actions: Actions = {
 			if (!ticket_id) {
 				return fail(400, { error: 'ID de ticket no proporcionado', _action });
 			}
+			const ticketExists = await db.query.tickets.findFirst({ where: eq(tickets.id, ticket_id) });
+			if (!ticketExists) return fail(404, { error: 'Ticket no encontrado', _action });
 			if (!contenido || contenido.trim().length === 0) {
 				return fail(400, { error: 'El comentario no puede estar vacío', _action });
 			}

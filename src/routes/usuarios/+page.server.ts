@@ -1,9 +1,17 @@
 import { db } from '$lib/server/db';
-import { users, tickets } from '$lib/server/db/schema';
+import { users, tickets, pm_executions } from '$lib/server/db/schema';
 import { hashPassword, requireRole } from '$lib/server/auth';
+import {
+	validateEmail,
+	validatePasswordStrength,
+	isUsernameTaken,
+	isEmailTaken,
+	isLastActiveAdmin
+} from '$lib/server/validators';
 import { eq, or, count, and } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
-import type { PageServerLoad, Actions } from './$types';	export const load: PageServerLoad = async ({ url, locals }) => {
+import type { PageServerLoad, Actions } from './$types';
+export const load: PageServerLoad = async ({ url, locals }) => {
 	if (!locals.user) return { usuarios: [], filterRol: '', filterActivo: '' };
 
 	const filterRol = url.searchParams.get('rol') ?? '';
@@ -58,19 +66,21 @@ export const actions: Actions = {
 			if (!email.trim()) errors.push('El email es obligatorio');
 			if (!nombre.trim()) errors.push('El nombre es obligatorio');
 			if (!apellido.trim()) errors.push('El apellido es obligatorio');
-			if (!password) errors.push('La contraseña es obligatoria');
+			const pwError = validatePasswordStrength(password);
+			if (pwError) errors.push(pwError);
+			const emailError = validateEmail(email.trim());
+			if (emailError) errors.push(emailError);
+			const rolValid = ['admin', 'tecnico', 'consultor'].includes(rol);
+			if (!rolValid) errors.push('Rol no válido');
 			if (errors.length > 0) {
 				return fail(400, { error: errors.join('. '), _action });
 			}
 
-			const existing = await db
-				.select({ count: count() })
-				.from(users)
-				.where(or(eq(users.username, username.trim()), eq(users.email, email.trim())))
-				.then((r) => r[0].count);
-
-			if (existing > 0) {
-				return fail(400, { error: 'El nombre de usuario o email ya está en uso', _action });
+			if (await isUsernameTaken(username.trim())) {
+				return fail(400, { error: 'Ya existe un usuario con ese nombre de usuario', _action });
+			}
+			if (await isEmailTaken(email.trim())) {
+				return fail(400, { error: 'Ya existe un usuario con ese email', _action });
 			}
 
 			await db.insert(users).values({
@@ -78,7 +88,7 @@ export const actions: Actions = {
 				email: email.trim(),
 				nombre: nombre.trim(),
 				apellido: apellido.trim(),
-				password_hash: hashPassword(password),
+				password_hash: await hashPassword(password),
 				rol: rol as 'admin' | 'tecnico' | 'consultor',
 				activo
 			});
@@ -90,12 +100,48 @@ export const actions: Actions = {
 		if (_action === 'update') {
 			if (!id) return fail(400, { error: 'ID de usuario no proporcionado', _action });
 
+			const existingUser = await db.query.users.findFirst({ where: eq(users.id, id) });
+			if (!existingUser) return fail(404, { error: 'Usuario no encontrado', _action });
+
 			const nombre = (form.get('nombre') as string) ?? '';
 			const apellido = (form.get('apellido') as string) ?? '';
 			const email = (form.get('email') as string) ?? '';
 			const password = (form.get('password') as string) ?? '';
 			const rol = (form.get('rol') as string) ?? 'tecnico';
 			const activo = form.get('activo') === 'on';
+
+			const errors: string[] = [];
+			if (!nombre.trim()) errors.push('El nombre es obligatorio');
+			if (!apellido.trim()) errors.push('El apellido es obligatorio');
+			if (!email.trim()) errors.push('El email es obligatorio');
+			const emailError = validateEmail(email.trim());
+			if (emailError) errors.push(emailError);
+			const rolValid = ['admin', 'tecnico', 'consultor'].includes(rol);
+			if (!rolValid) errors.push('Rol no válido');
+			if (password) {
+				const pwError = validatePasswordStrength(password);
+				if (pwError) errors.push(pwError);
+			}
+			if (errors.length > 0) {
+				return fail(400, { error: errors.join('. '), _action });
+			}
+
+			if (existingUser.rol === 'admin' && existingUser.activo) {
+				if (!activo || rol !== 'admin') {
+					if (await isLastActiveAdmin(id)) {
+						return fail(400, {
+							error: 'No podés desactivar o cambiar el rol del último administrador',
+							_action
+						});
+					}
+				}
+			}
+
+			if (email.trim() !== existingUser.email) {
+				if (await isEmailTaken(email.trim(), id)) {
+					return fail(400, { error: 'Ya existe otro usuario con ese email', _action });
+				}
+			}
 
 			const updateData: Record<string, unknown> = {
 				nombre: nombre.trim(),
@@ -106,7 +152,7 @@ export const actions: Actions = {
 			};
 
 			if (password) {
-				updateData.password_hash = hashPassword(password);
+				updateData.password_hash = await hashPassword(password);
 			}
 
 			await db.update(users).set(updateData).where(eq(users.id, id));
@@ -118,30 +164,19 @@ export const actions: Actions = {
 		if (_action === 'delete') {
 			if (!id) return fail(400, { error: 'ID de usuario no proporcionado', _action });
 
-			// Prevent deleting self
+			const existingUser = await db.query.users.findFirst({ where: eq(users.id, id) });
+			if (!existingUser) return fail(404, { error: 'Usuario no encontrado', _action });
+
 			if (!locals.user || locals.user.id === id) {
 				return fail(400, { error: 'No podés eliminar tu propio usuario', _action });
 			}
 
-			// Prevent deleting last admin
-			const userToDelete = await db.query.users.findFirst({
-				columns: { rol: true },
-				where: eq(users.id, id)
-			});
-
-			if (userToDelete?.rol === 'admin') {
-				const adminCount = await db
-					.select({ count: count() })
-					.from(users)
-					.where(and(eq(users.rol, 'admin'), eq(users.activo, true)))
-					.then((r) => r[0].count);
-
-				if (adminCount <= 1) {
+			if (existingUser.rol === 'admin' && existingUser.activo) {
+				if (await isLastActiveAdmin(id)) {
 					return fail(400, { error: 'No podés eliminar el último administrador', _action });
 				}
 			}
 
-			// Check references
 			const ticketRefs = await db
 				.select({ count: count() })
 				.from(tickets)
@@ -155,8 +190,18 @@ export const actions: Actions = {
 				});
 			}
 
-			// ponytail: equipment references are via status_history and pm_executions, skip those
-			// references for now — add when cascade logic is needed
+			const pmRefs = await db
+				.select({ count: count() })
+				.from(pm_executions)
+				.where(eq(pm_executions.ejecutado_por, id))
+				.then((r) => r[0].count);
+
+			if (pmRefs > 0) {
+				return fail(400, {
+					error: `No se puede eliminar: el usuario tiene ${pmRefs} ejecución(es) de mantenimiento asociada(s)`,
+					_action
+				});
+			}
 
 			await db.delete(users).where(eq(users.id, id));
 			return { success: true, _action };

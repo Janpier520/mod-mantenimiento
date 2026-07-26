@@ -2,6 +2,7 @@ import { db } from '$lib/server/db';
 import { equipment_types, equipment } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
+import { isEquipmentTypeNameTaken } from '$lib/server/validators';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -34,6 +35,10 @@ export const actions: Actions = {
 		}
 
 		if (_action === 'create') {
+			if (await isEquipmentTypeNameTaken(nombre.trim())) {
+				return fail(400, { error: 'Ya existe un tipo con ese nombre', _action });
+			}
+
 			await db.insert(equipment_types).values({
 				nombre: nombre.trim(),
 				descripcion: descripcion.trim(),
@@ -44,6 +49,18 @@ export const actions: Actions = {
 
 		if (_action === 'update') {
 			if (!id) return fail(400, { error: 'ID de tipo no proporcionado', _action });
+
+			const existing = await db.query.equipment_types.findFirst({
+				where: eq(equipment_types.id, id)
+			});
+			if (!existing) return fail(404, { error: 'Tipo no encontrado', _action });
+
+			if (nombre.trim() !== existing.nombre) {
+				if (await isEquipmentTypeNameTaken(nombre.trim(), id)) {
+					return fail(400, { error: 'Ya existe otro tipo con ese nombre', _action });
+				}
+			}
+
 			await db
 				.update(equipment_types)
 				.set({
@@ -57,6 +74,11 @@ export const actions: Actions = {
 
 		if (_action === 'delete') {
 			if (!id) return fail(400, { error: 'ID de tipo no proporcionado', _action });
+
+			const existing = await db.query.equipment_types.findFirst({
+				where: eq(equipment_types.id, id)
+			});
+			if (!existing) return fail(404, { error: 'Tipo no encontrado', _action });
 
 			const ref = await db.query.equipment.findFirst({
 				where: eq(equipment.tipo_id, id)

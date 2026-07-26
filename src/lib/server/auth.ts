@@ -11,12 +11,19 @@ const COOKIE_NAME = 'equip-lab-session';
 
 // ─── Password hashing ─────────────────────────────────────────────────────────
 
-export function hashPassword(password: string): string {
-	return bcrypt.hashSync(password, SALT_ROUNDS);
+export async function hashPassword(password: string): Promise<string> {
+	return bcrypt.hash(password, SALT_ROUNDS);
 }
 
-export function verifyPassword(password: string, hash: string): boolean {
-	return bcrypt.compareSync(password, hash);
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+	return bcrypt.compare(password, hash);
+}
+
+export function validatePasswordStrength(password: string): string | null {
+	if (!password) return 'La contraseña es obligatoria';
+	if (password.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
+	if (password.length > 128) return 'La contraseña no puede tener más de 128 caracteres';
+	return null;
 }
 
 // ─── Session management ──────────────────────────────────────────────────────
@@ -100,7 +107,7 @@ export async function login(
 		return { success: false, error: 'Esta cuenta está desactivada. Contactá al administrador.' };
 	}
 
-	if (!verifyPassword(password, user.password_hash)) {
+	if (!(await verifyPassword(password, user.password_hash))) {
 		return { success: false, error: 'Usuario o contraseña incorrectos' };
 	}
 
@@ -152,9 +159,12 @@ export async function getUserSecurityQuestions(username: string) {
 }
 
 export async function resetPassword(userId: string, newPassword: string): Promise<void> {
-	const hash = hashPassword(newPassword);
-	await db
-		.update(users)
-		.set({ password_hash: hash, updated_at: new Date().toISOString() })
-		.where(eq(users.id, userId));
+	const hash = await hashPassword(newPassword);
+	await Promise.all([
+		db
+			.update(users)
+			.set({ password_hash: hash, updated_at: new Date().toISOString() })
+			.where(eq(users.id, userId)),
+		db.delete(sessions).where(eq(sessions.user_id, userId))
+	]);
 }
