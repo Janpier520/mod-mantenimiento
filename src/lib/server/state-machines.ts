@@ -48,3 +48,36 @@ export function getValidTransitions(from: string, machine: 'equipment' | 'ticket
 	const transitions = machine === 'equipment' ? EQUIPMENT_TRANSITIONS : TICKET_TRANSITIONS;
 	return transitions[from] ?? [];
 }
+
+// ─── Role-based transition guards ────────────────────────────────────────────
+
+export const TICKET_TRANSITION_ROLES: Record<string, string[]> = {
+	abierto: ['admin', 'consultor'],
+	en_proceso: ['admin', 'tecnico'],
+	resuelto: ['admin', 'tecnico'],
+	cerrado: ['admin', 'consultor']
+};
+
+export function canTransition(
+	from: string,
+	to: string,
+	role: string,
+	machine: 'equipment' | 'ticket'
+): { allowed: boolean; error?: string } {
+	if (machine === 'equipment') {
+		if (to === 'dado_de_baja' && role !== 'admin') {
+			return { allowed: false, error: 'Solo los administradores pueden dar de baja equipos' };
+		}
+		return { allowed: true };
+	}
+
+	const allowedRoles = TICKET_TRANSITION_ROLES[to];
+	if (!allowedRoles || !allowedRoles.includes(role)) {
+		const roleName = role === 'admin' ? 'administrador' : role === 'tecnico' ? 'técnico' : 'consultor';
+		return {
+			allowed: false,
+			error: `El rol '${roleName}' no puede cambiar el estado a '${to}'`
+		};
+	}
+	return { allowed: true };
+}

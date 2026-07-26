@@ -12,6 +12,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import {
 	isValidTransition,
+	canTransition,
 	VALID_EQUIPMENT_STATES,
 	type EquipmentState
 } from '$lib/server/state-machines';
@@ -162,15 +163,23 @@ export const actions: Actions = {
 
 			if (!existing) return fail(400, { error: 'Equipo no encontrado', _action });
 
-			// Validate state transition
-			if (existing.estado !== estado && !isValidTransition(existing.estado, estado, 'equipment')) {
-				return fail(400, {
-					error: `Transición de estado no permitida: ${existing.estado} → ${estado}`,
-					_action
-				});
-			}
+		// Validate state transition
+		if (existing.estado !== estado && !isValidTransition(existing.estado, estado, 'equipment')) {
+			return fail(400, {
+				error: `Transición de estado no permitida: ${existing.estado} → ${estado}`,
+				_action
+			});
+		}
 
-			// If estado changed, record status history
+		// Validate role-based transition for equipment
+		if (existing.estado !== estado) {
+			const roleCheck = canTransition(existing.estado, estado, locals.user.rol, 'equipment');
+			if (!roleCheck.allowed) {
+				return fail(403, { error: roleCheck.error, _action });
+			}
+		}
+
+		// If estado changed, record status history
 			if (existing.estado !== estado) {
 				await db.insert(equipment_status_history).values({
 					equipo_id: id,

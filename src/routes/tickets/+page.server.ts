@@ -5,6 +5,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import {
 	isValidTransition,
+	canTransition,
 	VALID_TICKET_STATES,
 	VALID_TICKET_PRIORITIES
 } from '$lib/server/state-machines';
@@ -181,15 +182,23 @@ export const actions: Actions = {
 				return fail(400, { error: 'Estado no válido', _action });
 			}
 
-			// Validate state transition
-			if (existing.estado !== estado && !isValidTransition(existing.estado, estado, 'ticket')) {
-				return fail(400, {
-					error: `Transición de estado no permitida: ${existing.estado} → ${estado}`,
-					_action
-				});
-			}
+		// Validate state transition
+		if (existing.estado !== estado && !isValidTransition(existing.estado, estado, 'ticket')) {
+			return fail(400, {
+				error: `Transición de estado no permitida: ${existing.estado} → ${estado}`,
+				_action
+			});
+		}
 
-			// Validate technician exists and has tech/admin role
+		// Validate role-based transition
+		if (existing.estado !== estado) {
+			const roleCheck = canTransition(existing.estado, estado, locals.user.rol, 'ticket');
+			if (!roleCheck.allowed) {
+				return fail(403, { error: roleCheck.error, _action });
+			}
+		}
+
+		// Validate technician exists and has tech/admin role
 			if (tecnico_asignado) {
 				const tech = await db.query.users.findFirst({ where: eq(users.id, tecnico_asignado) });
 				if (!tech) return fail(400, { error: 'Técnico no encontrado', _action });
