@@ -19,13 +19,6 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 	return bcrypt.compare(password, hash);
 }
 
-export function validatePasswordStrength(password: string): string | null {
-	if (!password) return 'La contraseña es obligatoria';
-	if (password.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
-	if (password.length > 128) return 'La contraseña no puede tener más de 128 caracteres';
-	return null;
-}
-
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOGIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
 const MAX_RESET_ATTEMPTS = 3;

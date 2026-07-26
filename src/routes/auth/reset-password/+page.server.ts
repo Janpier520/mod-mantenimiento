@@ -2,8 +2,12 @@ import {
 	getUserSecurityQuestions,
 	verifyPassword,
 	hashPassword,
-	resetPassword
+	resetPassword,
+	checkResetRateLimit,
+	recordFailedReset,
+	onResetSuccess
 } from '$lib/server/auth';
+import { validatePasswordStrength } from '$lib/server/validators';
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -38,8 +42,16 @@ export const actions: Actions = {
 			return fail(400, { error: 'Completá todos los campos' });
 		}
 
-		if (newPassword.length < 6) {
-			return fail(400, { error: 'La contraseña debe tener al menos 6 caracteres' });
+		// Rate limit check
+		const rateCheck = await checkResetRateLimit(username);
+		if (!rateCheck.allowed) {
+			return fail(429, { error: rateCheck.error });
+		}
+
+		// Validate password strength
+		const pwError = validatePasswordStrength(newPassword);
+		if (pwError) {
+			return fail(400, { error: pwError });
 		}
 
 		if (newPassword !== confirmPassword) {
@@ -48,6 +60,7 @@ export const actions: Actions = {
 
 		const questions = await getUserSecurityQuestions(username);
 		if (!questions) {
+			await recordFailedReset(username);
 			return fail(404, { error: 'Usuario no encontrado' });
 		}
 
@@ -55,10 +68,12 @@ export const actions: Actions = {
 			!(await verifyPassword(answer1, questions.answerHash1)) ||
 			!(await verifyPassword(answer2, questions.answerHash2))
 		) {
+			await recordFailedReset(username);
 			return fail(401, { error: 'Las respuestas de seguridad no son correctas' });
 		}
 
 		await resetPassword(questions.userId, newPassword);
+		await onResetSuccess(username);
 
 		return { success: 'Contraseña restablecida correctamente. Ya podés iniciar sesión.' };
 	}
