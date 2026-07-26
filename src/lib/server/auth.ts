@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { db } from './db/index';
 import { users, sessions, login_attempts } from './db/schema';
-import { eq, and, gte, count } from 'drizzle-orm';
+import { eq, and, gte, lte, count } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import type { Cookies } from '@sveltejs/kit';
 
@@ -114,6 +114,12 @@ export async function onResetSuccess(username: string): Promise<void> {
 // ─── Session management ──────────────────────────────────────────────────────
 
 export async function createSession(userId: string): Promise<string> {
+	// Clean up expired sessions for this user
+	const now = new Date().toISOString();
+	await db.delete(sessions).where(
+		and(eq(sessions.user_id, userId), lte(sessions.expires_at, now))
+	);
+
 	const token = crypto.randomUUID();
 	const expiresAt = new Date(Date.now() + SESSION_DURATION_MS).toISOString();
 
