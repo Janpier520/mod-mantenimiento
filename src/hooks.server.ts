@@ -1,4 +1,4 @@
-import { validateSession, getSessionToken, clearSessionCookie } from '$lib/server/auth';
+import { validateSession, getSessionToken, clearSessionCookie, setSessionCookie } from '$lib/server/auth';
 import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 
@@ -18,6 +18,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const token = getSessionToken(event.cookies);
 	const user = await validateSession(token);
 	event.locals.user = user;
+
+	// Renew cookie on every valid request (sliding window, no DB write)
+	if (user && token) {
+		setSessionCookie(event.cookies, token);
+	}
 
 	const path = event.url.pathname;
 

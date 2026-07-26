@@ -6,7 +6,7 @@ import { redirect } from '@sveltejs/kit';
 import type { Cookies } from '@sveltejs/kit';
 
 const SALT_ROUNDS = 10;
-const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+export const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 const COOKIE_NAME = 'equip-lab-session';
 
 // ─── Password hashing ─────────────────────────────────────────────────────────
@@ -146,6 +146,21 @@ export async function validateSession(token: string | undefined): Promise<App.Lo
 	if (!session) return null;
 	if (new Date(session.expires_at) < new Date()) return null;
 	if (!session.user.activo) return null;
+
+	// Sliding window: if past halfway point, extend expiry
+	const expiresAt = new Date(session.expires_at);
+	const now = new Date();
+	const createdAt = new Date(session.created_at);
+	const totalTtl = expiresAt.getTime() - createdAt.getTime();
+	const elapsed = now.getTime() - createdAt.getTime();
+
+	if (elapsed > totalTtl * 0.5) {
+		const newExpiresAt = new Date(now.getTime() + SESSION_DURATION_MS);
+		await db
+			.update(sessions)
+			.set({ expires_at: newExpiresAt.toISOString() })
+			.where(eq(sessions.id, session.id));
+	}
 
 	return {
 		id: session.user.id,
