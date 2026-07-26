@@ -314,6 +314,21 @@ export const config = sqliteTable('config', {
 });
 // ponytail: key-value settings, no relations needed
 
+// ─── Intentos de Login ──────────────────────────────────────────────────────
+export const login_attempts = sqliteTable('login_attempts', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	username: text('username').notNull(),
+	ip_address: text('ip_address').notNull().default(''),
+	created_at: text('created_at')
+		.notNull()
+		.$defaultFn(() => new Date().toISOString())
+}, (table) => ({
+	username_idx: index('idx_login_attempts_username').on(table.username),
+	created_at_idx: index('idx_login_attempts_created_at').on(table.created_at)
+}));
+
 // ─── Inferred Types ───────────────────────────────────────────────────────────
 // Type-safe row & insert shapes inferred from the schema
 
@@ -358,6 +373,9 @@ export type NewProveedor = InferInsertModel<typeof proveedores>;
 
 export type ConfigSetting = InferSelectModel<typeof config>;
 export type NewConfigSetting = InferInsertModel<typeof config>;
+
+export type LoginAttempt = InferSelectModel<typeof login_attempts>;
+export type NewLoginAttempt = InferInsertModel<typeof login_attempts>;
 
 // ─── Relations ────────────────────────────────────────────────────────────────
 // Required for db.query.* findFirst/findMany with `with` clause

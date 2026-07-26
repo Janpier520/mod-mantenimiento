@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { db } from './db/index';
-import { users, sessions } from './db/schema';
-import { eq } from 'drizzle-orm';
+import { users, sessions, login_attempts } from './db/schema';
+import { eq, and, gte, count } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import type { Cookies } from '@sveltejs/kit';
 
@@ -24,6 +24,98 @@ export function validatePasswordStrength(password: string): string | null {
 	if (password.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
 	if (password.length > 128) return 'La contraseña no puede tener más de 128 caracteres';
 	return null;
+}
+
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+const MAX_RESET_ATTEMPTS = 3;
+const RESET_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+// ─── Rate limiting ────────────────────────────────────────────────────────────
+
+async function recordLoginAttempt(username: string, ipAddress: string): Promise<void> {
+	await db.insert(login_attempts).values({
+		username,
+		ip_address: ipAddress
+	});
+}
+
+async function getRecentAttempts(identifier: string, windowMs: number): Promise<number> {
+	const since = new Date(Date.now() - windowMs).toISOString();
+	const [result] = await db
+		.select({ count: count() })
+		.from(login_attempts)
+		.where(
+			and(eq(login_attempts.username, identifier), gte(login_attempts.created_at, since))
+		);
+	return result?.count ?? 0;
+}
+
+async function clearAttempts(identifier: string): Promise<void> {
+	await db.delete(login_attempts).where(eq(login_attempts.username, identifier));
+}
+
+export async function checkLoginRateLimit(
+	username: string,
+	ipAddress: string
+): Promise<{ allowed: boolean; error?: string; retryAfterMs?: number }> {
+	const attempts = await getRecentAttempts(username, LOGIN_LOCKOUT_MS);
+
+	if (attempts >= MAX_LOGIN_ATTEMPTS) {
+		const oldest = await db.query.login_attempts.findFirst({
+			where: and(
+				eq(login_attempts.username, username),
+				gte(
+					login_attempts.created_at,
+					new Date(Date.now() - LOGIN_LOCKOUT_MS).toISOString()
+				)
+			),
+			orderBy: (login_attempts, { asc }) => [asc(login_attempts.created_at)]
+		});
+
+		const retryAfterMs = oldest
+			? new Date(oldest.created_at).getTime() + LOGIN_LOCKOUT_MS - Date.now()
+			: LOGIN_LOCKOUT_MS;
+
+		return {
+			allowed: false,
+			error: `Demasiados intentos fallidos. Probá de nuevo en ${Math.ceil(retryAfterMs / 60000)} minutos.`,
+			retryAfterMs
+		};
+	}
+
+	return { allowed: true };
+}
+
+export async function recordFailedLogin(username: string, ipAddress: string): Promise<void> {
+	await recordLoginAttempt(username, ipAddress);
+}
+
+export async function onLoginSuccess(username: string): Promise<void> {
+	await clearAttempts(username);
+}
+
+export async function checkResetRateLimit(
+	username: string
+): Promise<{ allowed: boolean; error?: string }> {
+	const attempts = await getRecentAttempts(`reset:${username}`, RESET_LOCKOUT_MS);
+
+	if (attempts >= MAX_RESET_ATTEMPTS) {
+		return {
+			allowed: false,
+			error: 'Demasiados intentos de recuperación. Probá de nuevo en 15 minutos.'
+		};
+	}
+
+	return { allowed: true };
+}
+
+export async function recordFailedReset(username: string): Promise<void> {
+	await recordLoginAttempt(`reset:${username}`, 'reset-flow');
+}
+
+export async function onResetSuccess(username: string): Promise<void> {
+	await clearAttempts(`reset:${username}`);
 }
 
 // ─── Session management ──────────────────────────────────────────────────────
