@@ -5,11 +5,11 @@
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
-	import FocusTrap from '$lib/ui/FocusTrap.svelte';
 	import FormField from '$lib/ui/FormField.svelte';
 	import ConfirmDialog from '$lib/ui/ConfirmDialog.svelte';
 	import Badge from '$lib/ui/Badge.svelte';
-	import { fade } from 'svelte/transition';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import { addToast } from '$lib/stores/toast.svelte';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -220,152 +220,118 @@
 		{/snippet}
 	</DataTable>
 
-	<!-- Modal form (create/edit) — with focus trap (a11y) -->
-	{#if showModal}
-		<FocusTrap>
-			<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
-			<div
-				class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
-				onclick={(e) => {
-					if (e.target === e.currentTarget) closeModal();
+	<Dialog.Root bind:open={showModal}>
+		<Dialog.Content class="sm:max-w-lg">
+			<Dialog.Header>
+				<Dialog.Title>{modalTitle}</Dialog.Title>
+			</Dialog.Header>
+
+			<form
+				method="post"
+				action="?/crud"
+				class="space-y-4"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success' && result.data?.success) {
+							closeModal();
+							addToast(
+								isEditing ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente'
+							);
+							await update();
+							await invalidate($page.url.pathname);
+						} else if (result.type === 'failure') {
+							const d = (result.data as Record<string, unknown>) ?? {};
+							formError = (d.error as string) ?? 'Error al guardar el usuario';
+						}
+					};
 				}}
-				onkeydown={(e) => e.key === 'Escape' && closeModal()}
-				transition:fade={{ duration: 200 }}
-				role="dialog"
-				aria-modal="true"
-				tabindex="-1"
 			>
-			<div
-				class="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-900"
-				transition:fade={{ duration: 200 }}
-			>
-				<h2 class="text-lg font-bold text-foreground">{modalTitle}</h2>
+				<input type="hidden" name="_action" value={isEditing ? 'update' : 'create'} />
+				{#if isEditing}
+					<input type="hidden" name="id" value={editingUser!.id} />
+				{/if}
 
-				<form
-					method="post"
-					action="?/crud"
-					class="mt-4 space-y-4"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if (result.type === 'success' && result.data?.success) {
-								closeModal();
-								addToast(
-									isEditing ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente'
-								);
-								await update();
-								await invalidate($page.url.pathname);
-							} else if (result.type === 'failure') {
-								const d = (result.data as Record<string, unknown>) ?? {};
-								formError = (d.error as string) ?? 'Error al guardar el usuario';
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="_action" value={isEditing ? 'update' : 'create'} />
-					{#if isEditing}
-						<input type="hidden" name="id" value={editingUser!.id} />
-					{/if}
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<FormField
+						label="Nombre de Usuario"
+						name="username"
+						bind:value={formUsername}
+						required
+						disabled={isEditing}
+					/>
+					<FormField label="Email" name="email" type="email" bind:value={formEmail} required />
+				</div>
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<FormField label="Nombre" name="nombre" bind:value={formNombre} required />
+					<FormField label="Apellido" name="apellido" bind:value={formApellido} required />
+				</div>
 
-					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-						<FormField
-							label="Nombre de Usuario"
-							name="username"
-							bind:value={formUsername}
-							required
-							disabled={isEditing}
-						/>
-						<FormField label="Email" name="email" type="email" bind:value={formEmail} required />
-					</div>
-					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-						<FormField label="Nombre" name="nombre" bind:value={formNombre} required />
-						<FormField label="Apellido" name="apellido" bind:value={formApellido} required />
-					</div>
-
-					{#if isEditing}
-						<div class="space-y-1.5">
-							<label
-								for="field-password"
-								class="block text-sm font-medium text-foreground"
+				{#if isEditing}
+					<div class="space-y-1.5">
+						<label for="field-password" class="block text-sm font-medium text-foreground">
+							Contraseña <span class="text-xs text-muted-foreground"
+								>(dejá vacío para mantener la actual)</span
 							>
-								Contraseña <span class="text-xs text-muted-foreground"
-									>(dejá vacío para mantener la actual)</span
-								>
-							</label>
-							<input
-								id="field-password"
-								type="password"
-								name="password"
-								bind:value={formPassword}
-								class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
-							/>
-						</div>
-					{:else}
-						<FormField
-							label="Contraseña"
+						</label>
+						<input
+							id="field-password"
+							type="password"
 							name="password"
-							type="text"
 							bind:value={formPassword}
-							required
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
 						/>
-					{/if}
-
-					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-						<div class="space-y-1.5">
-							<label
-								for="field-rol"
-								class="block text-sm font-medium text-foreground"
-							>
-								Rol <span class="ml-0.5 text-red-500">*</span>
-							</label>
-							<select
-								id="field-rol"
-								name="rol"
-								bind:value={formRol}
-								required
-								class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-							>
-								<option value="admin">Administrador</option>
-								<option value="tecnico">Técnico</option>
-								<option value="consultor">Consultor</option>
-							</select>
-						</div>
-						<div class="flex items-end pb-2.5">
-							<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-								<input
-									type="checkbox"
-									name="activo"
-									bind:checked={formActivo}
-									class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary dark:border-gray-600"
-								/>
-								Usuario activo
-							</label>
-						</div>
 					</div>
+				{:else}
+					<FormField
+						label="Contraseña"
+						name="password"
+						type="text"
+						bind:value={formPassword}
+						required
+					/>
+				{/if}
 
-					{#if formError}
-						<p class="text-xs text-red-500">{formError}</p>
-					{/if}
-
-					<div class="flex justify-end gap-3 pt-2">
-						<button
-							type="button"
-							onclick={closeModal}
-							class="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<div class="space-y-1.5">
+						<label for="field-rol" class="block text-sm font-medium text-foreground">
+							Rol <span class="ml-0.5 text-red-500">*</span>
+						</label>
+						<select
+							id="field-rol"
+							name="rol"
+							bind:value={formRol}
+							required
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
 						>
-							Cancelar
-						</button>
-						<button
-							type="submit"
-							class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-						>
-							{isEditing ? 'Guardar Cambios' : 'Crear Usuario'}
-						</button>
+							<option value="admin">Administrador</option>
+							<option value="tecnico">Técnico</option>
+							<option value="consultor">Consultor</option>
+						</select>
 					</div>
-				</form>
-			</div>
-		</div>
-	</FocusTrap>
-{/if}
+					<div class="flex items-end pb-2.5">
+						<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+							<input
+								type="checkbox"
+								name="activo"
+								bind:checked={formActivo}
+								class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary dark:border-gray-600"
+							/>
+							Usuario activo
+						</label>
+					</div>
+				</div>
+
+				{#if formError}
+					<p class="text-xs text-red-500">{formError}</p>
+				{/if}
+
+				<div class="flex justify-end gap-3">
+					<Button variant="outline" onclick={closeModal}>Cancelar</Button>
+					<Button type="submit">{isEditing ? 'Guardar Cambios' : 'Crear Usuario'}</Button>
+				</div>
+			</form>
+		</Dialog.Content>
+	</Dialog.Root>
 
 	<!-- ConfirmDialog for delete -->
 	<ConfirmDialog
