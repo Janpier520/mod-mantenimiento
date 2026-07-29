@@ -22,9 +22,7 @@
 <div class="mx-auto max-w-2xl space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold tracking-tight text-foreground">Mis Sesiones</h1>
-		<p class="mt-1 text-sm text-muted-foreground">
-			Dispositivos y sesiones activas en tu cuenta
-		</p>
+		<p class="mt-1 text-sm text-muted-foreground">Dispositivos y sesiones activas en tu cuenta</p>
 	</div>
 
 	<div class="space-y-3">

@@ -128,13 +128,13 @@
 	<div>
 		<h1 class="text-2xl font-bold tracking-tight text-foreground">Proveedores</h1>
 		<p class="mt-1 text-sm text-muted-foreground">
-			Gestioná los proveedores de equipos y servicios
+			Gestiona los proveedores de equipos y servicios
 		</p>
 	</div>
 
 	<!-- Filter bar with chips + URL params -->
 	<FilterBar
-		search={search}
+		{search}
 		onsearch={handleSearch}
 		filters={[]}
 		values={{}}
@@ -193,9 +193,7 @@
 						if (result.type === 'success' && result.data?.success) {
 							closeModal();
 							addToast(
-								isEditing
-									? 'Proveedor actualizado correctamente'
-									: 'Proveedor creado correctamente'
+								isEditing ? 'Proveedor actualizado correctamente' : 'Proveedor creado correctamente'
 							);
 							await update();
 							await invalidate($page.url.pathname);

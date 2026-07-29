@@ -178,13 +178,13 @@
 	<div>
 		<h1 class="text-2xl font-bold tracking-tight text-foreground">Equipos</h1>
 		<p class="mt-1 text-sm text-muted-foreground">
-			Gestioná los equipos registrados en el laboratorio
+			Gestiona los equipos registrados en el laboratorio
 		</p>
 	</div>
 
 	<!-- Filter bar with chips + URL params -->
 	<FilterBar
-		search={search}
+		{search}
 		onsearch={handleSearch}
 		values={{
 			estado: filterEstado,
@@ -214,7 +214,11 @@
 			reload();
 		}}
 		onremovechip={(key) => {
-			if (key === 'search') { search = ''; handleSearch(''); return; }
+			if (key === 'search') {
+				search = '';
+				handleSearch('');
+				return;
+			}
 			if (key === 'estado') filterEstado = '';
 			if (key === 'tipo') filterTipo = '';
 			currentPage = 1;
@@ -269,8 +273,8 @@
 				<Dialog.Title>{modalTitle}</Dialog.Title>
 				<Dialog.Description>
 					{isEditing
-						? 'Actualizá los datos del equipo'
-						: 'Registrá un nuevo equipo en el laboratorio'}
+						? 'Actualiza los datos del equipo'
+						: 'Registra un nuevo equipo en el laboratorio'}
 				</Dialog.Description>
 			</Dialog.Header>
 

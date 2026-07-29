@@ -28,7 +28,11 @@ function startTimer(id: string, ms: number) {
 	);
 }
 
-export function addToast(message: string, type: ToastType = 'success', duration = DEFAULT_DURATION) {
+export function addToast(
+	message: string,
+	type: ToastType = 'success',
+	duration = DEFAULT_DURATION
+) {
 	const id = crypto.randomUUID();
 	toasts.push({ id, message, type, duration });
 	if (browser) {

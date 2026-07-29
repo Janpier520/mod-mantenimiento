@@ -254,7 +254,9 @@
 						{totalEquipment}
 					</p>
 				</div>
-				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+				>
 					<Package class="h-5 w-5" />
 				</div>
 			</div>
@@ -280,14 +282,20 @@
 						{totalTickets}
 					</p>
 				</div>
-				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary">
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
+				>
 					<Ticket class="h-5 w-5" />
 				</div>
 			</div>
 			<div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
 				<span>Abiertos: {openTickets}</span>
 				<span>En curso: {inProgressTickets}</span>
-				<span>Resueltos: {data.ticketsByStatus.filter((t) => t.estado === 'resuelto').reduce((s, i) => s + i.count, 0)}</span>
+				<span
+					>Resueltos: {data.ticketsByStatus
+						.filter((t) => t.estado === 'resuelto')
+						.reduce((s, i) => s + i.count, 0)}</span
+				>
 			</div>
 		</div>
 
@@ -295,12 +303,16 @@
 		<div class="rounded-xl border bg-card p-5">
 			<div class="flex items-center justify-between">
 				<div>
-					<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">Mantenimiento</p>
+					<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+						Mantenimiento
+					</p>
 					<p class="mt-1 text-3xl font-bold text-foreground">
 						{data.maintenanceStats.totalPlans}
 					</p>
 				</div>
-				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary">
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
+				>
 					<Wrench class="h-5 w-5" />
 				</div>
 			</div>
@@ -319,7 +331,9 @@
 						{data.usersByRole.reduce((s, i) => s + i.count, 0)}
 					</p>
 				</div>
-				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary">
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
+				>
 					<Users class="h-5 w-5" />
 				</div>
 			</div>
@@ -337,9 +351,7 @@
 	<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 		<!-- Equipos por Estado -->
 		<div class="rounded-xl border bg-card p-5">
-			<h3 class="mb-3 text-sm font-semibold text-foreground">
-				Equipos por Estado
-			</h3>
+			<h3 class="mb-3 text-sm font-semibold text-foreground">Equipos por Estado</h3>
 			<div class="relative h-64">
 				<canvas bind:this={estadoCanvas}></canvas>
 			</div>
@@ -355,9 +367,7 @@
 
 		<!-- Tickets por Prioridad -->
 		<div class="rounded-xl border bg-card p-5">
-			<h3 class="mb-3 text-sm font-semibold text-foreground">
-				Tickets por Prioridad
-			</h3>
+			<h3 class="mb-3 text-sm font-semibold text-foreground">Tickets por Prioridad</h3>
 			<div class="relative h-64">
 				<canvas bind:this={priorityCanvas}></canvas>
 			</div>
@@ -375,15 +385,11 @@
 	<!-- Top 5 equipos con más reportes -->
 	{#if data.topEquipment.length > 0}
 		<div class="rounded-xl border bg-card p-5">
-			<h3 class="mb-3 text-sm font-semibold text-foreground">
-				Top 5 — Equipos con más Tickets
-			</h3>
+			<h3 class="mb-3 text-sm font-semibold text-foreground">Top 5 — Equipos con más Tickets</h3>
 			<div class="table-card-mobile overflow-x-auto">
 				<table class="w-full text-sm">
 					<thead>
-						<tr
-							class="border-b border-border text-left text-xs font-medium text-muted-foreground"
-						>
+						<tr class="border-b border-border text-left text-xs font-medium text-muted-foreground">
 							<th class="pr-4 pb-2">#</th>
 							<th class="pr-4 pb-2">Equipo</th>
 							<th class="pr-4 pb-2">Modelo</th>

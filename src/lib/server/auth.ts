@@ -38,9 +38,7 @@ async function getRecentAttempts(identifier: string, windowMs: number): Promise<
 	const [result] = await db
 		.select({ count: count() })
 		.from(login_attempts)
-		.where(
-			and(eq(login_attempts.username, identifier), gte(login_attempts.created_at, since))
-		);
+		.where(and(eq(login_attempts.username, identifier), gte(login_attempts.created_at, since)));
 	return result?.count ?? 0;
 }
 
@@ -58,10 +56,7 @@ export async function checkLoginRateLimit(
 		const oldest = await db.query.login_attempts.findFirst({
 			where: and(
 				eq(login_attempts.username, username),
-				gte(
-					login_attempts.created_at,
-					new Date(Date.now() - LOGIN_LOCKOUT_MS).toISOString()
-				)
+				gte(login_attempts.created_at, new Date(Date.now() - LOGIN_LOCKOUT_MS).toISOString())
 			),
 			orderBy: (login_attempts, { asc }) => [asc(login_attempts.created_at)]
 		});
@@ -116,9 +111,7 @@ export async function onResetSuccess(username: string): Promise<void> {
 export async function createSession(userId: string): Promise<string> {
 	// Clean up expired sessions for this user
 	const now = new Date().toISOString();
-	await db.delete(sessions).where(
-		and(eq(sessions.user_id, userId), lte(sessions.expires_at, now))
-	);
+	await db.delete(sessions).where(and(eq(sessions.user_id, userId), lte(sessions.expires_at, now)));
 
 	const token = crypto.randomUUID();
 	const expiresAt = new Date(Date.now() + SESSION_DURATION_MS).toISOString();

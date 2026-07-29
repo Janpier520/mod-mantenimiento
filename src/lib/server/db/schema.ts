@@ -30,21 +30,25 @@ export const users = sqliteTable('users', {
 });
 
 // ─── Sessions ────────────────────────────────────────────────────────────────
-export const sessions = sqliteTable('sessions', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	user_id: text('user_id')
-		.notNull()
-		.references(() => users.id, { onDelete: 'cascade' }),
-	token: text('token').notNull().unique(),
-	expires_at: text('expires_at').notNull(),
-	created_at: text('created_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString())
-}, (table) => ({
-	user_id_idx: index('idx_sessions_user_id').on(table.user_id)
-}));
+export const sessions = sqliteTable(
+	'sessions',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		user_id: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		token: text('token').notNull().unique(),
+		expires_at: text('expires_at').notNull(),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		user_id_idx: index('idx_sessions_user_id').on(table.user_id)
+	})
+);
 
 // ─── Tipos de Equipo ─────────────────────────────────────────────────────────
 export const equipment_types = sqliteTable('equipment_types', {
@@ -63,223 +67,259 @@ export const equipment_types = sqliteTable('equipment_types', {
 });
 
 // ─── Equipos ─────────────────────────────────────────────────────────────────
-export const equipment = sqliteTable('equipment', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	tipo_id: text('tipo_id')
-		.notNull()
-		.references(() => equipment_types.id),
-	numero_serie: text('numero_serie').notNull().default(''),
-	modelo: text('modelo').notNull().default(''),
-	marca: text('marca').notNull().default(''),
-	estado: text('estado', {
-		enum: ['operativo', 'en_reparacion', 'dado_de_baja', 'prestado']
+export const equipment = sqliteTable(
+	'equipment',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tipo_id: text('tipo_id')
+			.notNull()
+			.references(() => equipment_types.id),
+		numero_serie: text('numero_serie').notNull().default(''),
+		modelo: text('modelo').notNull().default(''),
+		marca: text('marca').notNull().default(''),
+		estado: text('estado', {
+			enum: ['operativo', 'en_reparacion', 'dado_de_baja', 'prestado']
+		})
+			.notNull()
+			.default('operativo'),
+		ubicacion: text('ubicacion').notNull().default(''),
+		fecha_adquisicion: text('fecha_adquisicion'),
+		proveedor_id: text('proveedor_id').references(() => proveedores.id),
+		notas: text('notas').notNull().default(''),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updated_at: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+			.$onUpdateFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		tipo_id_idx: index('idx_equipment_tipo_id').on(table.tipo_id),
+		proveedor_id_idx: index('idx_equipment_proveedor_id').on(table.proveedor_id),
+		estado_idx: index('idx_equipment_estado').on(table.estado)
 	})
-		.notNull()
-		.default('operativo'),
-	ubicacion: text('ubicacion').notNull().default(''),
-	fecha_adquisicion: text('fecha_adquisicion'),
-	proveedor_id: text('proveedor_id').references(() => proveedores.id),
-	notas: text('notas').notNull().default(''),
-	created_at: text('created_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString()),
-	updated_at: text('updated_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString())
-		.$onUpdateFn(() => new Date().toISOString())
-}, (table) => ({
-	tipo_id_idx: index('idx_equipment_tipo_id').on(table.tipo_id),
-	proveedor_id_idx: index('idx_equipment_proveedor_id').on(table.proveedor_id),
-	estado_idx: index('idx_equipment_estado').on(table.estado)
-}));
+);
 
 // ─── Historial de Estados ────────────────────────────────────────────────────
-export const equipment_status_history = sqliteTable('equipment_status_history', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	equipo_id: text('equipo_id')
-		.notNull()
-		.references(() => equipment.id, { onDelete: 'cascade' }),
-	estado_anterior: text('estado_anterior').notNull(),
-	estado_nuevo: text('estado_nuevo').notNull(),
-	cambiado_por: text('cambiado_por').references(() => users.id),
-	created_at: text('created_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString())
-}, (table) => ({
-	equipo_id_idx: index('idx_equip_status_hist_equipo_id').on(table.equipo_id),
-	cambiado_por_idx: index('idx_equip_status_hist_cambiado_por').on(table.cambiado_por)
-}));
+export const equipment_status_history = sqliteTable(
+	'equipment_status_history',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		equipo_id: text('equipo_id')
+			.notNull()
+			.references(() => equipment.id, { onDelete: 'cascade' }),
+		estado_anterior: text('estado_anterior').notNull(),
+		estado_nuevo: text('estado_nuevo').notNull(),
+		cambiado_por: text('cambiado_por').references(() => users.id),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		equipo_id_idx: index('idx_equip_status_hist_equipo_id').on(table.equipo_id),
+		cambiado_por_idx: index('idx_equip_status_hist_cambiado_por').on(table.cambiado_por)
+	})
+);
 
 // ─── Tickets ─────────────────────────────────────────────────────────────────
-export const tickets = sqliteTable('tickets', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	numero_ticket: text('numero_ticket').notNull().unique(),
-	titulo: text('titulo').notNull(),
-	descripcion: text('descripcion').notNull().default(''),
-	estado: text('estado', {
-		enum: ['abierto', 'en_proceso', 'resuelto', 'cerrado']
+export const tickets = sqliteTable(
+	'tickets',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		numero_ticket: text('numero_ticket').notNull().unique(),
+		titulo: text('titulo').notNull(),
+		descripcion: text('descripcion').notNull().default(''),
+		estado: text('estado', {
+			enum: ['abierto', 'en_proceso', 'resuelto', 'cerrado']
+		})
+			.notNull()
+			.default('abierto'),
+		prioridad: text('prioridad', {
+			enum: ['baja', 'media', 'alta', 'critica']
+		})
+			.notNull()
+			.default('media'),
+		usuario_reporta: text('usuario_reporta')
+			.notNull()
+			.references(() => users.id),
+		tecnico_asignado: text('tecnico_asignado').references(() => users.id),
+		equipo_id: text('equipo_id').references(() => equipment.id),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updated_at: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+			.$onUpdateFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		usuario_reporta_idx: index('idx_tickets_usuario_reporta').on(table.usuario_reporta),
+		tecnico_asignado_idx: index('idx_tickets_tecnico_asignado').on(table.tecnico_asignado),
+		equipo_id_idx: index('idx_tickets_equipo_id').on(table.equipo_id),
+		estado_idx: index('idx_tickets_estado').on(table.estado),
+		prioridad_idx: index('idx_tickets_prioridad').on(table.prioridad)
 	})
-		.notNull()
-		.default('abierto'),
-	prioridad: text('prioridad', {
-		enum: ['baja', 'media', 'alta', 'critica']
-	})
-		.notNull()
-		.default('media'),
-	usuario_reporta: text('usuario_reporta')
-		.notNull()
-		.references(() => users.id),
-	tecnico_asignado: text('tecnico_asignado').references(() => users.id),
-	equipo_id: text('equipo_id').references(() => equipment.id),
-	created_at: text('created_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString()),
-	updated_at: text('updated_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString())
-		.$onUpdateFn(() => new Date().toISOString())
-}, (table) => ({
-	usuario_reporta_idx: index('idx_tickets_usuario_reporta').on(table.usuario_reporta),
-	tecnico_asignado_idx: index('idx_tickets_tecnico_asignado').on(table.tecnico_asignado),
-	equipo_id_idx: index('idx_tickets_equipo_id').on(table.equipo_id),
-	estado_idx: index('idx_tickets_estado').on(table.estado),
-	prioridad_idx: index('idx_tickets_prioridad').on(table.prioridad)
-}));
+);
 
 // ─── Comentarios de Tickets ──────────────────────────────────────────────────
-export const ticket_comments = sqliteTable('ticket_comments', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	ticket_id: text('ticket_id')
-		.notNull()
-		.references(() => tickets.id, { onDelete: 'cascade' }),
-	usuario_id: text('usuario_id')
-		.notNull()
-		.references(() => users.id),
-	contenido: text('contenido').notNull(),
-	created_at: text('created_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString())
-}, (table) => ({
-	ticket_id_idx: index('idx_ticket_comments_ticket_id').on(table.ticket_id),
-	usuario_id_idx: index('idx_ticket_comments_usuario_id').on(table.usuario_id)
-}));
+export const ticket_comments = sqliteTable(
+	'ticket_comments',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		ticket_id: text('ticket_id')
+			.notNull()
+			.references(() => tickets.id, { onDelete: 'cascade' }),
+		usuario_id: text('usuario_id')
+			.notNull()
+			.references(() => users.id),
+		contenido: text('contenido').notNull(),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		ticket_id_idx: index('idx_ticket_comments_ticket_id').on(table.ticket_id),
+		usuario_id_idx: index('idx_ticket_comments_usuario_id').on(table.usuario_id)
+	})
+);
 
 // ─── Archivos Adjuntos ───────────────────────────────────────────────────────
-export const ticket_attachments = sqliteTable('ticket_attachments', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	ticket_id: text('ticket_id')
-		.notNull()
-		.references(() => tickets.id, { onDelete: 'cascade' }),
-	filename: text('filename').notNull(),
-	filepath: text('filepath').notNull(),
-	mime_type: text('mime_type').notNull().default(''),
-	uploaded_by: text('uploaded_by')
-		.notNull()
-		.references(() => users.id),
-	created_at: text('created_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString())
-}, (table) => ({
-	ticket_id_idx: index('idx_ticket_attachments_ticket_id').on(table.ticket_id),
-	uploaded_by_idx: index('idx_ticket_attachments_uploaded_by').on(table.uploaded_by)
-}));
+export const ticket_attachments = sqliteTable(
+	'ticket_attachments',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		ticket_id: text('ticket_id')
+			.notNull()
+			.references(() => tickets.id, { onDelete: 'cascade' }),
+		filename: text('filename').notNull(),
+		filepath: text('filepath').notNull(),
+		mime_type: text('mime_type').notNull().default(''),
+		uploaded_by: text('uploaded_by')
+			.notNull()
+			.references(() => users.id),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		ticket_id_idx: index('idx_ticket_attachments_ticket_id').on(table.ticket_id),
+		uploaded_by_idx: index('idx_ticket_attachments_uploaded_by').on(table.uploaded_by)
+	})
+);
 
 // ─── Planes de Mantenimiento Preventivo ──────────────────────────────────────
-export const preventive_maintenance_plans = sqliteTable('preventive_maintenance_plans', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	nombre: text('nombre').notNull(),
-	descripcion: text('descripcion').notNull().default(''),
-	equipo_id: text('equipo_id').references(() => equipment.id),
-	tipo_equipo_id: text('tipo_equipo_id').references(() => equipment_types.id),
-	frecuencia_dias: integer('frecuencia_dias').notNull().default(30),
-	created_at: text('created_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString()),
-	updated_at: text('updated_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString())
-		.$onUpdateFn(() => new Date().toISOString())
-}, (table) => ({
-	equipo_id_idx: index('idx_pm_plans_equipo_id').on(table.equipo_id),
-	tipo_equipo_id_idx: index('idx_pm_plans_tipo_equipo_id').on(table.tipo_equipo_id)
-}));
+export const preventive_maintenance_plans = sqliteTable(
+	'preventive_maintenance_plans',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		nombre: text('nombre').notNull(),
+		descripcion: text('descripcion').notNull().default(''),
+		equipo_id: text('equipo_id').references(() => equipment.id),
+		tipo_equipo_id: text('tipo_equipo_id').references(() => equipment_types.id),
+		frecuencia_dias: integer('frecuencia_dias').notNull().default(30),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updated_at: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+			.$onUpdateFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		equipo_id_idx: index('idx_pm_plans_equipo_id').on(table.equipo_id),
+		tipo_equipo_id_idx: index('idx_pm_plans_tipo_equipo_id').on(table.tipo_equipo_id)
+	})
+);
 
 // ─── Tareas de PM ────────────────────────────────────────────────────────────
-export const pm_tasks = sqliteTable('pm_tasks', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	plan_id: text('plan_id')
-		.notNull()
-		.references(() => preventive_maintenance_plans.id, { onDelete: 'cascade' }),
-	nombre: text('nombre').notNull(),
-	descripcion: text('descripcion').notNull().default(''),
-	orden: integer('orden').notNull().default(0)
-}, (table) => ({
-	plan_id_idx: index('idx_pm_tasks_plan_id').on(table.plan_id)
-}));
+export const pm_tasks = sqliteTable(
+	'pm_tasks',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		plan_id: text('plan_id')
+			.notNull()
+			.references(() => preventive_maintenance_plans.id, { onDelete: 'cascade' }),
+		nombre: text('nombre').notNull(),
+		descripcion: text('descripcion').notNull().default(''),
+		orden: integer('orden').notNull().default(0)
+	},
+	(table) => ({
+		plan_id_idx: index('idx_pm_tasks_plan_id').on(table.plan_id)
+	})
+);
 
 // ─── Ejecuciones de PM ───────────────────────────────────────────────────────
-export const pm_executions = sqliteTable('pm_executions', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	plan_id: text('plan_id')
-		.notNull()
-		.references(() => preventive_maintenance_plans.id),
-	tarea_id: text('tarea_id')
-		.notNull()
-		.references(() => pm_tasks.id),
-	ejecutado_por: text('ejecutado_por')
-		.notNull()
-		.references(() => users.id),
-	fecha_programada: text('fecha_programada').notNull(),
-	fecha_ejecucion: text('fecha_ejecucion'),
-	resultado: text('resultado', { enum: ['pendiente', 'completado', 'fallido', 'omitido'] })
-		.notNull()
-		.default('pendiente'),
-	observaciones: text('observaciones').notNull().default(''),
-	created_at: text('created_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString())
-}, (table) => ({
-	plan_id_idx: index('idx_pm_executions_plan_id').on(table.plan_id),
-	tarea_id_idx: index('idx_pm_executions_tarea_id').on(table.tarea_id),
-	ejecutado_por_idx: index('idx_pm_executions_ejecutado_por').on(table.ejecutado_por)
-}));
+export const pm_executions = sqliteTable(
+	'pm_executions',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		plan_id: text('plan_id')
+			.notNull()
+			.references(() => preventive_maintenance_plans.id),
+		tarea_id: text('tarea_id')
+			.notNull()
+			.references(() => pm_tasks.id),
+		ejecutado_por: text('ejecutado_por')
+			.notNull()
+			.references(() => users.id),
+		fecha_programada: text('fecha_programada').notNull(),
+		fecha_ejecucion: text('fecha_ejecucion'),
+		resultado: text('resultado', { enum: ['pendiente', 'completado', 'fallido', 'omitido'] })
+			.notNull()
+			.default('pendiente'),
+		observaciones: text('observaciones').notNull().default(''),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		plan_id_idx: index('idx_pm_executions_plan_id').on(table.plan_id),
+		tarea_id_idx: index('idx_pm_executions_tarea_id').on(table.tarea_id),
+		ejecutado_por_idx: index('idx_pm_executions_ejecutado_por').on(table.ejecutado_por)
+	})
+);
 
 // ─── Log de Actividad ────────────────────────────────────────────────────────
-export const activity_log = sqliteTable('activity_log', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	usuario_id: text('usuario_id').references(() => users.id),
-	accion: text('accion').notNull(),
-	entidad_tipo: text('entidad_tipo').notNull(),
-	entidad_id: text('entidad_id'),
-	metadata: text('metadata', { mode: 'json' })
-		.$type<Record<string, unknown>>()
-		.notNull()
-		.default({}),
-	created_at: text('created_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString())
-}, (table) => ({
-	usuario_id_idx: index('idx_activity_log_usuario_id').on(table.usuario_id),
-	entidad_idx: index('idx_activity_log_entidad').on(table.entidad_tipo, table.entidad_id)
-}));
+export const activity_log = sqliteTable(
+	'activity_log',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		usuario_id: text('usuario_id').references(() => users.id),
+		accion: text('accion').notNull(),
+		entidad_tipo: text('entidad_tipo').notNull(),
+		entidad_id: text('entidad_id'),
+		metadata: text('metadata', { mode: 'json' })
+			.$type<Record<string, unknown>>()
+			.notNull()
+			.default({}),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		usuario_id_idx: index('idx_activity_log_usuario_id').on(table.usuario_id),
+		entidad_idx: index('idx_activity_log_entidad').on(table.entidad_tipo, table.entidad_id)
+	})
+);
 
 // ─── Proveedores ─────────────────────────────────────────────────────────────
 export const proveedores = sqliteTable('proveedores', {
@@ -315,19 +355,23 @@ export const config = sqliteTable('config', {
 // ponytail: key-value settings, no relations needed
 
 // ─── Intentos de Login ──────────────────────────────────────────────────────
-export const login_attempts = sqliteTable('login_attempts', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	username: text('username').notNull(),
-	ip_address: text('ip_address').notNull().default(''),
-	created_at: text('created_at')
-		.notNull()
-		.$defaultFn(() => new Date().toISOString())
-}, (table) => ({
-	username_idx: index('idx_login_attempts_username').on(table.username),
-	created_at_idx: index('idx_login_attempts_created_at').on(table.created_at)
-}));
+export const login_attempts = sqliteTable(
+	'login_attempts',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		username: text('username').notNull(),
+		ip_address: text('ip_address').notNull().default(''),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		username_idx: index('idx_login_attempts_username').on(table.username),
+		created_at_idx: index('idx_login_attempts_created_at').on(table.created_at)
+	})
+);
 
 // ─── Inferred Types ───────────────────────────────────────────────────────────
 // Type-safe row & insert shapes inferred from the schema

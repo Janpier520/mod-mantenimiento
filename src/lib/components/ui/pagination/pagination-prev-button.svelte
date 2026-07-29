@@ -10,7 +10,9 @@
 		children,
 		...restProps
 	}: PaginationPrimitive.PrevButtonProps = $props();
-</script>	{#snippet Fallback()}
+</script>
+
+{#snippet Fallback()}
 	<ChevronLeftIcon class={cn('size-4', className)} />
 	<span>Anterior</span>
 {/snippet}

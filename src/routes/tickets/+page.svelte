@@ -239,14 +239,14 @@
 	<div>
 		<h1 class="text-2xl font-bold tracking-tight text-foreground">Tickets</h1>
 		<p class="mt-1 text-sm text-muted-foreground">
-			Gestioná los tickets de soporte y mantenimiento
+			Gestiona los tickets de soporte y mantenimiento
 		</p>
 	</div>
 
 	<!-- Filter bar with chips + URL params -->
 	<div class="flex flex-wrap items-start gap-3">
 		<FilterBar
-			search={search}
+			{search}
 			onsearch={handleSearch}
 			values={{
 				estado: filterEstado,
@@ -282,7 +282,11 @@
 				reload();
 			}}
 			onremovechip={(key) => {
-				if (key === 'search') { search = ''; handleSearch(''); return; }
+				if (key === 'search') {
+					search = '';
+					handleSearch('');
+					return;
+				}
 				if (key === 'estado') filterEstado = '';
 				if (key === 'prioridad') filterPrioridad = '';
 				currentPage = 1;
@@ -340,9 +344,7 @@
 
 	<!-- Detail panel -->
 	{#if selectedTicket}
-		<div
-			class="rounded-xl border bg-card p-6 shadow-sm transition-all"
-		>
+		<div class="rounded-xl border bg-card p-6 shadow-sm transition-all">
 			<!-- Header row -->
 			<div class="flex items-start justify-between gap-4">
 				<div class="flex-1">
@@ -359,88 +361,86 @@
 							variant={prioridadBadgeVariant[selectedTicket.prioridad] ?? 'default'}
 						/>
 					</div>
-				<p class="mt-1 text-base font-medium text-foreground">
-					{selectedTicket.titulo}
-				</p>
-			</div>
-			<button
-				onclick={closeDetail}
-				class="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-gray-100 hover:text-foreground dark:hover:bg-gray-800"
-				aria-label="Cerrar detalle"
-			>
-				<XIcon class="h-5 w-5" />
-			</button>
-		</div>
-
-		<!-- Info grid -->
-		<div class="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-3">
-			<div>
-				<span
-					class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
-					>Equipo</span
+					<p class="mt-1 text-base font-medium text-foreground">
+						{selectedTicket.titulo}
+					</p>
+				</div>
+				<button
+					onclick={closeDetail}
+					class="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-gray-100 hover:text-foreground dark:hover:bg-gray-800"
+					aria-label="Cerrar detalle"
 				>
-				<p class="text-sm text-foreground">
-					{getEquipoLabel(selectedTicket.equipo)}
-				</p>
+					<XIcon class="h-5 w-5" />
+				</button>
 			</div>
-			<div>
-				<span
-					class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
-					>Técnico asignado</span
-				>
-				<p class="text-sm text-foreground">
-					{selectedTicket.asignado
-						? `${selectedTicket.asignado.nombre} ${selectedTicket.asignado.apellido}`
-						: '—'}
-				</p>
-			</div>
-			<div>
-				<span
-					class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
-					>Reportado por</span
-				>
-				<p class="text-sm text-foreground">
-					{selectedTicket.reporta?.nombre ?? ''}
-					{selectedTicket.reporta?.apellido ?? ''}
-					<span class="text-xs text-muted-foreground"> — {formatDate(selectedTicket.created_at)}</span>
-				</p>
-			</div>
-		</div>
 
-		<!-- Description -->
-		{#if selectedTicket.descripcion}
-			<div class="mt-4">
-				<span
-					class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
-					>Descripción</span
-				>
-				<p class="mt-1 text-sm whitespace-pre-wrap text-foreground">
-					{selectedTicket.descripcion}
-				</p>
+			<!-- Info grid -->
+			<div class="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-3">
+				<div>
+					<span class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+						>Equipo</span
+					>
+					<p class="text-sm text-foreground">
+						{getEquipoLabel(selectedTicket.equipo)}
+					</p>
+				</div>
+				<div>
+					<span class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+						>Técnico asignado</span
+					>
+					<p class="text-sm text-foreground">
+						{selectedTicket.asignado
+							? `${selectedTicket.asignado.nombre} ${selectedTicket.asignado.apellido}`
+							: '—'}
+					</p>
+				</div>
+				<div>
+					<span class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+						>Reportado por</span
+					>
+					<p class="text-sm text-foreground">
+						{selectedTicket.reporta?.nombre ?? ''}
+						{selectedTicket.reporta?.apellido ?? ''}
+						<span class="text-xs text-muted-foreground">
+							— {formatDate(selectedTicket.created_at)}</span
+						>
+					</p>
+				</div>
 			</div>
-		{/if}
 
-		<!-- Comments -->
-		<div class="mt-6">
-			<hr class="mb-4 border-border" />
-			<h3 class="mb-3 text-sm font-semibold text-foreground">
-				Comentarios ({selectedTicket.comentarios?.length ?? 0})
-			</h3>
+			<!-- Description -->
+			{#if selectedTicket.descripcion}
+				<div class="mt-4">
+					<span class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+						>Descripción</span
+					>
+					<p class="mt-1 text-sm whitespace-pre-wrap text-foreground">
+						{selectedTicket.descripcion}
+					</p>
+				</div>
+			{/if}
 
-			<div class="mb-4 max-h-64 space-y-3 overflow-y-auto">
-				{#each selectedTicket.comentarios ?? [] as comment}
-					<div class="rounded-lg bg-muted p-3">
-						<div class="flex items-center gap-2 text-xs text-muted-foreground">
-							<span class="font-medium text-foreground">
-								{comment.usuario?.nombre ?? ''}
-								{comment.usuario?.apellido ?? ''}
+			<!-- Comments -->
+			<div class="mt-6">
+				<hr class="mb-4 border-border" />
+				<h3 class="mb-3 text-sm font-semibold text-foreground">
+					Comentarios ({selectedTicket.comentarios?.length ?? 0})
+				</h3>
+
+				<div class="mb-4 max-h-64 space-y-3 overflow-y-auto">
+					{#each selectedTicket.comentarios ?? [] as comment}
+						<div class="rounded-lg bg-muted p-3">
+							<div class="flex items-center gap-2 text-xs text-muted-foreground">
+								<span class="font-medium text-foreground">
+									{comment.usuario?.nombre ?? ''}
+									{comment.usuario?.apellido ?? ''}
 								</span>
 								<span>&middot;</span>
 								<span>{formatDate(comment.created_at)}</span>
 							</div>
-						<p class="mt-1 text-sm text-foreground">
-							{comment.contenido}
-						</p>
+							<p class="mt-1 text-sm text-foreground">
+								{comment.contenido}
+							</p>
 						</div>
 					{/each}
 				</div>
@@ -467,7 +467,7 @@
 					<textarea
 						name="contenido"
 						bind:value={formComentario}
-						placeholder="Escribí un comentario..."
+						placeholder="Escribe un comentario..."
 						required
 						class="min-h-[2.5rem] flex-1 resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
 						rows="1"></textarea>
@@ -490,7 +490,7 @@
 			<Dialog.Header>
 				<Dialog.Title>{modalTitle}</Dialog.Title>
 				<Dialog.Description>
-					{isEditing ? 'Actualizá el ticket' : 'Registrá un nuevo ticket'}
+					{isEditing ? 'Actualiza el ticket' : 'Registra un nuevo ticket'}
 				</Dialog.Description>
 			</Dialog.Header>
 

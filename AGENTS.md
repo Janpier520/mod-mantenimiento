@@ -68,7 +68,7 @@ npm run db:seed       # npx tsx src/lib/server/db/seed.ts
 
 ## Convenciones de código
 
-- **UI en español rioplatense**, identificadores y comentarios técnicos en inglés.
+- **UI en español neutro**, identificadores y comentarios técnicos en inglés.
 - **Formato**: Prettier con tabs, single quotes, trailingComma none, printWidth 100.
 - **Estado de listados**: search + filter params en URL, paginación con `PAGE_SIZE = 10`.
 - **Comentarios `ponytail:`** marcan simplificaciones deliberadas. No borrarlas.

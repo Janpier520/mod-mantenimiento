@@ -152,27 +152,18 @@
 	<!-- Stats — 4 cards con trend indicators (bolder) -->
 	<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 		<!-- Featured: Equipos — card hero con gradiente brand -->
-		<div
-			bind:this={featuredEl}
-			class="stat-card-featured col-span-2 text-white"
-		>
-			<div class="flex items-start justify-between relative z-10">
+		<div bind:this={featuredEl} class="stat-card-featured col-span-2 text-white">
+			<div class="relative z-10 flex items-start justify-between">
 				<div>
 					<p class="text-sm font-medium text-white/80">Total Equipos</p>
-					<p bind:this={featuredVal} class="stat-value mt-1 text-white">
-						—
-					</p>
-					<div
-						class="mt-2 flex items-center gap-1.5 text-xs text-white/70"
-					>
+					<p bind:this={featuredVal} class="stat-value mt-1 text-white">—</p>
+					<div class="mt-2 flex items-center gap-1.5 text-xs text-white/70">
 						<TrendingUp class="h-3.5 w-3.5" />
 						<span class="font-medium">+12%</span>
 						<span class="text-white/50">vs mes anterior</span>
 					</div>
 				</div>
-				<div
-					class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 text-white"
-				>
+				<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 text-white">
 					<Package class="h-6 w-6" />
 				</div>
 			</div>

@@ -24,7 +24,11 @@
 
 	onMount(() => {
 		// Respect prefers-reduced-motion
-		if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		if (
+			typeof window !== 'undefined' &&
+			window.matchMedia('(prefers-reduced-motion: reduce)').matches
+		)
+			return;
 		const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 		tl.fromTo(iconEl, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.5 })
 			.fromTo(textEl, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4 }, '-=0.25')
@@ -102,12 +106,11 @@
 		</div>
 
 		<!-- Actions -->
-		<div bind:this={actionsEl} class="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-			<Button
-				variant="default"
-				onclick={() => window.history.back()}
-				class="w-full sm:w-auto"
-			>
+		<div
+			bind:this={actionsEl}
+			class="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
+		>
+			<Button variant="default" onclick={() => window.history.back()} class="w-full sm:w-auto">
 				<ArrowLeft class="h-4 w-4" />
 				Volver atrás
 			</Button>
@@ -116,11 +119,7 @@
 				Ir al inicio
 			</Button>
 			{#if browser && !is404}
-				<Button
-					variant="ghost"
-					onclick={() => window.location.reload()}
-					class="w-full sm:w-auto"
-				>
+				<Button variant="ghost" onclick={() => window.location.reload()} class="w-full sm:w-auto">
 					<RefreshCw class="h-4 w-4" />
 					Reintentar
 				</Button>

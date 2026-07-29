@@ -78,7 +78,8 @@
 		if (!isMobile) {
 			gsap.set(sidebarEl, { clearProps: 'all' });
 			if (overlayEl) gsap.set(overlayEl, { clearProps: 'all' });
-			if (navEl) gsap.set(navEl.querySelectorAll('.nav-item, :scope > div > button'), { clearProps: 'all' });
+			if (navEl)
+				gsap.set(navEl.querySelectorAll('.nav-item, :scope > div > button'), { clearProps: 'all' });
 			return;
 		}
 
@@ -133,7 +134,9 @@
 		'/sessions': 'Mis Sesiones'
 	};
 
-	let pageTitle = $derived(Object.entries(pageTitles).find(([path]) => activePath.startsWith(path))?.[1] ?? '');
+	let pageTitle = $derived(
+		Object.entries(pageTitles).find(([path]) => activePath.startsWith(path))?.[1] ?? ''
+	);
 
 	const iconMap: Record<string, any> = {
 		dashboard: LayoutDashboard,
@@ -206,7 +209,8 @@
 			}
 		}
 		pageTitleIcon = undefined;
-	});	</script>
+	});
+</script>
 
 <!-- Skip-link for keyboard users -->
 <a
@@ -232,14 +236,14 @@
 {:else}
 	<div class="bg-grain flex min-h-screen bg-surface">
 		<!-- Mobile overlay (GSAP-bound for fade transition) -->
-<button
-	bind:this={overlayEl}
-	class="fixed inset-0 z-40 bg-black/50 lg:hidden"
-	class:pointer-events-auto={sidebarOpen}
-	class:pointer-events-none={!sidebarOpen}
-	onclick={toggleSidebar}
-	aria-label="Cerrar menú"
-></button>
+		<button
+			bind:this={overlayEl}
+			class="fixed inset-0 z-40 bg-black/50 lg:hidden"
+			class:pointer-events-auto={sidebarOpen}
+			class:pointer-events-none={!sidebarOpen}
+			onclick={toggleSidebar}
+			aria-label="Cerrar menú"
+		></button>
 
 		<!-- Sidebar -->
 		<aside
@@ -305,7 +309,7 @@
 											)
 												? 'nav-item-active bg-primary-light/15 text-sidebar-text-active'
 												: 'text-sidebar-text hover:bg-white/5 hover:text-sidebar-text-active'}"
-																						>
+										>
 											<IconCmp class="nav-icon h-4 w-4 flex-shrink-0" />
 											<span>{item.label}</span>
 										</a>
@@ -406,7 +410,7 @@
 				<form action="/login?/logout" method="post">
 					<button
 						type="submit"
-						class="flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-gray-500 hover:bg-muted transition-colors"
+						class="flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-gray-500 transition-colors hover:bg-muted"
 					>
 						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path

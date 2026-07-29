@@ -82,9 +82,6 @@
 	});
 </script>
 
-<div
-	bind:this={containerEl}
-	class="contents"
->
+<div bind:this={containerEl} class="contents">
 	{@render children()}
 </div>

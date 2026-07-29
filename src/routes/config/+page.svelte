@@ -20,9 +20,7 @@
 
 <div class="mx-auto max-w-2xl space-y-6">
 	<div>
-		<h1 class="text-2xl font-bold tracking-tight text-foreground">
-			Parametrización General
-		</h1>
+		<h1 class="text-2xl font-bold tracking-tight text-foreground">Parametrización General</h1>
 		<p class="mt-1 text-sm text-muted-foreground">Parámetros generales del sistema</p>
 	</div>
 
@@ -42,10 +40,7 @@
 
 		{#each settings as setting}
 			<div>
-				<label
-					for={setting.key}
-					class="mb-1 block text-sm font-medium text-foreground"
-				>
+				<label for={setting.key} class="mb-1 block text-sm font-medium text-foreground">
 					{setting.descripcion}
 				</label>
 				<input

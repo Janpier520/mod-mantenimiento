@@ -12,7 +12,7 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Plus from '@lucide/svelte/icons/plus';
 
-let { data } = $props();
+	let { data } = $props();
 
 	// svelte-ignore state_referenced_locally
 	let tipos = $state(data.tipos);
@@ -75,12 +75,8 @@ let { data } = $props();
 <div class="space-y-6">
 	<!-- Header -->
 	<div>
-		<h1 class="text-2xl font-bold tracking-tight text-foreground">
-			Tipos de Equipo
-		</h1>
-		<p class="mt-1 text-sm text-muted-foreground">
-			Gestioná los tipos de equipo disponibles
-		</p>
+		<h1 class="text-2xl font-bold tracking-tight text-foreground">Tipos de Equipo</h1>
+		<p class="mt-1 text-sm text-muted-foreground">Gestiona los tipos de equipo disponibles</p>
 	</div>
 
 	<!-- DataTable -->
@@ -109,6 +105,7 @@ let { data } = $props();
 					aria-label="Eliminar"
 				>
 					<Trash2 class="h-4 w-4" />
+				</button>
 			</div>
 		{/snippet}
 	</DataTable>
@@ -128,9 +125,7 @@ let { data } = $props();
 					return async ({ result, update }) => {
 						if (result.type === 'success' && result.data?.success) {
 							closeModal();
-							addToast(
-								isEditing ? 'Tipo actualizado correctamente' : 'Tipo creado correctamente'
-							);
+							addToast(isEditing ? 'Tipo actualizado correctamente' : 'Tipo creado correctamente');
 							await update();
 							await invalidate($page.url.pathname);
 						} else if (result.type === 'failure') {

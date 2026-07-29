@@ -18,9 +18,23 @@
 
 	onMount(() => {
 		const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-		tl.fromTo(iconEl, { opacity: 0, scale: 0.85, rotate: -5 }, { opacity: 1, scale: 1, rotate: 0, duration: 0.4 })
-			.fromTo(el.querySelector('h3'), { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 }, '-=0.15')
-			.fromTo(el.querySelector('p'), { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.25 }, '-=0.1');
+		tl.fromTo(
+			iconEl,
+			{ opacity: 0, scale: 0.85, rotate: -5 },
+			{ opacity: 1, scale: 1, rotate: 0, duration: 0.4 }
+		)
+			.fromTo(
+				el.querySelector('h3'),
+				{ opacity: 0, y: 8 },
+				{ opacity: 1, y: 0, duration: 0.3 },
+				'-=0.15'
+			)
+			.fromTo(
+				el.querySelector('p'),
+				{ opacity: 0, y: 6 },
+				{ opacity: 1, y: 0, duration: 0.25 },
+				'-=0.1'
+			);
 	});
 </script>
 

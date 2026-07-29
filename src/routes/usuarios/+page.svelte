@@ -131,7 +131,7 @@
 	<!-- Header -->
 	<div>
 		<h1 class="text-2xl font-bold tracking-tight text-foreground">Usuarios</h1>
-		<p class="mt-1 text-sm text-muted-foreground">Gestioná los usuarios del sistema</p>
+		<p class="mt-1 text-sm text-muted-foreground">Gestiona los usuarios del sistema</p>
 	</div>
 
 	<!-- Filter bar with chips + URL params -->
@@ -270,7 +270,7 @@
 					<div class="space-y-1.5">
 						<label for="field-password" class="block text-sm font-medium text-foreground">
 							Contraseña <span class="text-xs text-muted-foreground"
-								>(dejá vacío para mantener la actual)</span
+								>(deja vacío para mantener la actual)</span
 							>
 						</label>
 						<input

@@ -7,47 +7,6 @@
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import InboxIcon from '@lucide/svelte/icons/inbox';
-
-	let {
-		columns,
-		items,
-		loading = false,
-		search = $bindable(),
-		onsearch,
-		page,
-		totalPages,
-		total,
-		onpagechange,
-		children,
-		empty,
-		cell,
-		hideSearch = false
-	}: {
-		columns: { key: string; label: string; sortable?: boolean }[];
-		items: any[];
-		loading?: boolean;
-		search: string;
-		onsearch: (value: string) => void;
-		page: number;
-		totalPages: number;
-		total: number;
-		onpagechange: (page: number) => void;
-		children?: Snippet<[item: any]>;
-		empty?: Snippet;
-		cell?: Snippet<[item: any, column: { key: string; label: string }]>;
-		hideSearch?: boolean;
-	} = $props();
-</script>
-
-<script lang="ts">
-	import type { Snippet } from 'svelte';
-	import * as Table from '$lib/components/ui/table/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
-	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
-	import SearchIcon from '@lucide/svelte/icons/search';
-	import InboxIcon from '@lucide/svelte/icons/inbox';
 	import gsap from 'gsap';
 
 	let {
@@ -80,12 +39,14 @@
 		hideSearch?: boolean;
 	} = $props();
 
-	let tableBodyEl: HTMLElement;
+	let tableWrapperEl: HTMLElement;
 
 	// Reactive stagger: re-triggers when items change (pagination, search)
 	$effect(() => {
-		if (items.length > 0 && tableBodyEl) {
-			const rows = tableBodyEl.querySelectorAll('tr');
+		if (items.length > 0 && tableWrapperEl) {
+			const tbody = tableWrapperEl.querySelector('tbody');
+			if (!tbody) return;
+			const rows = tbody.querySelectorAll('tr');
 			if (rows.length > 0) {
 				gsap.fromTo(
 					rows,
@@ -115,7 +76,10 @@
 	{/if}
 
 	<!-- Table (with horizontal scroll on mobile) -->
-	<div class="table-card-mobile overflow-x-auto rounded-xl border border-border shadow-sm">
+	<div
+		bind:this={tableWrapperEl}
+		class="table-card-mobile overflow-x-auto rounded-xl border border-border shadow-sm"
+	>
 		<Table.Table>
 			<Table.Header class="sticky top-0 z-10">
 				<Table.Row class="bg-muted/80 backdrop-blur-sm">
@@ -133,7 +97,7 @@
 					</Table.Head>
 				</Table.Row>
 			</Table.Header>
-			<Table.Body bind:this={tableBodyEl}>
+			<Table.Body>
 				{#if loading}
 					{#each { length: 5 } as _, i}
 						<Table.Row class="animate-pulse">
@@ -154,12 +118,16 @@
 								{@render empty()}
 							{:else}
 								<div class="mx-auto flex max-w-xs flex-col items-center gap-3">
-									<div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 ring-1 ring-border">
+									<div
+										class="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 ring-1 ring-border"
+									>
 										<InboxIcon class="h-6 w-6 text-muted-foreground/40" />
 									</div>
 									<div>
 										<p class="text-sm font-medium text-foreground">No hay datos</p>
-										<p class="mt-0.5 text-xs text-muted-foreground/60">Agregá un registro para empezar</p>
+										<p class="mt-0.5 text-xs text-muted-foreground/60">
+											Agrega un registro para empezar
+										</p>
 									</div>
 								</div>
 							{/if}
@@ -169,17 +137,22 @@
 					{#each items as item}
 						<Table.Row
 							tabindex="0"
-							class="group cursor-pointer transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary/5 active:scale-[0.999] even:bg-muted/20 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+							class="group cursor-pointer transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] even:bg-muted/20 hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring active:scale-[0.999]"
 							onkeydown={(e) => {
 								if (e.key === 'Enter' || e.key === ' ') {
 									e.preventDefault();
-									const firstAction = e.currentTarget.querySelector('button, a, [tabindex]:not([tabindex="-1"])');
+									const firstAction = e.currentTarget.querySelector(
+										'button, a, [tabindex]:not([tabindex="-1"])'
+									);
 									if (firstAction) (firstAction as HTMLElement).focus();
 								}
 							}}
 						>
 							{#each columns as col}
-								<Table.Cell data-label={col.label} class="group-hover:text-foreground transition-colors duration-150">
+								<Table.Cell
+									data-label={col.label}
+									class="transition-colors duration-150 group-hover:text-foreground"
+								>
 									{#if cell}
 										{@render cell(item, col)}
 									{:else}
@@ -187,7 +160,10 @@
 									{/if}
 								</Table.Cell>
 							{/each}
-							<Table.Cell data-label="Acciones" class="text-right opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+							<Table.Cell
+								data-label="Acciones"
+								class="text-right opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+							>
 								{#if children}{@render children(item)}{/if}
 							</Table.Cell>
 						</Table.Row>

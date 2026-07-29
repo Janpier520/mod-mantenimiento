@@ -216,11 +216,9 @@
 	<!-- Header -->
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="text-2xl font-bold tracking-tight text-foreground">
-				Mantenimiento Preventivo
-			</h1>
+			<h1 class="text-2xl font-bold tracking-tight text-foreground">Mantenimiento Preventivo</h1>
 			<p class="mt-1 text-sm text-muted-foreground">
-				Gestioná planes, tareas y ejecuciones de mantenimiento
+				Gestiona planes, tareas y ejecuciones de mantenimiento
 			</p>
 		</div>
 		<button
@@ -236,7 +234,7 @@
 	{#if plans.length === 0}
 		<div class="rounded-xl border bg-card p-10 text-center">
 			<p class="text-lg text-muted-foreground">No hay planes de mantenimiento</p>
-			<p class="mt-1 text-sm text-muted-foreground/70">Creá tu primer plan para empezar</p>
+			<p class="mt-1 text-sm text-muted-foreground/70">Crea tu primer plan para empezar</p>
 		</div>
 	{:else}
 		<div class="space-y-4">
@@ -301,7 +299,8 @@
 								</svg>
 							</button>
 							<svg
-								class="h-5 w-5 text-muted-foreground transition-transform {expandedPlanId === plan.id
+								class="h-5 w-5 text-muted-foreground transition-transform {expandedPlanId ===
+								plan.id
 									? 'rotate-180'
 									: ''}"
 								fill="none"
@@ -321,31 +320,29 @@
 					<!-- Expanded content -->
 					{#if expandedPlanId === plan.id}
 						<div
-							class="space-y-4 border-t border-border-light px-6 py-4"
-							transition:fade={{ duration: 150 }}
+							class="animate-in fade-in space-y-4 border-t border-border-light px-6 py-4 duration-150"
 						>
 							<!-- Tasks table -->
 							{#if (plan.tareas ?? []).length === 0}
-								<p class="text-sm text-muted-foreground ">No hay tareas en este plan.</p>
+								<p class="text-sm text-muted-foreground">No hay tareas en este plan.</p>
 							{:else}
-								<div class="table-card-mobile overflow-hidden rounded-xl border border-border-light">
+								<div
+									class="table-card-mobile overflow-hidden rounded-xl border border-border-light"
+								>
 									<table class="w-full text-sm">
 										<thead>
 											<tr class="bg-muted">
-												<th
-													class="w-12 px-4 py-2.5 text-left font-medium text-muted-foreground"
+												<th class="w-12 px-4 py-2.5 text-left font-medium text-muted-foreground"
 													>#</th
 												>
-												<th
-													class="px-4 py-2.5 text-left font-medium text-muted-foreground"
+												<th class="px-4 py-2.5 text-left font-medium text-muted-foreground"
 													>Tarea</th
 												>
 												<th
-													class="hidden px-4 py-2.5 text-left font-medium text-muted-foreground sm:table-cell "
+													class="hidden px-4 py-2.5 text-left font-medium text-muted-foreground sm:table-cell"
 													>Descripción</th
 												>
-												<th
-													class="w-24 px-4 py-2.5 text-right font-medium text-muted-foreground"
+												<th class="w-24 px-4 py-2.5 text-right font-medium text-muted-foreground"
 													>Acción</th
 												>
 											</tr>
@@ -353,12 +350,15 @@
 										<tbody>
 											{#each plan.tareas as task (task.id)}
 												<tr class="border-t border-border-light">
-													<td data-label="#" class="px-4 py-2.5 text-muted-foreground">{task.orden}</td>
+													<td data-label="#" class="px-4 py-2.5 text-muted-foreground"
+														>{task.orden}</td
+													>
 													<td data-label="Tarea" class="px-4 py-2.5 font-medium text-foreground"
 														>{task.nombre}</td
 													>
-													<td data-label="Descripción"
-														class="hidden px-4 py-2.5 text-muted-foreground sm:table-cell "
+													<td
+														data-label="Descripción"
+														class="hidden px-4 py-2.5 text-muted-foreground sm:table-cell"
 														>{task.descripcion || '—'}</td
 													>
 													<td data-label="Acción" class="px-4 py-2.5 text-right">
@@ -402,7 +402,7 @@
 									Programar Ejecución
 								</button>
 
-								<div class="flex-1 text-right text-xs text-muted-foreground ">
+								<div class="flex-1 text-right text-xs text-muted-foreground">
 									{#if getLastExecution(plan)}
 										Última ejecución: {formatDate(getLastExecution(plan)!.fecha_programada)}
 									{:else}
@@ -415,24 +415,22 @@
 							{#if plan.ejecuciones && plan.ejecuciones.length > 0}
 								<div>
 									<h4
-										class="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase "
+										class="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
 									>
 										Ejecuciones recientes
 									</h4>
 									<div class="max-h-48 space-y-1.5 overflow-y-auto">
 										{#each plan.ejecuciones.slice(0, 5) as exec (exec.id)}
-											<div
-												class="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm"
-											>
+											<div class="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm">
 												<Badge
 													text={resultLabels[exec.resultado] ?? exec.resultado}
 													variant={resultBadgeVariant[exec.resultado] ?? 'default'}
 												/>
-												<span class="text-muted-foreground "
+												<span class="text-muted-foreground"
 													>{formatDate(exec.fecha_programada)}</span
 												>
 												{#if exec.fecha_ejecucion}
-													<span class="text-muted-foreground "
+													<span class="text-muted-foreground"
 														>&rarr; {formatDate(exec.fecha_ejecucion)}</span
 													>
 												{/if}
@@ -463,8 +461,8 @@
 				<Dialog.Title>{planModalTitle}</Dialog.Title>
 				<Dialog.Description>
 					{isEditingPlan
-						? 'Actualizá los datos del plan de mantenimiento'
-						: 'Creá un plan de mantenimiento preventivo'}
+						? 'Actualiza los datos del plan de mantenimiento'
+						: 'Crea un plan de mantenimiento preventivo'}
 				</Dialog.Description>
 			</Dialog.Header>
 

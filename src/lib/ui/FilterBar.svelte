@@ -82,7 +82,11 @@
 		<select
 			value={values[f.key] ?? ''}
 			onchange={(e) => onfilterchange?.(f.key, (e.target as HTMLSelectElement).value)}
-			class="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 {values[f.key] ? 'border-primary/40 bg-primary/5' : ''}"
+			class="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 {values[
+				f.key
+			]
+				? 'border-primary/40 bg-primary/5'
+				: ''}"
 		>
 			<option value="">{f.label}</option>
 			{#each f.options as opt}
@@ -100,7 +104,7 @@
 	{#if activeChips.length > 0}
 		<button
 			onclick={onclearall}
-			class="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+			class="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-all duration-200 hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
 		>
 			<XIcon class="h-3.5 w-3.5" />
 			Limpiar todo
@@ -115,7 +119,7 @@
 			<button
 				data-chip
 				onclick={() => onremovechip?.(chip.key)}
-				class="filter-chip inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary transition-all duration-200 hover:bg-primary/10 hover:border-primary/30 active:scale-95"
+				class="filter-chip inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 active:scale-95"
 				aria-label={`Quitar filtro: ${chip.label}`}
 			>
 				<span class="text-muted-foreground">{chip.label}:</span>

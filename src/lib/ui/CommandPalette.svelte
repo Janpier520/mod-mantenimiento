@@ -109,9 +109,27 @@
 		{ label: 'Equipos', icon: 'equipos', href: '/equipos', shortcut: 'Ctrl+E' },
 		{ label: 'Tickets', icon: 'tickets', href: '/tickets', shortcut: 'Ctrl+T' },
 		{ label: 'Mantenimiento', icon: 'mantenimiento', href: '/mantenimiento', shortcut: 'Ctrl+M' },
-		{ label: 'Proveedores', icon: 'proveedores', href: '/proveedores', roles: ['admin', 'consultor'], shortcut: 'Ctrl+P' },
-		{ label: 'Reportes', icon: 'reportes', href: '/reportes', roles: ['admin', 'consultor'], shortcut: 'Ctrl+R' },
-		{ label: 'Usuarios', icon: 'usuarios', href: '/usuarios', roles: ['admin'], shortcut: 'Ctrl+U' },
+		{
+			label: 'Proveedores',
+			icon: 'proveedores',
+			href: '/proveedores',
+			roles: ['admin', 'consultor'],
+			shortcut: 'Ctrl+P'
+		},
+		{
+			label: 'Reportes',
+			icon: 'reportes',
+			href: '/reportes',
+			roles: ['admin', 'consultor'],
+			shortcut: 'Ctrl+R'
+		},
+		{
+			label: 'Usuarios',
+			icon: 'usuarios',
+			href: '/usuarios',
+			roles: ['admin'],
+			shortcut: 'Ctrl+U'
+		},
 		{ label: 'Configuración', icon: 'config', href: '/config', roles: ['admin'] },
 		{ label: 'Mis Sesiones', icon: 'sessions', href: '/sessions' }
 	];
@@ -127,7 +145,13 @@
 	}
 
 	const actionItems: ActionItem[] = [
-		{ label: 'Volver al Dashboard', icon: 'home', action: 'navigate', href: '/', shortcut: 'Ctrl+D' },
+		{
+			label: 'Volver al Dashboard',
+			icon: 'home',
+			action: 'navigate',
+			href: '/',
+			shortcut: 'Ctrl+D'
+		},
 		{
 			label: 'Nuevo Ticket',
 			icon: 'plusTicket',
@@ -187,7 +211,12 @@
 				...filteredActions.map((i) => ({ ...i, __type: 'action' as const }))
 			].slice(0, 8);
 			// Return flat result in a single section
-			return { hasQuery: true, merged, navCount: filteredNav.length, actionCount: filteredActions.length };
+			return {
+				hasQuery: true,
+				merged,
+				navCount: filteredNav.length,
+				actionCount: filteredActions.length
+			};
 		}
 
 		return {
@@ -209,9 +238,7 @@
 		];
 	});
 
-	let filteredItems = $derived(
-		flatItems.slice(0, 12) as (any)[]
-	);
+	let filteredItems = $derived(flatItems.slice(0, 12) as any[]);
 
 	// Reset selection when filter changes
 	$effect(() => {
@@ -246,11 +273,7 @@
 			const key = e.key.toUpperCase();
 			// Normalize: if Shift is held, key is already uppercase; if not, still match
 			for (const shortcut of shortcuts) {
-				if (
-					shortcut.key === key &&
-					e.shiftKey === !!shortcut.shift &&
-					isAuthorized(shortcut)
-				) {
+				if (shortcut.key === key && e.shiftKey === !!shortcut.shift && isAuthorized(shortcut)) {
 					e.preventDefault();
 					goto(shortcut.href);
 					return;
@@ -289,7 +312,11 @@
 		// Animate entrance + focus
 		requestAnimationFrame(() => {
 			inputEl?.focus();
-			gsap.fromTo(panelEl, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.15, ease: 'cubic-bezier(0.23, 1, 0.32, 1)' });
+			gsap.fromTo(
+				panelEl,
+				{ opacity: 0, scale: 0.96 },
+				{ opacity: 1, scale: 1, duration: 0.15, ease: 'cubic-bezier(0.23, 1, 0.32, 1)' }
+			);
 			gsap.fromTo(overlayEl, { opacity: 0 }, { opacity: 1, duration: 0.1 });
 		});
 	}
@@ -327,7 +354,9 @@
 		document.addEventListener('keydown', handleKeydown);
 		return () => document.removeEventListener('keydown', handleKeydown);
 	});
-</script>	{#if open}
+</script>
+
+{#if open}
 	<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
 	<div
 		bind:this={overlayEl}
@@ -371,7 +400,9 @@
 					<div class="flex flex-col items-center gap-2 px-4 py-8 text-center">
 						<Search class="h-8 w-8 text-muted-foreground/30" />
 						<p class="text-sm text-muted-foreground">
-							No se encontraron resultados para "<span class="font-medium text-foreground">{query}</span>"
+							No se encontraron resultados para "<span class="font-medium text-foreground"
+								>{query}</span
+							>"
 						</p>
 					</div>
 				{:else}
@@ -392,7 +423,7 @@
 										onclick={() => navigate(item.href)}
 										onmouseenter={() => (selectedIndex = idx)}
 										class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors {idx ===
-											selectedIndex
+										selectedIndex
 											? 'bg-primary/10 text-primary'
 											: 'text-foreground hover:bg-muted'}"
 									>
@@ -407,12 +438,12 @@
 										{#if item.shortcut}
 											<kbd
 												class="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-											>{item.shortcut}</kbd
+												>{item.shortcut}</kbd
 											>
 										{/if}
 										<div
 											class="flex h-5 w-5 items-center justify-center rounded border border-border {idx ===
-												selectedIndex
+											selectedIndex
 												? 'border-primary bg-primary/10'
 												: ''}"
 										>
@@ -442,7 +473,7 @@
 										onclick={() => navigate(item.href)}
 										onmouseenter={() => (selectedIndex = globalIdx)}
 										class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors {globalIdx ===
-											selectedIndex
+										selectedIndex
 											? 'bg-primary/10 text-primary'
 											: 'text-foreground hover:bg-muted'}"
 									>
@@ -464,12 +495,12 @@
 										{#if item.shortcut && query}
 											<kbd
 												class="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-											>{item.shortcut}</kbd
+												>{item.shortcut}</kbd
 											>
 										{/if}
 										<div
 											class="flex h-5 w-5 items-center justify-center rounded border border-border {globalIdx ===
-												selectedIndex
+											selectedIndex
 												? 'border-primary bg-primary/10'
 												: ''}"
 										>
@@ -485,22 +516,26 @@
 					<div class="mt-3 border-t border-border px-3 pt-2.5">
 						<div class="flex items-center gap-4 text-xs text-muted-foreground">
 							<div class="flex items-center gap-1">
-								<kbd class="rounded border border-border bg-muted px-1 py-0.5 text-[10px] font-medium"
+								<kbd
+									class="rounded border border-border bg-muted px-1 py-0.5 text-[10px] font-medium"
 									>&uarr;</kbd
 								>
-								<kbd class="rounded border border-border bg-muted px-1 py-0.5 text-[10px] font-medium"
+								<kbd
+									class="rounded border border-border bg-muted px-1 py-0.5 text-[10px] font-medium"
 									>&darr;</kbd
 								>
 								<span>navegar</span>
 							</div>
 							<div class="flex items-center gap-1">
-								<kbd class="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium"
+								<kbd
+									class="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium"
 									>Enter</kbd
 								>
 								<span>ir</span>
 							</div>
 							<div class="flex items-center gap-1">
-								<kbd class="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium"
+								<kbd
+									class="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium"
 									>Esc</kbd
 								>
 								<span>cerrar</span>

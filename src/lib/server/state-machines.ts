@@ -73,7 +73,8 @@ export function canTransition(
 
 	const allowedRoles = TICKET_TRANSITION_ROLES[to];
 	if (!allowedRoles || !allowedRoles.includes(role)) {
-		const roleName = role === 'admin' ? 'administrador' : role === 'tecnico' ? 'técnico' : 'consultor';
+		const roleName =
+			role === 'admin' ? 'administrador' : role === 'tecnico' ? 'técnico' : 'consultor';
 		return {
 			allowed: false,
 			error: `El rol '${roleName}' no puede cambiar el estado a '${to}'`
