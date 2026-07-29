@@ -48,7 +48,7 @@
 	});
 
 	// Stagger chip entrance when they change
-	let chipContainerEl: HTMLElement;
+	let chipContainerEl: HTMLElement | undefined = $state();
 	$effect(() => {
 		if (!browser || !chipContainerEl || activeChips.length === 0) return;
 		const chips = chipContainerEl.querySelectorAll<HTMLElement>('[data-chip]');

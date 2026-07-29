@@ -157,7 +157,7 @@
 	bind:this={el}
 	class="pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-xl border shadow-lg {style.bg} {style.border} {style.text} select-none"
 	role="alert"
-	tabindex="0"
+	tabindex="-1"
 	style="touch-action: pan-y;"
 	onpointerenter={handlePointerEnter}
 	onpointerleave={handlePointerLeave}

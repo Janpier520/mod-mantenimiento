@@ -27,7 +27,7 @@
 	} = $props();
 
 	let id = $derived(`field-${name}`);
-	let errorEl: HTMLElement;
+	let errorEl: HTMLElement | undefined = $state();
 
 	// Emil + taste-skill: shake + fade on error, gate behind browser check
 	$effect(() => {

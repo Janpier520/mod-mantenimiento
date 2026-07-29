@@ -14,12 +14,12 @@
 	} = $props();
 
 	let el: HTMLElement;
-	let iconEl: HTMLElement;
+	let iconEl: HTMLElement | undefined = $state();
 
 	onMount(() => {
 		const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 		tl.fromTo(
-			iconEl,
+			iconEl!,
 			{ opacity: 0, scale: 0.85, rotate: -5 },
 			{ opacity: 1, scale: 1, rotate: 0, duration: 0.4 }
 		)

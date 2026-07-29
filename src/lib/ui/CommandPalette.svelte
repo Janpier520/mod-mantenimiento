@@ -25,9 +25,9 @@
 	let open = $state(false);
 	let query = $state('');
 	let selectedIndex = $state(0);
-	let inputEl: HTMLInputElement;
-	let overlayEl: HTMLElement;
-	let panelEl: HTMLElement;
+	let inputEl: HTMLInputElement | undefined = $state();
+	let overlayEl: HTMLElement | undefined = $state();
+	let panelEl: HTMLElement | undefined = $state();
 
 	const iconMap: Record<string, typeof LayoutDashboard> = {
 		dashboard: LayoutDashboard,
@@ -313,17 +313,17 @@
 		requestAnimationFrame(() => {
 			inputEl?.focus();
 			gsap.fromTo(
-				panelEl,
+				panelEl!,
 				{ opacity: 0, scale: 0.96 },
 				{ opacity: 1, scale: 1, duration: 0.15, ease: 'cubic-bezier(0.23, 1, 0.32, 1)' }
 			);
-			gsap.fromTo(overlayEl, { opacity: 0 }, { opacity: 1, duration: 0.1 });
+			gsap.fromTo(overlayEl!, { opacity: 0 }, { opacity: 1, duration: 0.1 });
 		});
 	}
 
 	function close() {
 		if (!open) return;
-		gsap.to(panelEl, {
+		gsap.to(panelEl!, {
 			opacity: 0,
 			scale: 0.96,
 			duration: 0.12,
@@ -333,7 +333,7 @@
 				query = '';
 			}
 		});
-		gsap.to(overlayEl, {
+		gsap.to(overlayEl!, {
 			opacity: 0,
 			duration: 0.1,
 			ease: 'linear'
