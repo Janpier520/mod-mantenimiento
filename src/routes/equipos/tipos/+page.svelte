@@ -4,8 +4,9 @@
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
 	import FormField from '$lib/ui/FormField.svelte';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '$lib/components/ui/button';
 	import ConfirmDialog from '$lib/ui/ConfirmDialog.svelte';
-	import { fade } from 'svelte/transition';
 	import { addToast } from '$lib/stores/toast.svelte';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -112,89 +113,64 @@ let { data } = $props();
 		{/snippet}
 	</DataTable>
 
-	<!-- Modal form (create/edit) -->
-	{#if showModal}
-		<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
-		<div
-			class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
-			onclick={(e) => {
-				if (e.target === e.currentTarget) closeModal();
-			}}
-			onkeydown={(e) => e.key === 'Escape' && closeModal()}
-			transition:fade={{ duration: 200 }}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-		<div
-			class="w-full max-w-lg rounded-xl border bg-card p-6 shadow-xl"
-			transition:fade={{ duration: 200 }}
-		>
-			<h2 class="text-lg font-bold text-foreground">{modalTitle}</h2>
+	<!-- Dialog form (create/edit) -->
+	<Dialog.Root bind:open={showModal}>
+		<Dialog.Content class="sm:max-w-lg">
+			<Dialog.Header>
+				<Dialog.Title>{modalTitle}</Dialog.Title>
+			</Dialog.Header>
 
-				<form
-					method="post"
-					action="?/crud"
-					class="mt-4 space-y-4"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if (result.type === 'success' && result.data?.success) {
-								closeModal();
-								addToast(
-									isEditing ? 'Tipo actualizado correctamente' : 'Tipo creado correctamente'
-								);
-								await update();
-								await invalidate($page.url.pathname);
-							} else if (result.type === 'failure') {
-								const d = (result.data as Record<string, unknown>) ?? {};
-								formError = (d.error as string) ?? 'Error al guardar el tipo';
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="_action" value={isEditing ? 'update' : 'create'} />
-					{#if isEditing}
-						<input type="hidden" name="id" value={editingTipo!.id} />
-					{/if}
+			<form
+				method="post"
+				action="?/crud"
+				class="space-y-4"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success' && result.data?.success) {
+							closeModal();
+							addToast(
+								isEditing ? 'Tipo actualizado correctamente' : 'Tipo creado correctamente'
+							);
+							await update();
+							await invalidate($page.url.pathname);
+						} else if (result.type === 'failure') {
+							const d = (result.data as Record<string, unknown>) ?? {};
+							formError = (d.error as string) ?? 'Error al guardar el tipo';
+						}
+					};
+				}}
+			>
+				<input type="hidden" name="_action" value={isEditing ? 'update' : 'create'} />
+				{#if isEditing}
+					<input type="hidden" name="id" value={editingTipo!.id} />
+				{/if}
 
-					<FormField
-						label="Nombre"
-						name="nombre"
-						bind:value={formNombre}
-						required
-						error={formError && !formNombre ? formError : ''}
-					/>
-					<FormField
-						label="Descripción"
-						name="descripcion"
-						type="textarea"
-						bind:value={formDescripcion}
-					/>
-					<FormField label="Icono" name="icono" bind:value={formIcono} placeholder="Ej: 🔬" />
+				<FormField
+					label="Nombre"
+					name="nombre"
+					bind:value={formNombre}
+					required
+					error={formError && !formNombre ? formError : ''}
+				/>
+				<FormField
+					label="Descripción"
+					name="descripcion"
+					type="textarea"
+					bind:value={formDescripcion}
+				/>
+				<FormField label="Icono" name="icono" bind:value={formIcono} placeholder="Ej: 🔬" />
 
-					{#if formError && formNombre}
-						<p class="text-xs text-red-500">{formError}</p>
-					{/if}
+				{#if formError && formNombre}
+					<p class="text-xs text-red-500">{formError}</p>
+				{/if}
 
-					<div class="flex justify-end gap-3 pt-2">
-						<button
-							type="button"
-							onclick={closeModal}
-							class="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
-						>
-							Cancelar
-						</button>
-						<button
-							type="submit"
-							class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-						>
-							{isEditing ? 'Guardar Cambios' : 'Crear Tipo'}
-						</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	{/if}
+				<Dialog.Footer>
+					<Button variant="outline" onclick={closeModal}>Cancelar</Button>
+					<Button type="submit">{isEditing ? 'Guardar Cambios' : 'Crear Tipo'}</Button>
+				</Dialog.Footer>
+			</form>
+		</Dialog.Content>
+	</Dialog.Root>
 
 	<!-- ConfirmDialog for delete -->
 	<ConfirmDialog
