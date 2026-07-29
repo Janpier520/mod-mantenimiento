@@ -13,7 +13,6 @@
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import XIcon from '@lucide/svelte/icons/x';
 	import SendIcon from '@lucide/svelte/icons/send';
-	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 
@@ -485,20 +484,20 @@
 		</div>
 	{/if}
 
-	<!-- Sheet form (create/edit) -->
-	<Sheet.Root bind:open={showModal}>
-		<Sheet.Content class="sm:max-w-lg">
-			<Sheet.Header>
-				<Sheet.Title>{modalTitle}</Sheet.Title>
-				<Sheet.Description>
+	<!-- Dialog form (create/edit) -->
+	<Dialog.Root bind:open={showModal}>
+		<Dialog.Content class="sm:max-w-lg">
+			<Dialog.Header>
+				<Dialog.Title>{modalTitle}</Dialog.Title>
+				<Dialog.Description>
 					{isEditing ? 'Actualizá el ticket' : 'Registrá un nuevo ticket'}
-				</Sheet.Description>
-			</Sheet.Header>
+				</Dialog.Description>
+			</Dialog.Header>
 
 			<form
 				method="post"
 				action="?/crud"
-				class="mt-4 space-y-4"
+				class="space-y-4"
 				use:enhance={() => {
 					return async ({ result, update }) => {
 						if (result.type === 'success' && result.data?.success) {
@@ -590,13 +589,13 @@
 					<p class="text-xs text-red-500">{formError}</p>
 				{/if}
 
-				<div class="flex justify-end gap-3 pt-2">
+				<Dialog.Footer>
 					<Button variant="outline" onclick={closeModal}>Cancelar</Button>
 					<Button type="submit">{isEditing ? 'Guardar Cambios' : 'Crear Ticket'}</Button>
-				</div>
+				</Dialog.Footer>
 			</form>
-		</Sheet.Content>
-	</Sheet.Root>
+		</Dialog.Content>
+	</Dialog.Root>
 
 	<Dialog.Root bind:open={showDelete}>
 		<Dialog.Content>
