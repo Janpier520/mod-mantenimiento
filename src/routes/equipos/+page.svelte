@@ -402,7 +402,7 @@
 						formData.set('_action', 'delete');
 						formData.set('id', deletingEquipo.id);
 
-						const res = await fetch($page.url.pathname, {
+						const res = await fetch(`${$page.url.pathname}?/crud`, {
 							method: 'POST',
 							body: formData
 						});
