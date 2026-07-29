@@ -29,7 +29,7 @@ export const actions: Actions = {
 			request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
 
 		if (!username || !password) {
-			return fail(400, { error: 'Completá todos los campos', username: username ?? '' });
+			return fail(400, { error: 'Completa todos los campos', username: username ?? '' });
 		}
 
 		const rateCheck = await checkLoginRateLimit(username, ipAddress);
@@ -59,7 +59,7 @@ export const actions: Actions = {
 		const username = form.get('username')?.toString().trim();
 
 		if (!username) {
-			return fail(400, { error: 'Ingresá tu nombre de usuario' });
+			return fail(400, { error: 'Ingresa tu nombre de usuario' });
 		}
 
 		const rateCheck = await checkResetRateLimit(username);

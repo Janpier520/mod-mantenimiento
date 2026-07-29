@@ -83,5 +83,5 @@
 </script>
 
 <div bind:this={containerEl} class="contents">
-	{@render children()}
+	{#if children}{@render children()}{/if}
 </div>

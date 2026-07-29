@@ -209,7 +209,7 @@
 </script>
 
 <svelte:head>
-	<title>Mantenimiento Preventivo — EquipLab</title>
+	<title>Mantenimiento Preventivo — Módulo Mantenimiento de Equipos</title>
 </svelte:head>
 
 <div class="space-y-6">

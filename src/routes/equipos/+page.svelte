@@ -170,7 +170,7 @@
 {/snippet}
 
 <svelte:head>
-	<title>Equipos — EquipLab</title>
+	<title>Equipos — Módulo Mantenimiento de Equipos</title>
 </svelte:head>
 
 <div class="space-y-6">

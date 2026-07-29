@@ -14,14 +14,14 @@
 	let { data } = $props();
 	const user = $derived(data.user);
 
-	let quickActions: HTMLElement;
-	let featuredEl: HTMLElement;
-	let ticketsEl: HTMLElement;
-	let mantenimientosEl: HTMLElement;
-	let pendientesEl: HTMLElement;
-	let featuredVal: HTMLElement;
-	let mantenimientosVal: HTMLElement;
-	let pendientesVal: HTMLElement;
+	let quickActions: HTMLElement | undefined = $state();
+	let featuredEl: HTMLElement | undefined = $state();
+	let ticketsEl: HTMLElement | undefined = $state();
+	let mantenimientosEl: HTMLElement | undefined = $state();
+	let pendientesEl: HTMLElement | undefined = $state();
+	let featuredVal: HTMLElement | undefined = $state();
+	let mantenimientosVal: HTMLElement | undefined = $state();
+	let pendientesVal: HTMLElement | undefined = $state();
 	let chartCanvas: HTMLCanvasElement;
 	let chartInstance: Chart | null = null;
 	let timePeriod = $state<'semanal' | 'mensual' | 'anual'>('mensual');

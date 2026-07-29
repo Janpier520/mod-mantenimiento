@@ -26,8 +26,6 @@
 	let totalPages = $state(data.totalPages);
 	// svelte-ignore state_referenced_locally
 	let search = $state(data.search);
-	// svelte-ignore state_referenced_locally
-	let filterEstado = $state(data.filterEstado ?? '');
 
 	let showModal = $state(false);
 	let editingProveedor = $state<Record<string, string> | null>(null);
@@ -120,7 +118,7 @@
 </script>
 
 <svelte:head>
-	<title>Proveedores — EquipLab</title>
+	<title>Proveedores — Módulo Mantenimiento de Equipos</title>
 </svelte:head>
 
 <div class="space-y-6">

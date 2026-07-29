@@ -231,7 +231,7 @@
 {/snippet}
 
 <svelte:head>
-	<title>Tickets — EquipLab</title>
+	<title>Tickets — Módulo Mantenimiento de Equipos</title>
 </svelte:head>
 
 <div class="space-y-6">

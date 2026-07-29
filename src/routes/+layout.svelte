@@ -270,7 +270,9 @@
 					</svg>
 				</div>
 				<div>
-					<h1 class="text-sm font-bold tracking-tight text-white">EquipLab</h1>
+					<h1 class="text-sm font-bold tracking-tight text-white">
+						Módulo Mantenimiento de Equipos
+					</h1>
 					<p class="text-[11px] text-sidebar-text/50">Gestión de Equipos</p>
 				</div>
 			</div>

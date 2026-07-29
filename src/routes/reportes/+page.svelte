@@ -231,7 +231,7 @@
 </script>
 
 <svelte:head>
-	<title>Reportes — EquipLab</title>
+	<title>Reportes — Módulo Mantenimiento de Equipos</title>
 </svelte:head>
 
 <div class="space-y-6">

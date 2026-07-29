@@ -124,7 +124,7 @@
 </script>
 
 <svelte:head>
-	<title>Usuarios — EquipLab</title>
+	<title>Usuarios — Módulo Mantenimiento de Equipos</title>
 </svelte:head>
 
 <div class="space-y-6">

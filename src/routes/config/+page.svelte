@@ -15,7 +15,7 @@
 </script>
 
 <svelte:head>
-	<title>Configuración — EquipLab</title>
+	<title>Configuración — Módulo Mantenimiento de Equipos</title>
 </svelte:head>
 
 <div class="mx-auto max-w-2xl space-y-6">

@@ -1,4 +1,4 @@
-# EquipLab — AGENTS.md
+# Módulo Mantenimiento de Equipos — AGENTS.md
 
 Sistema de gestión de equipos (ERP de mantenimiento). SvelteKit 5 + Drizzle ORM (SQLite) + Tailwind v4 + shadcn-svelte.
 

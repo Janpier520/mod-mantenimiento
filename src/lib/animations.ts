@@ -4,7 +4,7 @@ import gsap from 'gsap';
 /**
  * Staggered fade-up entrance for a list of elements.
  */
-export function staggerIn(elements: (HTMLElement | null)[], delay = 0) {
+export function staggerIn(elements: (HTMLElement | null | undefined)[], delay = 0) {
 	if (!browser) return;
 	gsap.fromTo(
 		elements.filter(Boolean),

@@ -69,7 +69,7 @@
 </script>
 
 <svelte:head>
-	<title>Tipos de Equipo — EquipLab</title>
+	<title>Tipos de Equipo — Módulo Mantenimiento de Equipos</title>
 </svelte:head>
 
 <div class="space-y-6">

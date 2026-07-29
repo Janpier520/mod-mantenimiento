@@ -37,4 +37,5 @@ export interface NavItem {
 	icon: string;
 	href: string;
 	roles?: UserRole[];
+	shortcut?: string;
 }

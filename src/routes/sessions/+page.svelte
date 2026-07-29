@@ -16,7 +16,7 @@
 </script>
 
 <svelte:head>
-	<title>Mis Sesiones — EquipLab</title>
+	<title>Mis Sesiones — Módulo Mantenimiento de Equipos</title>
 </svelte:head>
 
 <div class="mx-auto max-w-2xl space-y-6">

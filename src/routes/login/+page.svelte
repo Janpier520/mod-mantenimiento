@@ -53,7 +53,9 @@
 				/>
 			</svg>
 		</div>
-		<h1 class="text-3xl font-extrabold tracking-tight text-foreground">EquipLab</h1>
+		<h1 class="text-3xl font-extrabold tracking-tight text-foreground">
+			Módulo Mantenimiento de Equipos
+		</h1>
 		<p class="mt-1.5 text-sm text-muted-foreground">
 			Gestiona tu laboratorio, equipos y mantenimiento desde un solo lugar
 		</p>
@@ -72,7 +74,7 @@
 						autocomplete="username"
 						required
 						bind:value={username}
-						placeholder="Ingresá tu usuario"
+						placeholder="Ingresa tu usuario"
 					/>
 				</div>
 
@@ -85,7 +87,7 @@
 						autocomplete="current-password"
 						required
 						bind:value={password}
-						placeholder="Ingresá tu contraseña"
+						placeholder="Ingresa tu contraseña"
 					/>
 				</div>
 

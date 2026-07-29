@@ -228,17 +228,17 @@
 		};
 	});
 
-	let flatItems = $derived.by(() => {
+	let flatItems = $derived.by((): any[] => {
 		if (filteredSections.hasQuery) {
-			return filteredSections.merged;
+			return filteredSections.merged ?? [];
 		}
 		return [
-			...filteredSections.actionItems.map((i: any) => ({ ...i, __section: 'actions' })),
-			...filteredSections.navItems.map((i: any) => ({ ...i, __section: 'nav' }))
+			...(filteredSections.actionItems ?? []).map((i: any) => ({ ...i, __section: 'actions' })),
+			...(filteredSections.navItems ?? []).map((i: any) => ({ ...i, __section: 'nav' }))
 		];
 	});
 
-	let filteredItems = $derived(flatItems.slice(0, 12) as any[]);
+	let filteredItems = $derived(flatItems.slice(0, 12));
 
 	// Reset selection when filter changes
 	$effect(() => {
@@ -381,7 +381,7 @@
 				<input
 					bind:this={inputEl}
 					type="text"
-					placeholder="Buscá páginas o acciones..."
+					placeholder="Busca páginas o acciones..."
 					bind:value={query}
 					onkeydown={handlePaletteKeydown}
 					class="h-12 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"

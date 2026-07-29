@@ -67,7 +67,7 @@ export async function checkLoginRateLimit(
 
 		return {
 			allowed: false,
-			error: `Demasiados intentos fallidos. Probá de nuevo en ${Math.ceil(retryAfterMs / 60000)} minutos.`,
+			error: `Demasiados intentos fallidos. Prueba de nuevo en ${Math.ceil(retryAfterMs / 60000)} minutos.`,
 			retryAfterMs
 		};
 	}
@@ -91,7 +91,7 @@ export async function checkResetRateLimit(
 	if (attempts >= MAX_RESET_ATTEMPTS) {
 		return {
 			allowed: false,
-			error: 'Demasiados intentos de recuperación. Probá de nuevo en 15 minutos.'
+			error: 'Demasiados intentos de recuperación. Prueba de nuevo en 15 minutos.'
 		};
 	}
 
@@ -203,7 +203,7 @@ export async function login(
 	}
 
 	if (!user.activo) {
-		return { success: false, error: 'Esta cuenta está desactivada. Contactá al administrador.' };
+		return { success: false, error: 'Esta cuenta está desactivada. Contacta al administrador.' };
 	}
 
 	if (!(await verifyPassword(password, user.password_hash))) {

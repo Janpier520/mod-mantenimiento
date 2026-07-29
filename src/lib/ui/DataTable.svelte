@@ -136,7 +136,7 @@
 				{:else}
 					{#each items as item}
 						<Table.Row
-							tabindex="0"
+							tabindex={0}
 							class="group cursor-pointer transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] even:bg-muted/20 hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring active:scale-[0.999]"
 							onkeydown={(e) => {
 								if (e.key === 'Enter' || e.key === ' ') {

@@ -45,7 +45,7 @@
 		</div>
 		<h1 class="text-2xl font-bold tracking-tight text-foreground">Recuperar Contraseña</h1>
 		<p class="mt-1 text-sm text-muted-foreground">
-			{step === 1 ? 'Ingresá tu usuario para empezar' : 'Respondé las preguntas de seguridad'}
+			{step === 1 ? 'Ingresa tu usuario para empezar' : 'Responde las preguntas de seguridad'}
 		</p>
 	</div>
 

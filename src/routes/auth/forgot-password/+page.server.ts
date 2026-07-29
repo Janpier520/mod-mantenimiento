@@ -16,7 +16,7 @@ export const actions: Actions = {
 		const username = form.get('username')?.toString().trim();
 
 		if (!username) {
-			return fail(400, { error: 'Ingresá tu nombre de usuario' });
+			return fail(400, { error: 'Ingresa tu nombre de usuario' });
 		}
 
 		const user = await db.query.users.findFirst({

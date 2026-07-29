@@ -1,5 +1,5 @@
-# SDD Configuration for EquipLab
-project: equip-lab
+# SDD Configuration for Módulo Mantenimiento de Equipos
+project: mod-mantenimiento
 stack:
   framework: SvelteKit 5
   language: TypeScript

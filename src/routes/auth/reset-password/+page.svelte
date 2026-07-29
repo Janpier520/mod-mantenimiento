@@ -51,7 +51,7 @@
 		</div>
 		<h1 class="text-2xl font-bold tracking-tight text-foreground">Restablecer Contraseña</h1>
 		<p class="mt-1 text-sm text-muted-foreground">
-			Respondé las preguntas de seguridad y creá una nueva contraseña
+			Responde las preguntas de seguridad y crea una nueva contraseña
 		</p>
 	</div>
 
@@ -127,7 +127,7 @@
 							type="password"
 							required
 							bind:value={confirmPassword}
-							placeholder="Repetí la contraseña"
+							placeholder="Repite la contraseña"
 						/>
 					</div>
 

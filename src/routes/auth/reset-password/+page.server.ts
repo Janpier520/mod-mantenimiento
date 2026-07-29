@@ -39,7 +39,7 @@ export const actions: Actions = {
 		const confirmPassword = form.get('confirmPassword')?.toString();
 
 		if (!username || !answer1 || !answer2 || !newPassword || !confirmPassword) {
-			return fail(400, { error: 'Completá todos los campos' });
+			return fail(400, { error: 'Completa todos los campos' });
 		}
 
 		// Rate limit check

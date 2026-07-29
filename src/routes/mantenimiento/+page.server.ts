@@ -261,9 +261,9 @@ export const actions: Actions = {
 		if (!plan_id)
 			return fail(400, { error: 'ID de plan no proporcionado', _action: 'schedule_execution' });
 		if (!ejecutado_por)
-			return fail(400, { error: 'Seleccioná un técnico', _action: 'schedule_execution' });
+			return fail(400, { error: 'Selecciona un técnico', _action: 'schedule_execution' });
 		if (!fecha_programada)
-			return fail(400, { error: 'Seleccioná una fecha programada', _action: 'schedule_execution' });
+			return fail(400, { error: 'Selecciona una fecha programada', _action: 'schedule_execution' });
 
 		// Validate plan exists
 		const planExists = await db.query.preventive_maintenance_plans.findFirst({
@@ -285,7 +285,7 @@ export const actions: Actions = {
 		// Validate date format (YYYY-MM-DD)
 		if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha_programada)) {
 			return fail(400, {
-				error: 'Formato de fecha no válido (usá YYYY-MM-DD)',
+				error: 'Formato de fecha no válido (usa YYYY-MM-DD)',
 				_action: 'schedule_execution'
 			});
 		}
@@ -296,7 +296,7 @@ export const actions: Actions = {
 
 		if (tasks.length === 0) {
 			return fail(400, {
-				error: 'El plan no tiene tareas. Agregá tareas primero.',
+				error: 'El plan no tiene tareas. Agrega tareas primero.',
 				_action: 'schedule_execution'
 			});
 		}

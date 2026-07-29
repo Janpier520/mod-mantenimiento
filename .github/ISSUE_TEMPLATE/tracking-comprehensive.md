@@ -7,7 +7,7 @@
 
 ## Problem Description
 
-EquipLab's UI was functional but visually dated — purple color scheme, glassmorphism cards, Google Fonts dependency, plain DataTable, basic buttons with no press feedback, and inconsistent component styling across 15+ pages. The app worked but didn't feel polished or professional.
+Módulo Mantenimiento de Equipos' UI was functional but visually dated — purple color scheme, glassmorphism cards, Google Fonts dependency, plain DataTable, basic buttons with no press feedback, and inconsistent component styling across 15+ pages. The app worked but didn't feel polished or professional.
 
 ## Proposed Solution — Complete UI Overhaul
 

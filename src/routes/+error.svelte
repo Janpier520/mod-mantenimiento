@@ -17,7 +17,7 @@
 	let title = $derived(is404 ? 'Página no encontrada' : 'Algo salió mal');
 	let description = $derived(
 		is404
-			? 'La página que buscas no existe o fue movida. Revisá la URL o volvé al inicio.'
+			? 'La página que buscas no existe o fue movida. Revisa la URL o vuelve al inicio.'
 			: 'Ocurrió un error inesperado. No te preocupes, nuestro equipo ya fue notificado.'
 	);
 	let code = $derived(String($page.status));
@@ -37,7 +37,7 @@
 </script>
 
 <svelte:head>
-	<title>{$page.status} — EquipLab</title>
+	<title>{$page.status} — Módulo Mantenimiento de Equipos</title>
 </svelte:head>
 
 <div class="bg-grain flex flex-col items-center justify-center bg-surface px-4 py-12">
@@ -80,7 +80,9 @@
 						/>
 					</svg>
 				</div>
-				<span class="text-sm font-bold tracking-tight text-foreground">EquipLab</span>
+				<span class="text-sm font-bold tracking-tight text-foreground"
+					>Módulo Mantenimiento de Equipos</span
+				>
 			</div>
 
 			<h1 class="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
@@ -100,7 +102,7 @@
 
 			{#if browser && !is404}
 				<p class="mt-3 text-xs text-muted-foreground/60">
-					Si el problema persiste, contactá a soporte.
+					Si el problema persiste, contacta a soporte.
 				</p>
 			{/if}
 		</div>

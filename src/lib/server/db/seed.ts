@@ -86,7 +86,7 @@ export async function seed() {
 	const DEFAULT_CONFIG = [
 		{
 			key: 'empresa_nombre',
-			value: 'EquipLab',
+			value: 'Módulo Mantenimiento de Equipos',
 			descripcion: 'Nombre de la empresa',
 			tipo: 'text' as const
 		},

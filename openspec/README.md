@@ -1,6 +1,6 @@
-# EquipLab — OpenSpec SDD Artifacts
+# Módulo Mantenimiento de Equipos — OpenSpec SDD Artifacts
 
-This directory contains SDD (Spec-Driven Development) artifacts for the EquipLab project.
+This directory contains SDD (Spec-Driven Development) artifacts for the Módulo Mantenimiento de Equipos project.
 
 ## Conventions
 
