@@ -5,10 +5,10 @@
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
-	import FocusTrap from '$lib/ui/FocusTrap.svelte';
 	import FormField from '$lib/ui/FormField.svelte';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '$lib/components/ui/button';
 	import ConfirmDialog from '$lib/ui/ConfirmDialog.svelte';
-	import { fade } from 'svelte/transition';
 	import { addToast } from '$lib/stores/toast.svelte';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -177,90 +177,63 @@
 		{/snippet}
 	</DataTable>
 
-	<!-- Modal form (create/edit) — with focus trap (a11y) -->
-	{#if showModal}
-	<FocusTrap>
-		<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
-		<div
-			class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
-			onclick={(e) => {
-				if (e.target === e.currentTarget) closeModal();
-			}}
-			onkeydown={(e) => e.key === 'Escape' && closeModal()}
-			transition:fade={{ duration: 200 }}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-			<div
-				class="w-full max-w-lg rounded-xl border bg-card p-6 shadow-xl"
-				transition:fade={{ duration: 200 }}
+	<!-- Dialog form (create/edit) -->
+	<Dialog.Root bind:open={showModal}>
+		<Dialog.Content class="sm:max-w-lg">
+			<Dialog.Header>
+				<Dialog.Title>{modalTitle}</Dialog.Title>
+			</Dialog.Header>
+
+			<form
+				method="post"
+				action="?/crud"
+				class="space-y-4"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success' && result.data?.success) {
+							closeModal();
+							addToast(
+								isEditing
+									? 'Proveedor actualizado correctamente'
+									: 'Proveedor creado correctamente'
+							);
+							await update();
+							await invalidate($page.url.pathname);
+						} else if (result.type === 'failure') {
+							const d = (result.data as Record<string, unknown>) ?? {};
+							formError = (d.error as string) ?? 'Error al guardar el proveedor';
+						}
+					};
+				}}
 			>
-				<h2 class="text-lg font-bold text-foreground">{modalTitle}</h2>
+				<input type="hidden" name="_action" value={isEditing ? 'update' : 'create'} />
+				{#if isEditing}
+					<input type="hidden" name="id" value={editingProveedor!.id} />
+				{/if}
 
-				<form
-					method="post"
-					action="?/crud"
-					class="mt-4 space-y-4"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if (result.type === 'success' && result.data?.success) {
-								closeModal();
-								addToast(
-									isEditing
-										? 'Proveedor actualizado correctamente'
-										: 'Proveedor creado correctamente'
-								);
-								await update();
-								await invalidate($page.url.pathname);
-							} else if (result.type === 'failure') {
-								const d = (result.data as Record<string, unknown>) ?? {};
-								formError = (d.error as string) ?? 'Error al guardar el proveedor';
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="_action" value={isEditing ? 'update' : 'create'} />
-					{#if isEditing}
-						<input type="hidden" name="id" value={editingProveedor!.id} />
-					{/if}
+				<FormField
+					label="Nombre"
+					name="nombre"
+					bind:value={formNombre}
+					required
+					error={formError && !formNombre ? formError : ''}
+				/>
+				<FormField label="Contacto" name="contacto" bind:value={formContacto} />
+				<FormField label="Teléfono" name="telefono" type="tel" bind:value={formTelefono} />
+				<FormField label="Email" name="email" type="email" bind:value={formEmail} />
+				<FormField label="Dirección" name="direccion" bind:value={formDireccion} />
 
-					<FormField
-						label="Nombre"
-						name="nombre"
-						bind:value={formNombre}
-						required
-						error={formError && !formNombre ? formError : ''}
-					/>
-					<FormField label="Contacto" name="contacto" bind:value={formContacto} />
-					<FormField label="Teléfono" name="telefono" type="tel" bind:value={formTelefono} />
-					<FormField label="Email" name="email" type="email" bind:value={formEmail} />
-					<FormField label="Dirección" name="direccion" bind:value={formDireccion} />
+				{#if formError && formNombre}
+					<p class="text-xs text-red-500">{formError}</p>
+				{/if}
 
-					{#if formError && formNombre}
-						<p class="text-xs text-red-500">{formError}</p>
-					{/if}
-
-					<div class="flex justify-end gap-3 pt-2">
-						<button
-							type="button"
-							onclick={closeModal}
-							class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-						>
-							Cancelar
-						</button>
-						<button
-							type="submit"
-							class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-						>
-							{isEditing ? 'Guardar Cambios' : 'Crear Proveedor'}
-						</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</FocusTrap>
-{/if}
+				<Dialog.Footer>
+					<Button variant="outline" onclick={closeModal}>Cancelar</Button>
+					<Button type="submit">{isEditing ? 'Guardar Cambios' : 'Crear Proveedor'}</Button>
+				</Dialog.Footer>
+			</form>
+		</Dialog.Content>
+	</Dialog.Root>
 
 	<!-- ConfirmDialog for delete -->
 	<ConfirmDialog
