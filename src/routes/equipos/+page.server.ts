@@ -110,6 +110,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 export const actions: Actions = {
 	crud: async ({ request, locals }) => {
 		if (!locals.user) throw redirect(303, '/login');
+		if (locals.user.rol === 'consultor') {
+			return fail(403, { error: 'Los consultores no pueden modificar equipos', _action: '' });
+		}
 
 		const form = await request.formData();
 		const _action = form.get('_action') as string;
