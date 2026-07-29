@@ -3,11 +3,9 @@
 	import { invalidate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import Badge from '$lib/ui/Badge.svelte';
-	import ConfirmDialog from '$lib/ui/ConfirmDialog.svelte';
-	import FocusTrap from '$lib/ui/FocusTrap.svelte';
-	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import { fade } from 'svelte/transition';
+	import { Button } from '$lib/components/ui/button';
+	import ConfirmDialog from '$lib/ui/ConfirmDialog.svelte';
 	import { addToast } from '$lib/stores/toast.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Pencil from '@lucide/svelte/icons/pencil';
@@ -458,17 +456,17 @@
 		</div>
 	{/if}
 
-	<!-- Plan modal (create/edit) — Sheet slide-in panel -->
-	<Sheet.Root bind:open={showPlanModal}>
-		<Sheet.Content class="sm:max-w-lg">
-			<Sheet.Header>
-				<Sheet.Title>{planModalTitle}</Sheet.Title>
-				<Sheet.Description>
+	<!-- Plan modal (create/edit) -->
+	<Dialog.Root bind:open={showPlanModal}>
+		<Dialog.Content class="sm:max-w-lg">
+			<Dialog.Header>
+				<Dialog.Title>{planModalTitle}</Dialog.Title>
+				<Dialog.Description>
 					{isEditingPlan
 						? 'Actualizá los datos del plan de mantenimiento'
 						: 'Creá un plan de mantenimiento preventivo'}
-				</Sheet.Description>
-			</Sheet.Header>
+				</Dialog.Description>
+			</Dialog.Header>
 
 			<form
 				method="post"
@@ -496,10 +494,7 @@
 
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<div class="space-y-1.5 sm:col-span-2">
-						<label
-							for="plan-nombre"
-							class="block text-sm font-medium text-foreground"
-						>
+						<label for="plan-nombre" class="block text-sm font-medium text-foreground">
 							Nombre <span class="text-red-500">*</span>
 						</label>
 						<input
@@ -515,10 +510,7 @@
 					</div>
 
 					<div class="space-y-1.5 sm:col-span-2">
-						<label
-							for="plan-descripcion"
-							class="block text-sm font-medium text-foreground"
-						>
+						<label for="plan-descripcion" class="block text-sm font-medium text-foreground">
 							Descripción
 						</label>
 						<textarea
@@ -530,10 +522,7 @@
 					</div>
 
 					<div class="space-y-1.5">
-						<label
-							for="plan-frecuencia"
-							class="block text-sm font-medium text-foreground"
-						>
+						<label for="plan-frecuencia" class="block text-sm font-medium text-foreground">
 							Frecuencia (días) <span class="text-red-500">*</span>
 						</label>
 						<input
@@ -548,10 +537,7 @@
 					</div>
 
 					<div class="space-y-1.5">
-						<label
-							for="plan-equipo"
-							class="block text-sm font-medium text-foreground"
-						>
+						<label for="plan-equipo" class="block text-sm font-medium text-foreground">
 							Equipo específico
 						</label>
 						<select
@@ -568,10 +554,7 @@
 					</div>
 
 					<div class="space-y-1.5">
-						<label
-							for="plan-tipo-equipo"
-							class="block text-sm font-medium text-foreground"
-						>
+						<label for="plan-tipo-equipo" class="block text-sm font-medium text-foreground">
 							O por tipo de equipo
 						</label>
 						<select
@@ -592,359 +575,252 @@
 					<p class="text-xs text-red-500">{formPlanError}</p>
 				{/if}
 
-				<div class="flex justify-end gap-3 pt-2">
-					<button
-						type="button"
-						onclick={closePlanModal}
-						class="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
-					>
-						Cancelar
-					</button>
-					<button
-						type="submit"
-						class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-					>
-						{isEditingPlan ? 'Guardar Cambios' : 'Crear Plan'}
-					</button>
-				</div>
+				<Dialog.Footer>
+					<Button variant="outline" onclick={closePlanModal}>Cancelar</Button>
+					<Button type="submit">{isEditingPlan ? 'Guardar Cambios' : 'Crear Plan'}</Button>
+				</Dialog.Footer>
 			</form>
-		</Sheet.Content>
-	</Sheet.Root>
+		</Dialog.Content>
+	</Dialog.Root>
 
-	<!-- Task modal (add/edit) — with focus trap (a11y) -->
-	{#if showTaskModal}
-	<FocusTrap>
-		<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
-		<div
-			class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
-			onclick={(e) => {
-				if (e.target === e.currentTarget) closeTaskModal();
-			}}
-			onkeydown={(e) => e.key === 'Escape' && closeTaskModal()}
-			transition:fade={{ duration: 200 }}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-			<div
-				class="w-full max-w-lg rounded-xl border bg-card p-6 shadow-xl"
+	<!-- Task modal (add/edit) -->
+	<Dialog.Root bind:open={showTaskModal}>
+		<Dialog.Content class="sm:max-w-lg">
+			<Dialog.Header>
+				<Dialog.Title>{taskModalTitle}</Dialog.Title>
+			</Dialog.Header>
+
+			<form
+				method="post"
+				action={isEditingTask ? '?/update_task' : '?/add_task'}
+				class="space-y-4"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success' && result.data?.success) {
+							closeTaskModal();
+							addToast(
+								isEditingTask ? 'Tarea actualizada correctamente' : 'Tarea agregada correctamente'
+							);
+							await update();
+							await invalidate($page.url.pathname);
+						} else if (result.type === 'failure') {
+							const d = (result.data as Record<string, unknown>) ?? {};
+							formTaskError = (d.error as string) ?? 'Error al guardar la tarea';
+						}
+					};
+				}}
 			>
-				<h2 class="text-lg font-bold text-foreground">{taskModalTitle}</h2>
+				<input type="hidden" name="plan_id" value={taskPlanId} />
+				{#if isEditingTask}
+					<input type="hidden" name="id" value={editingTask!.id} />
+				{/if}
 
-				<form
-					method="post"
-					action={isEditingTask ? '?/update_task' : '?/add_task'}
-					class="mt-4 space-y-4"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if (result.type === 'success' && result.data?.success) {
-								closeTaskModal();
-								addToast(
-									isEditingTask ? 'Tarea actualizada correctamente' : 'Tarea agregada correctamente'
-								);
-								await update();
-								await invalidate($page.url.pathname);
-							} else if (result.type === 'failure') {
-								const d = (result.data as Record<string, unknown>) ?? {};
-								formTaskError = (d.error as string) ?? 'Error al guardar la tarea';
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="plan_id" value={taskPlanId} />
-					{#if isEditingTask}
-						<input type="hidden" name="id" value={editingTask!.id} />
-					{/if}
+				<div class="space-y-1.5">
+					<label for="task-nombre" class="block text-sm font-medium text-foreground">
+						Nombre <span class="text-red-500">*</span>
+					</label>
+					<input
+						id="task-nombre"
+						name="nombre"
+						type="text"
+						bind:value={formTaskNombre}
+						required
+						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+						class:border-red-400={!!formTaskError}
+						placeholder="Ej: Limpieza interna"
+					/>
+				</div>
 
-					<div class="space-y-1.5">
-						<label
-							for="task-nombre"
-							class="block text-sm font-medium text-foreground"
-						>
-							Nombre <span class="text-red-500">*</span>
-						</label>
-						<input
-							id="task-nombre"
-							name="nombre"
-							type="text"
-							bind:value={formTaskNombre}
-							required
-							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
-							class:border-red-400={!!formTaskError}
-							placeholder="Ej: Limpieza interna"
-						/>
-					</div>
+				<div class="space-y-1.5">
+					<label for="task-descripcion" class="block text-sm font-medium text-foreground">
+						Descripción
+					</label>
+					<textarea
+						id="task-descripcion"
+						name="descripcion"
+						bind:value={formTaskDescripcion}
+						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+						rows="2"></textarea>
+				</div>
 
-					<div class="space-y-1.5">
-						<label
-							for="task-descripcion"
-							class="block text-sm font-medium text-foreground"
-						>
-							Descripción
-						</label>
-						<textarea
-							id="task-descripcion"
-							name="descripcion"
-							bind:value={formTaskDescripcion}
-							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
-							rows="2"></textarea>
-					</div>
+				{#if formTaskError}
+					<p class="text-xs text-red-500">{formTaskError}</p>
+				{/if}
 
-					{#if formTaskError}
-						<p class="text-xs text-red-500">{formTaskError}</p>
-					{/if}
+				<Dialog.Footer>
+					<Button variant="outline" onclick={closeTaskModal}>Cancelar</Button>
+					<Button type="submit">{isEditingTask ? 'Guardar Cambios' : 'Agregar Tarea'}</Button>
+				</Dialog.Footer>
+			</form>
+		</Dialog.Content>
+	</Dialog.Root>
 
-					<div class="flex justify-end gap-3 pt-2">
-						<button
-							type="button"
-							onclick={closeTaskModal}
-							class="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
-						>
-							Cancelar
-						</button>
-						<button
-							type="submit"
-							class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-						>
-							{isEditingTask ? 'Guardar Cambios' : 'Agregar Tarea'}
-						</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</FocusTrap>
-{/if}
-
-	<!-- Schedule modal — with focus trap (a11y) -->
-	{#if showScheduleModal}
-	<FocusTrap>
-		<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
-		<div
-			class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
-			onclick={(e) => {
-				if (e.target === e.currentTarget) closeScheduleModal();
-			}}
-			onkeydown={(e) => e.key === 'Escape' && closeScheduleModal()}
-			transition:fade={{ duration: 200 }}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-			<div
-				class="w-full max-w-lg rounded-xl border bg-card p-6 shadow-xl"
-			>
-				<h2 class="text-lg font-bold text-foreground">Programar Ejecución</h2>
-				<p class="mt-1 text-sm text-muted-foreground">
+	<!-- Schedule modal -->
+	<Dialog.Root bind:open={showScheduleModal}>
+		<Dialog.Content class="sm:max-w-lg">
+			<Dialog.Header>
+				<Dialog.Title>Programar Ejecución</Dialog.Title>
+				<Dialog.Description>
 					{schedulePlanName}
-				</p>
+				</Dialog.Description>
+			</Dialog.Header>
 
-				<form
-					method="post"
-					action="?/schedule_execution"
-					class="mt-4 space-y-4"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if (result.type === 'success' && result.data?.success) {
-								closeScheduleModal();
-								addToast('Ejecución programada correctamente');
-								await update();
-								await invalidate($page.url.pathname);
-							} else if (result.type === 'failure') {
-								const d = (result.data as Record<string, unknown>) ?? {};
-								formScheduleError = (d.error as string) ?? 'Error al programar';
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="plan_id" value={schedulePlanId} />
-
-					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-						<div class="space-y-1.5">
-							<label
-								for="sched-tecnico"
-								class="block text-sm font-medium text-foreground"
-							>
-								Técnico <span class="text-red-500">*</span>
-							</label>
-							<select
-								id="sched-tecnico"
-								name="ejecutado_por"
-								bind:value={formScheduleTecnico}
-								required
-								class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-							>
-								<option value="">Seleccionar técnico</option>
-								{#each technicians as t}
-									<option value={t.id}>{t.nombre} {t.apellido}</option>
-								{/each}
-							</select>
-						</div>
-
-						<div class="space-y-1.5">
-							<label
-								for="sched-fecha"
-								class="block text-sm font-medium text-foreground"
-							>
-								Fecha programada <span class="text-red-500">*</span>
-							</label>
-							<input
-								id="sched-fecha"
-								name="fecha_programada"
-								type="date"
-								bind:value={formScheduleFecha}
-								required
-								class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-							/>
-						</div>
-					</div>
-
-					<!-- Tasks to confirm -->
-					<div>
-						<h4 class="mb-2 text-sm font-medium text-foreground">
-							Tareas a ejecutar ({scheduleTasks.length})
-						</h4>
-						<div
-							class="max-h-40 divide-y divide-border-light overflow-y-auto rounded-xl border border-border-light"
-						>
-							{#each scheduleTasks as task (task.id)}
-								<div class="flex items-center gap-2 px-3 py-2">
-									<ChevronRight class="h-4 w-4 shrink-0 text-primary" />
-									<span class="text-sm text-foreground">
-										{task.orden}. {task.nombre}
-									</span>
-								</div>
-							{/each}
-						</div>
-					</div>
-
-					{#if formScheduleError}
-						<p class="text-xs text-red-500">{formScheduleError}</p>
-					{/if}
-
-					<div class="flex justify-end gap-3 pt-2">
-						<button
-							type="button"
-							onclick={closeScheduleModal}
-							class="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
-						>
-							Cancelar
-						</button>
-						<button
-							type="submit"
-							class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-						>
-							Programar
-						</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</FocusTrap>
-{/if}
-
-	<!-- Complete execution modal — with focus trap (a11y) -->
-	{#if showExecModal && selectedExec}
-	<FocusTrap>
-		<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
-		<div
-			class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
-			onclick={(e) => {
-				if (e.target === e.currentTarget) closeExecModal();
-			}}
-			onkeydown={(e) => e.key === 'Escape' && closeExecModal()}
-			transition:fade={{ duration: 200 }}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-			<div
-				class="w-full max-w-lg rounded-xl border bg-card p-6 shadow-xl"
+			<form
+				method="post"
+				action="?/schedule_execution"
+				class="space-y-4"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success' && result.data?.success) {
+							closeScheduleModal();
+							addToast('Ejecución programada correctamente');
+							await update();
+							await invalidate($page.url.pathname);
+						} else if (result.type === 'failure') {
+							const d = (result.data as Record<string, unknown>) ?? {};
+							formScheduleError = (d.error as string) ?? 'Error al programar';
+						}
+					};
+				}}
 			>
-				<h2 class="text-lg font-bold text-foreground">Completar Ejecución</h2>
-				<p class="mt-1 text-sm text-muted-foreground">
-					Tarea pendiente del {formatDate(selectedExec.fecha_programada)}
-				</p>
+				<input type="hidden" name="plan_id" value={schedulePlanId} />
 
-				<form
-					method="post"
-					action="?/complete_execution"
-					class="mt-4 space-y-4"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if (result.type === 'success' && result.data?.success) {
-								closeExecModal();
-								addToast('Ejecución actualizada correctamente');
-								await update();
-								await invalidate($page.url.pathname);
-							} else if (result.type === 'failure') {
-								const d = (result.data as Record<string, unknown>) ?? {};
-								formExecError = (d.error as string) ?? 'Error al actualizar';
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="id" value={selectedExec.id} />
-
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<div class="space-y-1.5">
-						<label
-							for="exec-resultado"
-							class="block text-sm font-medium text-foreground"
-						>
-							Resultado <span class="text-red-500">*</span>
+						<label for="sched-tecnico" class="block text-sm font-medium text-foreground">
+							Técnico <span class="text-red-500">*</span>
 						</label>
 						<select
-							id="exec-resultado"
-							name="resultado"
-							bind:value={formExecResultado}
+							id="sched-tecnico"
+							name="ejecutado_por"
+							bind:value={formScheduleTecnico}
 							required
 							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
 						>
-							<option value="completado">Completado</option>
-							<option value="fallido">Fallido</option>
-							<option value="omitido">Omitido</option>
+							<option value="">Seleccionar técnico</option>
+							{#each technicians as t}
+								<option value={t.id}>{t.nombre} {t.apellido}</option>
+							{/each}
 						</select>
 					</div>
 
 					<div class="space-y-1.5">
-						<label
-							for="exec-obs"
-							class="block text-sm font-medium text-foreground"
-						>
-							Observaciones
+						<label for="sched-fecha" class="block text-sm font-medium text-foreground">
+							Fecha programada <span class="text-red-500">*</span>
 						</label>
-						<textarea
-							id="exec-obs"
-							name="observaciones"
-							bind:value={formExecObservaciones}
-							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
-							rows="3"
-							placeholder="Detalles de la ejecución..."></textarea>
+						<input
+							id="sched-fecha"
+							name="fecha_programada"
+							type="date"
+							bind:value={formScheduleFecha}
+							required
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+						/>
 					</div>
+				</div>
 
-					{#if formExecError}
-						<p class="text-xs text-red-500">{formExecError}</p>
-					{/if}
-
-					<div class="flex justify-end gap-3 pt-2">
-						<button
-							type="button"
-							onclick={closeExecModal}
-							class="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
-						>
-							Cancelar
-						</button>
-						<button
-							type="submit"
-							class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-						>
-							Guardar
-						</button>
+				<!-- Tasks to confirm -->
+				<div>
+					<h4 class="mb-2 text-sm font-medium text-foreground">
+						Tareas a ejecutar ({scheduleTasks.length})
+					</h4>
+					<div
+						class="max-h-40 divide-y divide-border-light overflow-y-auto rounded-xl border border-border-light"
+					>
+						{#each scheduleTasks as task (task.id)}
+							<div class="flex items-center gap-2 px-3 py-2">
+								<ChevronRight class="h-4 w-4 shrink-0 text-primary" />
+								<span class="text-sm text-foreground">
+									{task.orden}. {task.nombre}
+								</span>
+							</div>
+						{/each}
 					</div>
-				</form>
-			</div>
-		</div>
-	</FocusTrap>
-{/if}
+				</div>
+
+				{#if formScheduleError}
+					<p class="text-xs text-red-500">{formScheduleError}</p>
+				{/if}
+
+				<Dialog.Footer>
+					<Button variant="outline" onclick={closeScheduleModal}>Cancelar</Button>
+					<Button type="submit">Programar</Button>
+				</Dialog.Footer>
+			</form>
+		</Dialog.Content>
+	</Dialog.Root>
+
+	<!-- Complete execution modal -->
+	<Dialog.Root bind:open={showExecModal}>
+		<Dialog.Content class="sm:max-w-lg">
+			<Dialog.Header>
+				<Dialog.Title>Completar Ejecución</Dialog.Title>
+				<Dialog.Description>
+					{selectedExec ? `Tarea pendiente del ${formatDate(selectedExec.fecha_programada)}` : ''}
+				</Dialog.Description>
+			</Dialog.Header>
+
+			<form
+				method="post"
+				action="?/complete_execution"
+				class="space-y-4"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success' && result.data?.success) {
+							closeExecModal();
+							addToast('Ejecución actualizada correctamente');
+							await update();
+							await invalidate($page.url.pathname);
+						} else if (result.type === 'failure') {
+							const d = (result.data as Record<string, unknown>) ?? {};
+							formExecError = (d.error as string) ?? 'Error al actualizar';
+						}
+					};
+				}}
+			>
+				<input type="hidden" name="id" value={selectedExec?.id ?? ''} />
+
+				<div class="space-y-1.5">
+					<label for="exec-resultado" class="block text-sm font-medium text-foreground">
+						Resultado <span class="text-red-500">*</span>
+					</label>
+					<select
+						id="exec-resultado"
+						name="resultado"
+						bind:value={formExecResultado}
+						required
+						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+					>
+						<option value="completado">Completado</option>
+						<option value="fallido">Fallido</option>
+						<option value="omitido">Omitido</option>
+					</select>
+				</div>
+
+				<div class="space-y-1.5">
+					<label for="exec-obs" class="block text-sm font-medium text-foreground">
+						Observaciones
+					</label>
+					<textarea
+						id="exec-obs"
+						name="observaciones"
+						bind:value={formExecObservaciones}
+						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+						rows="3"
+						placeholder="Detalles de la ejecución..."></textarea>
+				</div>
+
+				{#if formExecError}
+					<p class="text-xs text-red-500">{formExecError}</p>
+				{/if}
+
+				<Dialog.Footer>
+					<Button variant="outline" onclick={closeExecModal}>Cancelar</Button>
+					<Button type="submit">Guardar</Button>
+				</Dialog.Footer>
+			</form>
+		</Dialog.Content>
+	</Dialog.Root>
 
 	<!-- Confirm delete plan -->
 	<ConfirmDialog
