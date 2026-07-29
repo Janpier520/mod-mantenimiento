@@ -156,12 +156,7 @@
 			<div class="relative z-10 flex items-start justify-between">
 				<div>
 					<p class="text-sm font-medium text-white/80">Total Equipos</p>
-					<p bind:this={featuredVal} class="stat-value mt-1 text-white">—</p>
-					<div class="mt-2 flex items-center gap-1.5 text-xs text-white/70">
-						<TrendingUp class="h-3.5 w-3.5" />
-						<span class="font-medium">+12%</span>
-						<span class="text-white/50">vs mes anterior</span>
-					</div>
+					<p bind:this={featuredVal} class="stat-value mt-1 text-white">{data.equipmentCount}</p>
 				</div>
 				<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 text-white">
 					<Package class="h-6 w-6" />
@@ -174,14 +169,7 @@
 			<div class="flex items-start justify-between">
 				<div>
 					<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">Tickets</p>
-					<p class="stat-value mt-1">—</p>
-					<div
-						class="mt-2 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400"
-					>
-						<TrendingUp class="h-3.5 w-3.5" />
-						<span class="font-medium">+5%</span>
-						<span class="text-muted-foreground">vs mes anterior</span>
-					</div>
+					<p class="stat-value mt-1">{data.ticketCount}</p>
 				</div>
 				<div
 					class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
@@ -390,10 +378,49 @@
 
 		<div class="rounded-xl border bg-card p-6">
 			<h2 class="mb-4 text-lg font-bold text-foreground">Tickets Recientes</h2>
-			<EmptyState
-				title="No hay tickets abiertos"
-				description="Los tickets se crearán desde el módulo de Tickets."
-			/>
+			{#if data.recentTickets.length > 0}
+				<div class="space-y-2">
+					{#each data.recentTickets as ticket}
+						<a
+							href="/tickets"
+							class="flex items-center justify-between rounded-lg border border-border-light bg-white px-4 py-3 transition-colors hover:bg-gray-50 dark:bg-gray-800/50 dark:hover:bg-gray-800"
+						>
+							<div class="min-w-0 flex-1">
+								<p class="truncate text-sm font-medium text-gray-800 dark:text-gray-200">
+									{ticket.titulo || ticket.equipo?.nombre || 'Ticket'}
+								</p>
+								<p class="truncate text-xs text-gray-500 dark:text-gray-400">
+									{ticket.equipo?.nombre ?? 'Sin equipo'}
+									<span class="mx-1">&middot;</span>
+									{ticket.reporta
+										? `${ticket.reporta.nombre} ${ticket.reporta.apellido}`
+										: 'Sistema'}
+								</p>
+							</div>
+							<div class="ml-3 shrink-0 text-right">
+								<span
+									class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {ticket.estado === 'abierto'
+										? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+										: ticket.estado === 'en_progreso'
+											? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+											: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}"
+								>
+									{ticket.estado === 'abierto'
+										? 'Abierto'
+										: ticket.estado === 'en_progreso'
+											? 'En progreso'
+											: ticket.estado ?? ticket.estado}
+								</span>
+							</div>
+						</a>
+					{/each}
+				</div>
+			{:else}
+				<EmptyState
+					title="No hay tickets abiertos"
+					description="Los tickets se crearán desde el módulo de Tickets."
+				/>
+			{/if}
 		</div>
 	</div>
 </div>
