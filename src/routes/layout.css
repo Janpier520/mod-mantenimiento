@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import '../../design-system/tokens.css' layer(base);
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -90,8 +89,12 @@
 	--space-laravel-19: 160px;
 	--space-laravel-20: 208px;
 
-	/* ── Radius (shadcn-compatible) ───────────────────────────────────── */
+	/* ── Radius hierarchy (shadcn-compatible) ─────────────────────────── */
 	--radius: 0.5rem;
+	--radius-sm: 0.25rem;
+	--radius-md: 0.375rem;
+	--radius-lg: 0.5rem;
+	--radius-xl: 0.75rem;
 
 	/* ── shadcn UI utility mappings (reference HSL vars via hsl()) ──── */
 	--color-background: hsl(var(--background));
@@ -110,6 +113,29 @@
 	--color-border: hsl(var(--border));
 	--color-input: hsl(var(--input));
 	--color-ring: hsl(var(--ring));
+
+	/* ── Semantic status colors ──────────────────────────────────────── */
+	--color-success: hsl(var(--success));
+	--color-success-foreground: hsl(var(--success-foreground));
+	--color-danger: hsl(var(--destructive));
+	--color-danger-foreground: hsl(var(--destructive-foreground));
+	--color-warning: hsl(var(--warning));
+	--color-warning-foreground: hsl(var(--warning-foreground));
+	--color-info: hsl(var(--info));
+	--color-info-foreground: hsl(var(--info-foreground));
+
+	/* ── Typography scale ────────────────────────────────────────────── */
+	--text-display: 2.5rem;
+	--text-h1: 1.75rem;
+	--text-h2: 1.25rem;
+	--text-h3: 1.125rem;
+	--text-body: 0.875rem;
+	--text-sm: 0.75rem;
+	--text-xs: 0.625rem;
+
+	/* ── Card glow shadows ──────────────────────────────────────────── */
+	--shadow-card: 0 4px 20px rgba(59, 130, 246, 0.08);
+	--shadow-card-hover: 0 8px 30px rgba(59, 130, 246, 0.12);
 }
 
 /* ── Light mode tokens ──────────────────────────────────────────────── */
@@ -121,24 +147,39 @@
 	--card-foreground: 240 10% 3.9%;
 	--popover: 0 0% 100%;
 	--popover-foreground: 240 10% 3.9%;
-	--primary: 160 84% 39%; /* emerald #059669 */
+	--primary: 217 91% 60%; /* electric blue #3b82f6 */
 	--primary-foreground: 0 0% 100%;
 	--secondary: 240 4.8% 95.9%;
 	--secondary-foreground: 240 5.9% 10%;
 	--muted: 240 4.8% 95.9%;
-	--muted-foreground: 240 3.8% 35%; /* darkened for WCAG AA on bg-muted (#5c5c66 vs #f4f4f5 ≈ 5.2:1) */
+	--muted-foreground: 240 3.8% 35%;
 	--accent: 240 4.8% 95.9%;
 	--accent-foreground: 240 5.9% 10%;
 	--destructive: 0 72.2% 50.6%;
 	--destructive-foreground: 0 0% 98%;
 	--border: 240 5.9% 90%;
 	--input: 240 5.9% 90%;
-	--ring: 160 84% 39%;
-	--chart-1: 12 76% 61%;
-	--chart-2: 173 58% 39%;
-	--chart-3: 197 37% 24%;
-	--chart-4: 43 74% 66%;
-	--chart-5: 27 87% 67%;
+	--ring: 217 91% 60%;
+	--chart-1: 217 91% 60%;
+	--chart-2: 142 71% 45%;
+	--chart-3: 35 92% 55%;
+	--chart-4: 280 65% 60%;
+	--chart-5: 340 75% 55%;
+
+	/* ── Semantic status HSL vars (light) ─────────────────────────── */
+	--success: 142 71% 45%;
+	--success-foreground: 142 71% 25%;
+	--warning: 35 92% 55%;
+	--warning-foreground: 35 80% 30%;
+	--info: 217 91% 60%;
+	--info-foreground: 217 80% 30%;
+
+	/* ── Chart CSS vars (light) ───────────────────────────────────── */
+	--chart-line-1: #3b82f6;
+	--chart-line-2: #22c55e;
+	--chart-tooltip-bg: #1e293b;
+	--chart-grid-color: #94a3b8;
+	--chart-grid-line: #e2e8f0;
 
 	/* ── Our custom hex tokens (overridden by .dark) ──────────────── */
 	--gray-50: #f8fafc;
@@ -159,9 +200,9 @@
 	--sidebar-text: #64748b;
 	--sidebar-text-active: #f8fafc;
 
-	--color-brand: #059669;
-	--color-brand-hover: #047857;
-	--color-brand-light: #d1fae5;
+	--color-brand: #3b82f6;
+	--color-brand-hover: #2563eb;
+	--color-brand-light: #dbeafe;
 	--surface: #f8fafc;
 	--card-hex: #ffffff;
 	--card-hover: #f8fafc;
@@ -171,57 +212,72 @@
 /* ── Dark mode tokens ───────────────────────────────────────────────── */
 .dark {
 	/* ── shadcn-svelte HSL variables (dark) ───────────────────────── */
-	--background: 240 10% 3.9%;
-	--foreground: 0 0% 98%;
-	--card: 240 10% 3.9%;
-	--card-foreground: 0 0% 98%;
-	--popover: 240 10% 3.9%;
-	--popover-foreground: 0 0% 98%;
-	--primary: 160 84% 45%; /* lighter emerald for dark bg */
-	--primary-foreground: 0 0% 5%;
-	--secondary: 240 3.7% 15.9%;
-	--secondary-foreground: 0 0% 98%;
-	--muted: 240 3.7% 15.9%;
-	--muted-foreground: 240 5% 64.9%;
-	--accent: 240 3.7% 15.9%;
-	--accent-foreground: 0 0% 98%;
-	--destructive: 0 62.8% 30.6%;
-	--destructive-foreground: 0 0% 98%;
-	--border: 240 3.7% 15.9%;
-	--input: 240 3.7% 15.9%;
-	--ring: 160 84% 45%;
-	--chart-1: 220 70% 50%;
-	--chart-2: 160 60% 45%;
-	--chart-3: 30 80% 55%;
+	--background: 222 47% 7%; /* #0b0f19 — VaultX near-black */
+	--foreground: 0 0% 100%;
+	--card: 220 30% 10%; /* #151a26 */
+	--card-foreground: 0 0% 100%;
+	--popover: 220 30% 10%; /* #151a26 */
+	--popover-foreground: 0 0% 100%;
+	--primary: 217 91% 65%; /* #60a5fa — brighter blue for dark bg */
+	--primary-foreground: 0 0% 100%;
+	--secondary: 220 25% 14%; /* #1a2033 */
+	--secondary-foreground: 0 0% 100%;
+	--muted: 220 20% 16%; /* #1e293b */
+	--muted-foreground: 215 20% 55%; /* #94a3b8 */
+	--accent: 220 25% 14%; /* #1a2033 */
+	--accent-foreground: 0 0% 100%;
+	--destructive: 0 72% 45%; /* #dc2626 */
+	--destructive-foreground: 0 0% 100%;
+	--border: 220 25% 16%; /* #1e293b */
+	--input: 220 25% 16%; /* #1e293b */
+	--ring: 217 91% 65%; /* #60a5fa */
+	--chart-1: 217 91% 65%;
+	--chart-2: 142 71% 55%;
+	--chart-3: 35 85% 65%;
 	--chart-4: 280 65% 60%;
 	--chart-5: 340 75% 55%;
 
+	/* ── Semantic status HSL vars (dark) ──────────────────────────── */
+	--success: 142 71% 55%;
+	--success-foreground: 142 60% 85%;
+	--warning: 35 85% 65%;
+	--warning-foreground: 35 60% 85%;
+	--info: 217 80% 70%;
+	--info-foreground: 217 60% 85%;
+
+	/* ── Chart CSS vars (dark) ────────────────────────────────────── */
+	--chart-line-1: #60a5fa;
+	--chart-line-2: #4ade80;
+	--chart-tooltip-bg: #151a26;
+	--chart-grid-color: #475569;
+	--chart-grid-line: #1e293b;
+
 	/* ── Our custom hex tokens (dark) ─────────────────────────────── */
-	--gray-50: #0a0a0a;
-	--gray-100: #111111;
-	--gray-200: #1a1a1a;
-	--gray-300: #222222;
-	--gray-400: #333333;
-	--gray-500: #555555;
-	--gray-600: #888888;
-	--gray-700: #aaaaaa;
-	--gray-800: #cccccc;
-	--gray-900: #e5e5e5;
-	--gray-950: #f5f5f5;
+	--gray-50: #0b0f19;
+	--gray-100: #111827;
+	--gray-200: #151a26;
+	--gray-300: #1e293b;
+	--gray-400: #2d3a4f;
+	--gray-500: #475569;
+	--gray-600: #64748b;
+	--gray-700: #94a3b8;
+	--gray-800: #cbd5e1;
+	--gray-900: #e2e8f0;
+	--gray-950: #f8fafc;
 
-	--color-brand: #059669;
-	--color-brand-hover: #059669;
-	--color-brand-light: #064e3b;
-	--surface: #0a0a0a;
-	--card-hex: #111111;
-	--card-hover: #1a1a1a;
-	--border-light: #1a1a1a;
+	--color-brand: #3b82f6;
+	--color-brand-hover: #2563eb;
+	--color-brand-light: #1e3a5f;
+	--surface: #0b0f19;
+	--card-hex: #151a26;
+	--card-hover: #1a2033;
+	--border-light: #1e293b;
 
-	--sidebar: #050505;
-	--sidebar-hover: #0a0a0a;
-	--sidebar-active: #111111;
-	--sidebar-text: #666666;
-	--sidebar-text-active: #e5e5e5;
+	--sidebar: #080c14;
+	--sidebar-hover: #0b0f19;
+	--sidebar-active: #151a26;
+	--sidebar-text: #64748b;
+	--sidebar-text-active: #f8fafc;
 }
 
 /* ── Base styles ────────────────────────────────────────────────────── */
@@ -295,12 +351,12 @@ th {
 	.card:hover,
 	[data-card]:hover {
 		border-color: var(--color-primary);
-		box-shadow: 0 0 20px rgba(5, 150, 105, 0.1);
+		box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
 	}
 
 	.dark .card:hover,
 	.dark [data-card]:hover {
-		box-shadow: 0 0 20px rgba(5, 150, 105, 0.15);
+		box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
 	}
 }
 
@@ -322,7 +378,7 @@ th {
 	.card-elevated:hover {
 		border-color: var(--color-primary);
 		box-shadow:
-			0 0 30px rgba(5, 150, 105, 0.12),
+			0 0 30px rgba(59, 130, 246, 0.12),
 			0 4px 12px rgba(0, 0, 0, 0.08);
 	}
 }
@@ -365,7 +421,7 @@ th {
 		transform: translateY(-3px);
 		box-shadow:
 			0 12px 32px rgba(0, 0, 0, 0.1),
-			0 0 24px rgba(5, 150, 105, 0.12);
+			0 0 24px rgba(59, 130, 246, 0.12);
 		border-color: var(--color-primary);
 	}
 }
@@ -395,7 +451,7 @@ th {
 @media (hover: hover) and (pointer: fine) {
 	.stat-card-featured:hover {
 		transform: translateY(-3px);
-		box-shadow: 0 12px 32px rgba(5, 150, 105, 0.3);
+		box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3);
 	}
 }
 
@@ -634,10 +690,10 @@ input:focus-within {
 }
 
 .dark ::-webkit-scrollbar-thumb {
-	background: #333;
+	background: #2d3a4f;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-	background: #555;
+	background: #475569;
 }
 
 /* ── Responsive: tables become cards on mobile ──────────────────── */
