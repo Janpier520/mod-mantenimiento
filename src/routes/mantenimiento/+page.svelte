@@ -957,23 +957,23 @@
 		variant="danger"
 		onconfirm={async () => {
 			if (!deletingPlan) return;
-			const formData = new FormData();
-			formData.set('id', deletingPlan.id);
+			const formData = new URLSearchParams({ id: deletingPlan.id });
 
-			const res = await fetch($page.url.pathname, {
+			const res = await fetch($page.url.pathname + '?/delete_plan', {
 				method: 'POST',
-				body: new URLSearchParams({ _action: 'delete_plan', id: deletingPlan.id })
+				body: formData
 			});
 
-			const body = (await res.json()) as Record<string, unknown>;
 			showDeletePlan = false;
 
-			if (body.success) {
+			if (res.ok) {
 				if (expandedPlanId === deletingPlan.id) expandedPlanId = null;
 				addToast('Plan eliminado correctamente');
 				await invalidate($page.url.pathname);
 			} else {
-				addToast((body.error as string) ?? 'Error al eliminar el plan', 'error');
+				const body = await res.json().catch(() => ({}));
+				const msg = typeof body.error === 'string' ? body.error : 'Error al eliminar el plan';
+				addToast(msg, 'error');
 			}
 			deletingPlan = null;
 		}}
@@ -994,22 +994,22 @@
 		variant="danger"
 		onconfirm={async () => {
 			if (!deletingTask) return;
-			const formData = new FormData();
-			formData.set('id', deletingTask.id);
+			const formData = new URLSearchParams({ id: deletingTask.id });
 
-			const res = await fetch($page.url.pathname, {
+			const res = await fetch($page.url.pathname + '?/delete_task', {
 				method: 'POST',
-				body: new URLSearchParams({ _action: 'delete_task', id: deletingTask.id })
+				body: formData
 			});
 
-			const body = (await res.json()) as Record<string, unknown>;
 			showDeleteTask = false;
 
-			if (body.success) {
+			if (res.ok) {
 				addToast('Tarea eliminada correctamente');
 				await invalidate($page.url.pathname);
 			} else {
-				addToast((body.error as string) ?? 'Error al eliminar la tarea', 'error');
+				const body = await res.json().catch(() => ({}));
+				const msg = typeof body.error === 'string' ? body.error : 'Error al eliminar la tarea';
+				addToast(msg, 'error');
 			}
 			deletingTask = null;
 		}}
