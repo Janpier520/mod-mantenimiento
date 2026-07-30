@@ -1,3 +1,76 @@
+/* ── Geist font-face (self-hosted via static/fonts/) ────────────────────── */
+@font-face {
+	font-family: 'Geist';
+	src: url('/fonts/Geist-Variable.woff2') format('woff2');
+	font-weight: 100 900;
+	font-display: swap;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Geist Mono';
+	src: url('/fonts/GeistMono-Variable.woff2') format('woff2');
+	font-weight: 100 900;
+	font-display: swap;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Geist';
+	src: url('/fonts/Geist-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-display: swap;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Geist';
+	src: url('/fonts/Geist-Medium.woff2') format('woff2');
+	font-weight: 500;
+	font-display: swap;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Geist';
+	src: url('/fonts/Geist-SemiBold.woff2') format('woff2');
+	font-weight: 600;
+	font-display: swap;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Geist';
+	src: url('/fonts/Geist-Bold.woff2') format('woff2');
+	font-weight: 700;
+	font-display: swap;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Geist Mono';
+	src: url('/fonts/GeistMono-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-display: swap;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Geist Mono';
+	src: url('/fonts/GeistMono-Medium.woff2') format('woff2');
+	font-weight: 500;
+	font-display: swap;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Geist Mono';
+	src: url('/fonts/GeistMono-Bold.woff2') format('woff2');
+	font-weight: 700;
+	font-display: swap;
+	font-style: normal;
+}
+
 @import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -16,25 +89,11 @@
 	--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
 	/* ── Color tokens — Emerald + Slate scheme ────────────────────── */
-	--font-sans:
-		-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
-		sans-serif;
-	--font-mono:
-		ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+	--font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
-	/* ── Laravel extracted brand tokens ──────────────────────────────── */
-	--font-laravel: InstrumentSans, ui-sans-serif, system-ui, sans-serif;
-	--font-laravel-mono: 'Geist Mono', ui-monospace, monospace;
-
-	--color-laravel-primary: var(--color-primary);
-	--color-laravel-primary-dark: var(--color-primary-dark);
-	--color-laravel-forge: var(--color-forge);
-	--color-laravel-cloud: var(--color-cloud);
-	--color-laravel-cloud-light: var(--color-cloud-light);
-	--color-laravel-nova: var(--color-nova);
-	--color-laravel-vapor: var(--color-vapor);
-	--color-laravel-nightwatch: var(--color-nightwatch);
-
+	/* ── Our custom hex tokens (overridden by .dark) ──────────────── */
+	/* ── Mapped design tokens (from CSS vars) ─────────────────────── */
 	--color-gray-50: var(--gray-50);
 	--color-gray-100: var(--gray-100);
 	--color-gray-200: var(--gray-200);
@@ -62,39 +121,16 @@
 	--color-surface: var(--surface);
 	--color-card: var(--card-hex);
 	--color-card-hover: var(--card-hover);
-	--color-border-light: var(--border-light);
 
 	/* ── Monospace labels & badges ────────────────────────────────────── */
 	--font-label: var(--font-mono);
 
-	/* ── Laravel spacing (extracted 1px–208px scale) ──────────────────── */
-	--space-laravel-1: 1px;
-	--space-laravel-2: 2px;
-	--space-laravel-3: 3px;
-	--space-laravel-4: 4px;
-	--space-laravel-5: 6px;
-	--space-laravel-6: 8px;
-	--space-laravel-7: 10px;
-	--space-laravel-8: 12px;
-	--space-laravel-9: 16px;
-	--space-laravel-10: 20px;
-	--space-laravel-11: 24px;
-	--space-laravel-12: 28px;
-	--space-laravel-13: 32px;
-	--space-laravel-14: 40px;
-	--space-laravel-15: 48px;
-	--space-laravel-16: 64px;
-	--space-laravel-17: 80px;
-	--space-laravel-18: 96px;
-	--space-laravel-19: 160px;
-	--space-laravel-20: 208px;
-
 	/* ── Radius hierarchy (shadcn-compatible) ─────────────────────────── */
 	--radius: 0.5rem;
-	--radius-sm: 0.25rem;
-	--radius-md: 0.375rem;
-	--radius-lg: 0.5rem;
-	--radius-xl: 0.75rem;
+	--radius-lg: var(--radius);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-xl: calc(var(--radius) + 4px);
 
 	/* ── shadcn UI utility mappings (reference HSL vars via hsl()) ──── */
 	--color-background: hsl(var(--background));
@@ -128,14 +164,14 @@
 	--text-display: 2.5rem;
 	--text-h1: 1.75rem;
 	--text-h2: 1.25rem;
-	--text-h3: 1.125rem;
+	--text-h3: 1rem;
 	--text-body: 0.875rem;
 	--text-sm: 0.75rem;
 	--text-xs: 0.625rem;
 
-	/* ── Card glow shadows ──────────────────────────────────────────── */
-	--shadow-card: 0 4px 20px rgba(59, 130, 246, 0.08);
-	--shadow-card-hover: 0 8px 30px rgba(59, 130, 246, 0.12);
+	/* ── Card diffused shadows (taste-design: wide-blur, tinted to bg) ── */
+	--shadow-card: 0 4px 24px rgba(0, 0, 0, 0.05);
+	--shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 /* ── Light mode tokens ──────────────────────────────────────────────── */
@@ -147,7 +183,7 @@
 	--card-foreground: 240 10% 3.9%;
 	--popover: 0 0% 100%;
 	--popover-foreground: 240 10% 3.9%;
-	--primary: 217 91% 60%; /* electric blue #3b82f6 */
+	--primary: 217 76% 60%; /* #4b86e7 — desaturated <80% per taste-design */
 	--primary-foreground: 0 0% 100%;
 	--secondary: 240 4.8% 95.9%;
 	--secondary-foreground: 240 5.9% 10%;
@@ -159,7 +195,7 @@
 	--destructive-foreground: 0 0% 98%;
 	--border: 240 5.9% 90%;
 	--input: 240 5.9% 90%;
-	--ring: 217 91% 60%;
+	--ring: 217 76% 60%;
 	--chart-1: 217 91% 60%;
 	--chart-2: 142 71% 45%;
 	--chart-3: 35 92% 55%;
@@ -171,11 +207,11 @@
 	--success-foreground: 142 71% 25%;
 	--warning: 35 92% 55%;
 	--warning-foreground: 35 80% 30%;
-	--info: 217 91% 60%;
+	--info: 217 76% 60%;
 	--info-foreground: 217 80% 30%;
 
 	/* ── Chart CSS vars (light) ───────────────────────────────────── */
-	--chart-line-1: #3b82f6;
+	--chart-line-1: #4b86e7;
 	--chart-line-2: #22c55e;
 	--chart-tooltip-bg: #1e293b;
 	--chart-grid-color: #94a3b8;
@@ -200,9 +236,9 @@
 	--sidebar-text: #64748b;
 	--sidebar-text-active: #f8fafc;
 
-	--color-brand: #3b82f6;
-	--color-brand-hover: #2563eb;
-	--color-brand-light: #dbeafe;
+	--color-brand: #4b86e7;
+	--color-brand-hover: #3468d9;
+	--color-brand-light: #deebfb;
 	--surface: #f8fafc;
 	--card-hex: #ffffff;
 	--card-hover: #f8fafc;
@@ -218,7 +254,7 @@
 	--card-foreground: 0 0% 100%;
 	--popover: 220 30% 10%; /* #151a26 */
 	--popover-foreground: 0 0% 100%;
-	--primary: 217 91% 65%; /* #60a5fa — brighter blue for dark bg */
+	--primary: 217 76% 65%; /* #6ca5ec — desaturated <80% per taste-design */
 	--primary-foreground: 0 0% 100%;
 	--secondary: 220 25% 14%; /* #1a2033 */
 	--secondary-foreground: 0 0% 100%;
@@ -230,7 +266,7 @@
 	--destructive-foreground: 0 0% 100%;
 	--border: 220 25% 16%; /* #1e293b */
 	--input: 220 25% 16%; /* #1e293b */
-	--ring: 217 91% 65%; /* #60a5fa */
+	--ring: 217 76% 65%; /* #60a5fa */
 	--chart-1: 217 91% 65%;
 	--chart-2: 142 71% 55%;
 	--chart-3: 35 85% 65%;
@@ -288,9 +324,7 @@ html {
 }
 
 body {
-	font-family:
-		-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
-		sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+	font-family: var(--font-sans);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
@@ -315,10 +349,18 @@ h2 {
 	color: hsl(var(--foreground));
 }
 
+.dark h2 {
+	color: hsl(var(--foreground));
+}
+
 h3 {
 	font-size: 1rem;
 	font-weight: 600;
 	letter-spacing: -0.01em;
+	color: hsl(var(--foreground));
+}
+
+.dark h3 {
 	color: hsl(var(--foreground));
 }
 
@@ -329,7 +371,10 @@ h3 {
 
 h1,
 h2,
-h3,
+h3 {
+	font-family: var(--font-sans);
+}
+
 label,
 th {
 	font-family: var(--font-mono);
@@ -351,12 +396,12 @@ th {
 	.card:hover,
 	[data-card]:hover {
 		border-color: var(--color-primary);
-		box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+		box-shadow: var(--shadow-card-hover);
 	}
 
 	.dark .card:hover,
 	.dark [data-card]:hover {
-		box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+		box-shadow: var(--shadow-card-hover);
 	}
 }
 
@@ -377,9 +422,7 @@ th {
 @media (hover: hover) and (pointer: fine) {
 	.card-elevated:hover {
 		border-color: var(--color-primary);
-		box-shadow:
-			0 0 30px rgba(59, 130, 246, 0.12),
-			0 4px 12px rgba(0, 0, 0, 0.08);
+		box-shadow: var(--shadow-card-hover);
 	}
 }
 
@@ -419,9 +462,7 @@ th {
 @media (hover: hover) and (pointer: fine) {
 	.stat-card:hover {
 		transform: translateY(-3px);
-		box-shadow:
-			0 12px 32px rgba(0, 0, 0, 0.1),
-			0 0 24px rgba(59, 130, 246, 0.12);
+		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
 		border-color: var(--color-primary);
 	}
 }
@@ -451,7 +492,7 @@ th {
 @media (hover: hover) and (pointer: fine) {
 	.stat-card-featured:hover {
 		transform: translateY(-3px);
-		box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3);
+		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
 	}
 }
 
@@ -627,15 +668,13 @@ a {
 	animation: spin 0.6s linear infinite;
 }
 
-/* ── Input focus glow (login page) ─────────────────────────────────── */
+/* ── Input focus ring (no outer glow per taste-design) ────────────────── */
 input {
 	--focus-glow: 0;
 }
 
 input:focus-within {
-	box-shadow:
-		0 0 0 2px hsl(var(--primary) / 0.15),
-		0 0 20px hsl(var(--primary) / 0.1);
+	box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15);
 }
 
 /* ── Form error shake animation (taste-skill 4.5: tactile feedback) ──── */
