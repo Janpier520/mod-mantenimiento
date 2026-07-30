@@ -6,6 +6,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import ConfirmDialog from '$lib/ui/ConfirmDialog.svelte';
+	import ActionIconButton from '$lib/ui/ActionIconButton.svelte';
 	import { addToast } from '$lib/stores/toast.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Pencil from '@lucide/svelte/icons/pencil';
@@ -264,40 +265,24 @@
 							</p>
 						</div>
 						<div class="ml-4 flex shrink-0 items-center gap-2">
-							<button
-								onclick={(e) => {
+							<ActionIconButton
+								icon={Pencil}
+								variant="edit"
+								onclick={(e: MouseEvent) => {
 									e.stopPropagation();
 									openEditPlan(plan);
 								}}
-								class="inline-flex items-center rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-white/50 hover:text-primary dark:hover:bg-gray-800/50"
-								aria-label="Editar plan"
-							>
-								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-									/>
-								</svg>
-							</button>
-							<button
-								onclick={(e) => {
+								label="Editar plan"
+							/>
+							<ActionIconButton
+								icon={Trash2}
+								variant="delete"
+								onclick={(e: MouseEvent) => {
 									e.stopPropagation();
 									openDeletePlan(plan);
 								}}
-								class="inline-flex items-center rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-white/50 hover:text-red-500 dark:hover:bg-gray-800/50"
-								aria-label="Eliminar plan"
-							>
-								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-									/>
-								</svg>
-							</button>
+								label="Eliminar plan"
+							/>
 							<svg
 								class="h-5 w-5 text-muted-foreground transition-transform {expandedPlanId ===
 								plan.id
@@ -362,20 +347,8 @@
 														>{task.descripcion || '—'}</td
 													>
 													<td data-label="Acción" class="px-4 py-2.5 text-right">
-														<button
-															onclick={() => openEditTask(task)}
-															class="inline-flex items-center rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-primary"
-															aria-label="Editar tarea"
-														>
-															<Pencil class="h-3.5 w-3.5" />
-														</button>
-														<button
-															onclick={() => openDeleteTask(task)}
-															class="inline-flex items-center rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-red-500"
-															aria-label="Eliminar tarea"
-														>
-															<Trash2 class="h-3.5 w-3.5" />
-														</button>
+												<ActionIconButton icon={Pencil} variant="edit" onclick={() => openEditTask(task)} label="Editar tarea" />
+												<ActionIconButton icon={Trash2} variant="delete" onclick={() => openDeleteTask(task)} label="Eliminar tarea" />
 													</td>
 												</tr>
 											{/each}

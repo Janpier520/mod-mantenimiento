@@ -9,6 +9,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import ConfirmDialog from '$lib/ui/ConfirmDialog.svelte';
+	import ActionIconButton from '$lib/ui/ActionIconButton.svelte';
 	import { addToast } from '$lib/stores/toast.svelte';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -157,20 +158,8 @@
 	>
 		{#snippet children(item)}
 			<div class="flex items-center gap-1">
-				<button
-					onclick={() => openEdit(item)}
-					class="inline-flex items-center gap-1 rounded-lg p-1.5 text-sm text-muted-foreground transition-colors hover:bg-gray-100 hover:text-primary dark:hover:bg-gray-800"
-					aria-label="Editar"
-				>
-					<Pencil class="h-4 w-4" />
-				</button>
-				<button
-					onclick={() => openDelete(item)}
-					class="inline-flex items-center gap-1 rounded-lg p-1.5 text-sm text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
-					aria-label="Eliminar"
-				>
-					<Trash2 class="h-4 w-4" />
-				</button>
+				<ActionIconButton icon={Pencil} variant="edit" onclick={() => openEdit(item)} label="Editar" />
+				<ActionIconButton icon={Trash2} variant="delete" onclick={() => openDelete(item)} label="Eliminar" />
 			</div>
 		{/snippet}
 	</DataTable>
