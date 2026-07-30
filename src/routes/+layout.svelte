@@ -39,6 +39,11 @@
 	let overlayEl = $state<HTMLElement | undefined>(undefined);
 	let mainEl = $state<HTMLElement | undefined>(undefined);
 
+	// Sidebar collapse (desktop only — persisted in localStorage)
+	let sidebarCollapsed = $state(
+		browser ? localStorage.getItem('equip-lab-sidebar-collapsed') === 'true' : false
+	);
+
 	let sidebarTl: gsap.core.Timeline | null = null;
 
 	// Collapsible nav groups — persisted in a Set
@@ -60,6 +65,15 @@
 	function toggleSidebar() {
 		sidebarOpen = !sidebarOpen;
 	}
+
+	function toggleCollapse() {
+		sidebarCollapsed = !sidebarCollapsed;
+	}
+
+	$effect(() => {
+		if (!browser) return;
+		localStorage.setItem('equip-lab-sidebar-collapsed', String(sidebarCollapsed));
+	});
 
 	$effect(() => {
 		if (!browser) return;
@@ -230,7 +244,7 @@
 </div>
 
 {#if !user}
-	<div class="bg-grain flex min-h-screen items-center justify-center bg-surface">
+	<div class="bg-grain flex min-h-screen items-center justify-center bg-surface text-foreground">
 		{@render children()}
 	</div>
 {:else}
@@ -248,12 +262,12 @@
 		<!-- Sidebar -->
 		<aside
 			bind:this={sidebarEl}
-			class="fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col bg-sidebar lg:static lg:z-auto lg:translate-x-0"
+			class="sidebar fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar transition-[width] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] lg:static lg:z-auto {sidebarCollapsed ? 'w-16' : 'w-64'} {sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0"
 		>
 			<!-- Logo -->
-			<div class="flex h-16 items-center gap-3 border-b border-white/5 px-5">
+			<div class="flex h-16 shrink-0 items-center gap-2 border-b border-white/5 px-3">
 				<div
-					class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white shadow-sm shadow-primary/30"
+					class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-white shadow-sm"
 				>
 					<svg
 						class="h-4 w-4"
@@ -269,69 +283,111 @@
 						/>
 					</svg>
 				</div>
-				<div>
-					<h1 class="text-sm font-bold tracking-tight text-white">
-						Módulo Mantenimiento de Equipos
-					</h1>
-					<p class="text-[11px] text-sidebar-text/50">Gestión de Equipos</p>
+				<div class="min-w-0 flex-1 overflow-hidden {sidebarCollapsed ? 'hidden' : ''}">
+					<span class="block truncate text-xs font-bold tracking-tight text-white">
+						Módulo Mantenimiento
+					</span>
+					<span class="block truncate text-[11px] text-sidebar-text/60">Gestión de Equipos</span>
 				</div>
+				<!-- Desktop collapse toggle -->
+				<button
+					onclick={toggleCollapse}
+					class="hidden shrink-0 items-center justify-center rounded-lg text-sidebar-text/40 transition-colors hover:text-sidebar-text-active/70 lg:flex {sidebarCollapsed ? 'h-8 w-8' : 'h-6 w-6'}"
+					aria-label={sidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+				>
+					<svg
+						class="h-3.5 w-3.5 transition-transform duration-200"
+						class:rotate-180={sidebarCollapsed}
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+						stroke-width="2"
+					>
+						<path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+					</svg>
+				</button>
 			</div>
 
 			<!-- Navigation -->
 			<nav bind:this={navEl} class="flex-1 overflow-y-auto px-3 py-3">
-				{#each navGroups as group}
-					{@const isCollapsed = collapsedGroups.has(group.label)}
-					<div class="mb-4">
-						<!-- Collapsible group header -->
-						<button
-							onclick={() => toggleGroup(group.label)}
-							class="mb-1 flex w-full items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-semibold tracking-widest text-sidebar-text/40 uppercase transition-colors hover:text-sidebar-text-active/60"
-						>
-							<svg
-								class="group-arrow h-3 w-3 {isCollapsed ? 'collapsed' : ''}"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-								stroke-width="2"
+				{#if sidebarCollapsed}
+					<!-- Collapsed: flat icon list -->
+					<ul class="flex flex-col items-center gap-1">
+						{#each navGroups as group}
+							{#each group.items as item}
+								{@const IconCmp = iconMap[item.icon]}
+								<li>
+									<a
+										href={item.href}
+										aria-current={isActive(item.href) ? 'page' : undefined}
+										aria-label={item.label}
+										class="nav-item flex h-9 w-9 items-center justify-center rounded-lg transition-colors {isActive(
+											item.href
+										)
+											? 'nav-item-active bg-primary-light/15 text-sidebar-text-active'
+											: 'text-sidebar-text hover:bg-white/5 hover:text-sidebar-text-active'}"
+									>
+										<IconCmp class="nav-icon h-4 w-4" />
+									</a>
+								</li>
+							{/each}
+						{/each}
+					</ul>
+				{:else}
+					{#each navGroups as group}
+						{@const isCollapsed = collapsedGroups.has(group.label)}
+						<div class="mb-4">
+							<!-- Collapsible group header -->
+							<button
+								onclick={() => toggleGroup(group.label)}
+								class="mb-1 flex w-full items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-semibold tracking-widest text-sidebar-text/60 uppercase transition-colors hover:text-sidebar-text-active/70"
 							>
-								<path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-							</svg>
-							{group.label}
-						</button>
-						{#if !isCollapsed}
-							<ul class="space-y-0.5">
-								{#each group.items as item}
-									{@const IconCmp = iconMap[item.icon]}
-									<li>
-										<a
-											href={item.href}
-											aria-current={isActive(item.href) ? 'page' : undefined}
-											class="nav-item flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors {isActive(
-												item.href
-											)
-												? 'nav-item-active bg-primary-light/15 text-sidebar-text-active'
-												: 'text-sidebar-text hover:bg-white/5 hover:text-sidebar-text-active'}"
-										>
-											<IconCmp class="nav-icon h-4 w-4 flex-shrink-0" />
-											<span>{item.label}</span>
-										</a>
-									</li>
-								{/each}
-							</ul>
-						{/if}
-					</div>
-				{/each}
+								<svg
+									class="group-arrow h-3 w-3 {isCollapsed ? 'collapsed' : ''}"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+									stroke-width="2"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+								</svg>
+								{group.label}
+							</button>
+							{#if !isCollapsed}
+								<ul class="space-y-1">
+									{#each group.items as item}
+										{@const IconCmp = iconMap[item.icon]}
+										<li>
+											<a
+												href={item.href}
+												aria-current={isActive(item.href) ? 'page' : undefined}
+												class="nav-item flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors {isActive(
+													item.href
+												)
+													? 'nav-item-active bg-primary-light/15 text-sidebar-text-active'
+													: 'text-sidebar-text hover:bg-white/5 hover:text-sidebar-text-active'}"
+											>
+												<IconCmp class="nav-icon h-4 w-4 flex-shrink-0" />
+												<span>{item.label}</span>
+											</a>
+										</li>
+									{/each}
+								</ul>
+							{/if}
+						</div>
+					{/each}
+				{/if}
 			</nav>
 
 			<!-- User info at bottom -->
-			<div class="border-t border-white/5 px-4 py-3">
-				<div class="flex items-center gap-2.5">
+			<div class="border-t border-white/5 px-3 py-3">
+				<div class="flex items-center justify-center gap-2.5 {sidebarCollapsed ? '' : ''}">
 					<div
-						class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/80 text-xs font-bold tracking-tight text-white"
+						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/80 text-xs font-bold tracking-tight text-white"
 					>
 						{user.nombre.charAt(0)}{user.apellido.charAt(0)}
 					</div>
-					<div class="min-w-0 flex-1">
+					<div class="min-w-0 flex-1 {sidebarCollapsed ? 'hidden' : ''}">
 						<p class="truncate text-sm font-medium text-white">
 							{user.nombre}
 							{user.apellido}
@@ -349,14 +405,14 @@
 		</aside>
 
 		<!-- Main content -->
-		<div class="flex min-w-0 flex-1 flex-col">
+		<div class="flex min-w-0 flex-1 flex-col text-foreground">
 			<!-- Topbar with page title + breadcrumb -->
 			<header
-				class="flex h-16 items-center gap-3 border-b border-border-light bg-card px-4 lg:px-6"
+				class="flex h-16 items-center gap-3 border-b border-border bg-card px-4 lg:px-6"
 			>
 				<!-- Mobile hamburger -->
 				<button
-					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-muted lg:hidden"
+					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted lg:hidden"
 					onclick={toggleSidebar}
 					aria-label="Abrir menú"
 				>
@@ -383,7 +439,7 @@
 
 				<!-- Dark mode toggle -->
 				<button
-					class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-muted"
+					class="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
 					onclick={toggleDarkMode}
 					aria-label="Cambiar tema"
 				>
@@ -412,7 +468,7 @@
 				<form action="/login?/logout" method="post">
 					<button
 						type="submit"
-						class="flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-gray-500 transition-colors hover:bg-muted"
+						class="flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-muted-foreground transition-colors hover:bg-muted"
 					>
 						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
