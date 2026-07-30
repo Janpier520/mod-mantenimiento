@@ -158,7 +158,7 @@
 					<p class="text-sm font-medium text-white/80">Total Equipos</p>
 					<p bind:this={featuredVal} class="stat-value mt-1 text-white">{data.equipmentCount}</p>
 				</div>
-				<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 text-white">
+				<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-card/15 text-white">
 					<Package class="h-6 w-6" />
 				</div>
 			</div>
@@ -172,7 +172,7 @@
 					<p class="stat-value mt-1">{data.ticketCount}</p>
 				</div>
 				<div
-					class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+					class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary dark:bg-primary/15 dark:text-primary"
 				>
 					<Ticket class="h-5 w-5" />
 				</div>
@@ -190,7 +190,7 @@
 						{data.totalPlans}
 					</p>
 					<div
-						class="mt-2 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400"
+						class="mt-2 flex items-center gap-1.5 text-xs text-success dark:text-success"
 					>
 						<TrendingUp class="h-3.5 w-3.5" />
 						<span class="font-medium">+8%</span>
@@ -198,14 +198,14 @@
 					</div>
 				</div>
 				<div
-					class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+					class="flex h-10 w-10 items-center justify-center rounded-lg bg-success/15 text-success dark:bg-success/15 dark:text-success"
 				>
 					<Wrench class="h-5 w-5" />
 				</div>
 			</div>
 			{#if data.overdueMaintenance > 0}
 				<div
-					class="mt-3 flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-600 dark:bg-red-950 dark:text-red-400"
+					class="mt-3 flex items-center gap-1.5 rounded-lg bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive dark:bg-destructive/15 dark:text-destructive"
 				>
 					<AlertTriangle class="h-3.5 w-3.5" />
 					<span>{data.overdueMaintenance} vencido{data.overdueMaintenance !== 1 ? 's' : ''}</span>
@@ -223,14 +223,14 @@
 					<p class="stat-value mt-1">
 						{data.pendingCount}
 					</p>
-					<div class="mt-2 flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
+					<div class="mt-2 flex items-center gap-1.5 text-xs text-destructive dark:text-destructive">
 						<TrendingDown class="h-3.5 w-3.5" />
 						<span class="font-medium">-3%</span>
 						<span class="text-muted-foreground">vs mes anterior</span>
 					</div>
 				</div>
 				<div
-					class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
+					class="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/15 text-warning dark:bg-warning/15 dark:text-warning"
 				>
 					<AlertTriangle class="h-5 w-5" />
 				</div>
@@ -242,12 +242,12 @@
 	<div class="rounded-xl border bg-card p-6">
 		<div class="mb-4 flex items-center justify-between">
 			<h2 class="text-lg font-bold text-foreground">Actividad</h2>
-			<div class="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+			<div class="flex gap-1 rounded-lg bg-muted p-1 dark:bg-card">
 				<button
 					class="rounded-md px-3 py-1.5 text-xs font-medium transition-colors {timePeriod ===
 					'semanal'
-						? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white'
-						: 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}"
+						? 'bg-card text-foreground shadow-sm dark:bg-muted dark:text-foreground'
+						: 'text-muted-foreground hover:text-foreground dark:text-muted-foreground'}"
 					onclick={() => (timePeriod = 'semanal')}
 				>
 					Semanal
@@ -255,8 +255,8 @@
 				<button
 					class="rounded-md px-3 py-1.5 text-xs font-medium transition-colors {timePeriod ===
 					'mensual'
-						? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white'
-						: 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}"
+						? 'bg-card text-foreground shadow-sm dark:bg-muted dark:text-foreground'
+						: 'text-muted-foreground hover:text-foreground dark:text-muted-foreground'}"
 					onclick={() => (timePeriod = 'mensual')}
 				>
 					Mensual
@@ -264,8 +264,8 @@
 				<button
 					class="rounded-md px-3 py-1.5 text-xs font-medium transition-colors {timePeriod ===
 					'anual'
-						? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white'
-						: 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}"
+						? 'bg-card text-foreground shadow-sm dark:bg-muted dark:text-foreground'
+						: 'text-muted-foreground hover:text-foreground dark:text-muted-foreground'}"
 					onclick={() => (timePeriod = 'anual')}
 				>
 					Anual
@@ -283,7 +283,7 @@
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
 			<a
 				href="/equipos"
-				class="group flex items-center gap-3 rounded-xl border border-border-light bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm hover:shadow-primary/10"
+				class="group flex items-center gap-3 rounded-xl border border-border-light bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm hover:shadow-blue-500/10"
 			>
 				<div
 					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20"
@@ -294,7 +294,7 @@
 			</a>
 			<a
 				href="/tickets"
-				class="group flex items-center gap-3 rounded-xl border border-border-light bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm hover:shadow-primary/10"
+				class="group flex items-center gap-3 rounded-xl border border-border-light bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm hover:shadow-blue-500/10"
 			>
 				<div
 					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20"
@@ -305,7 +305,7 @@
 			</a>
 			<a
 				href="/mantenimiento"
-				class="group flex items-center gap-3 rounded-xl border border-border-light bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm hover:shadow-primary/10"
+				class="group flex items-center gap-3 rounded-xl border border-border-light bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm hover:shadow-blue-500/10"
 			>
 				<div
 					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20"
@@ -316,7 +316,7 @@
 			</a>
 			<a
 				href="/reportes"
-				class="group flex items-center gap-3 rounded-xl border border-border-light bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm hover:shadow-primary/10"
+				class="group flex items-center gap-3 rounded-xl border border-border-light bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm hover:shadow-blue-500/10"
 			>
 				<div
 					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20"
@@ -335,7 +335,7 @@
 				Próximos Mantenimientos
 				{#if data.overdueMaintenance > 0}
 					<span
-						class="ml-2 inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600 dark:bg-red-900/30 dark:text-red-400"
+						class="ml-2 inline-flex items-center rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive dark:bg-destructive/15 dark:text-destructive"
 					>
 						{data.overdueMaintenance} vencido{data.overdueMaintenance !== 1 ? 's' : ''}
 					</span>
@@ -346,13 +346,13 @@
 					{#each data.upcomingMaintenance as item}
 						<a
 							href="/mantenimiento"
-							class="flex items-center justify-between rounded-lg border border-border-light bg-white px-4 py-3 transition-colors hover:bg-gray-50 dark:bg-gray-800/50 dark:hover:bg-gray-800"
+							class="flex items-center justify-between rounded-lg border border-border-light bg-card px-4 py-3 transition-colors hover:bg-muted/50 dark:bg-card dark:hover:bg-muted/50"
 						>
 							<div class="min-w-0 flex-1">
-								<p class="truncate text-sm font-medium text-gray-800 dark:text-gray-200">
+								<p class="truncate text-sm font-medium text-foreground dark:text-foreground">
 									{item.plan?.nombre ?? 'Plan'}
 								</p>
-								<p class="truncate text-xs text-gray-500 dark:text-gray-400">
+								<p class="truncate text-xs text-muted-foreground dark:text-muted-foreground">
 									{item.tarea?.nombre ?? ''}
 									<span class="mx-1">&middot;</span>
 									{item.ejecutante
@@ -361,7 +361,7 @@
 								</p>
 							</div>
 							<div class="ml-3 shrink-0 text-right">
-								<p class="text-xs font-medium text-gray-600 dark:text-gray-400">
+								<p class="text-xs font-medium text-muted-foreground dark:text-muted-foreground">
 									{new Date(item.fecha_programada).toLocaleDateString('es-AR')}
 								</p>
 							</div>
@@ -383,13 +383,13 @@
 					{#each data.recentTickets as ticket}
 						<a
 							href="/tickets"
-							class="flex items-center justify-between rounded-lg border border-border-light bg-white px-4 py-3 transition-colors hover:bg-gray-50 dark:bg-gray-800/50 dark:hover:bg-gray-800"
+							class="flex items-center justify-between rounded-lg border border-border-light bg-card px-4 py-3 transition-colors hover:bg-muted/50 dark:bg-card dark:hover:bg-muted/50"
 						>
 							<div class="min-w-0 flex-1">
-								<p class="truncate text-sm font-medium text-gray-800 dark:text-gray-200">
+								<p class="truncate text-sm font-medium text-foreground dark:text-foreground">
 									{ticket.titulo || ticket.equipo?.nombre || 'Ticket'}
 								</p>
-								<p class="truncate text-xs text-gray-500 dark:text-gray-400">
+								<p class="truncate text-xs text-muted-foreground dark:text-muted-foreground">
 									{ticket.equipo?.nombre ?? 'Sin equipo'}
 									<span class="mx-1">&middot;</span>
 									{ticket.reporta
@@ -400,10 +400,10 @@
 							<div class="ml-3 shrink-0 text-right">
 								<span
 									class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {ticket.estado === 'abierto'
-										? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+										? 'bg-primary/15 text-primary dark:bg-primary/15 dark:text-primary'
 										: ticket.estado === 'en_progreso'
-											? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-											: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}"
+											? 'bg-warning/15 text-warning dark:bg-warning/15 dark:text-warning'
+											: 'bg-muted text-muted-foreground dark:bg-card dark:text-muted-foreground'}"
 								>
 									{ticket.estado === 'abierto'
 										? 'Abierto'

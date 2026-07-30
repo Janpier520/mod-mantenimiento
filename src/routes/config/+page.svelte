@@ -34,7 +34,7 @@
 				}
 			};
 		}}
-		class="space-y-6 rounded-xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-900"
+		class="space-y-6 rounded-xl border border-border bg-card p-6 shadow-xl dark:border-border dark:bg-background"
 	>
 		<input type="hidden" name="_keys" value={settings.map((s) => s.key).join(',')} />
 

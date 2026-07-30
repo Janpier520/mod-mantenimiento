@@ -28,7 +28,7 @@
 	<div class="space-y-3">
 		{#each sessions as session}
 			<div
-				class="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm dark:bg-gray-900"
+				class="flex items-center justify-between rounded-xl bg-card p-4 shadow-sm dark:bg-background"
 			>
 				<div>
 					<p class="text-sm font-medium text-foreground">
@@ -53,7 +53,7 @@
 					<input type="hidden" name="sessionId" value={session.id} />
 					<button
 						type="submit"
-						class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400"
+						class="rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/15 dark:bg-destructive/20 dark:text-destructive"
 					>
 						Cerrar
 					</button>
