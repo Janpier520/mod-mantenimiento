@@ -37,7 +37,7 @@
 	<!-- Logo -->
 	<div bind:this={logoEl} class="mb-10 text-center">
 		<div
-			class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-emerald-700 shadow-lg ring-1 shadow-primary/30 ring-white/10"
+			class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-emerald-700 shadow-lg ring-1 ring-white/10"
 		>
 			<svg
 				class="h-6 w-6 text-white"
@@ -99,7 +99,7 @@
 
 				<Button
 					type="submit"
-					class="w-full shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30"
+					class="w-full shadow-lg hover:shadow-xl"
 					>Iniciar Sesión</Button
 				>
 			</div>

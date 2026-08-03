@@ -398,7 +398,7 @@
 					</thead>
 					<tbody>
 						{#each data.topEquipment as item, i}
-							<tr class="border-b border-border-light last:border-0">
+							<tr class="border-b border-border last:border-0">
 								<td data-label="#" class="py-2 pr-4 text-muted-foreground">{i + 1}</td>
 								<td data-label="Equipo" class="py-2 pr-4 font-medium text-foreground">
 									{item.marca ?? '—'}

@@ -18,22 +18,22 @@
 	let progressEl: HTMLElement;
 	let progressTween: gsap.core.Tween | null = null;
 
-	// ── Per-type styling — bolder colors + ring accents ──────────
+	// ── Per-type styling — semantic token colors (auto-adapt to dark mode) ──────────
 	const style = $derived(
 		toast.type === 'success'
 			? {
-					bg: 'bg-emerald-50 dark:bg-emerald-950/90',
-					border: 'border-emerald-200 dark:border-emerald-800',
-					text: 'text-emerald-800 dark:text-emerald-300',
+					bg: 'bg-success/10',
+					border: 'border-success/30',
+					text: 'text-success',
 					icon: CheckCircle2,
-					bar: 'bg-emerald-400 dark:bg-emerald-600'
+					bar: 'bg-success'
 				}
 			: {
-					bg: 'bg-red-50 dark:bg-red-950/90',
-					border: 'border-red-200 dark:border-red-800',
-					text: 'text-red-800 dark:text-red-300',
+					bg: 'bg-destructive/10',
+					border: 'border-destructive/30',
+					text: 'text-destructive',
 					icon: AlertCircle,
-					bar: 'bg-red-400 dark:bg-red-600'
+					bar: 'bg-destructive'
 				}
 	);
 

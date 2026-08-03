@@ -64,7 +64,7 @@
 			<!-- Brand logo -->
 			<div class="mb-4 flex items-center justify-center gap-2">
 				<div
-					class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white shadow-sm shadow-primary/30"
+					class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white shadow-sm"
 				>
 					<svg
 						class="h-4 w-4"

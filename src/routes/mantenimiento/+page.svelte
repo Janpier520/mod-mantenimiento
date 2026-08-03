@@ -305,14 +305,14 @@
 					<!-- Expanded content -->
 					{#if expandedPlanId === plan.id}
 						<div
-							class="animate-in fade-in space-y-4 border-t border-border-light px-6 py-4 duration-150"
+							class="animate-in fade-in space-y-4 border-t border-border px-6 py-4 duration-150"
 						>
 							<!-- Tasks table -->
 							{#if (plan.tareas ?? []).length === 0}
 								<p class="text-sm text-muted-foreground">No hay tareas en este plan.</p>
 							{:else}
 								<div
-									class="table-card-mobile overflow-hidden rounded-xl border border-border-light"
+									class="table-card-mobile overflow-hidden rounded-xl border border-border"
 								>
 									<table class="w-full text-sm">
 										<thead>
@@ -334,7 +334,7 @@
 										</thead>
 										<tbody>
 											{#each plan.tareas as task (task.id)}
-												<tr class="border-t border-border-light">
+												<tr class="border-t border-border">
 													<td data-label="#" class="px-4 py-2.5 text-muted-foreground"
 														>{task.orden}</td
 													>
@@ -361,7 +361,7 @@
 							<div class="flex flex-wrap items-center gap-3">
 								<button
 									onclick={() => openAddTask(plan.id)}
-									class="inline-flex items-center gap-1.5 rounded-lg border border-border-light bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+									class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
 								>
 									<Plus class="h-3.5 w-3.5" />
 									Agregar Tarea
@@ -474,7 +474,7 @@
 							type="text"
 							bind:value={formPlanNombre}
 							required
-							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 							class:border-red-400={!!formPlanError}
 							placeholder="Ej: Mantenimiento Mensual PCs"
 						/>
@@ -488,7 +488,7 @@
 							id="plan-descripcion"
 							name="descripcion"
 							bind:value={formPlanDescripcion}
-							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 							rows="2"></textarea>
 					</div>
 
@@ -503,7 +503,7 @@
 							bind:value={formPlanFrecuencia}
 							required
 							min="1"
-							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						/>
 					</div>
 
@@ -515,7 +515,7 @@
 							id="plan-equipo"
 							name="equipo_id"
 							bind:value={formPlanEquipoId}
-							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						>
 							<option value="">Cualquier equipo</option>
 							{#each equipmentList as eq}
@@ -532,7 +532,7 @@
 							id="plan-tipo-equipo"
 							name="tipo_equipo_id"
 							bind:value={formPlanTipoEquipoId}
-							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						>
 							<option value="">Todos los tipos</option>
 							{#each equipmentTypesList as et}
@@ -596,7 +596,7 @@
 						type="text"
 						bind:value={formTaskNombre}
 						required
-						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						class:border-red-400={!!formTaskError}
 						placeholder="Ej: Limpieza interna"
 					/>
@@ -610,7 +610,7 @@
 						id="task-descripcion"
 						name="descripcion"
 						bind:value={formTaskDescripcion}
-						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						rows="2"></textarea>
 				</div>
 
@@ -666,7 +666,7 @@
 							name="ejecutado_por"
 							bind:value={formScheduleTecnico}
 							required
-							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						>
 							<option value="">Seleccionar técnico</option>
 							{#each technicians as t}
@@ -685,7 +685,7 @@
 							type="date"
 							bind:value={formScheduleFecha}
 							required
-							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						/>
 					</div>
 				</div>
@@ -696,7 +696,7 @@
 						Tareas a ejecutar ({scheduleTasks.length})
 					</h4>
 					<div
-						class="max-h-40 divide-y divide-border-light overflow-y-auto rounded-xl border border-border-light"
+						class="max-h-40 divide-y divide-border overflow-y-auto rounded-xl border border-border"
 					>
 						{#each scheduleTasks as task (task.id)}
 							<div class="flex items-center gap-2 px-3 py-2">
@@ -760,7 +760,7 @@
 						name="resultado"
 						bind:value={formExecResultado}
 						required
-						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 					>
 						<option value="completado">Completado</option>
 						<option value="fallido">Fallido</option>
@@ -776,7 +776,7 @@
 						id="exec-obs"
 						name="observaciones"
 						bind:value={formExecObservaciones}
-						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						rows="3"
 						placeholder="Detalles de la ejecución..."></textarea>
 				</div>

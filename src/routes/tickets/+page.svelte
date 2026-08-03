@@ -356,7 +356,7 @@
 				</div>
 				<button
 					onclick={closeDetail}
-					class="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-gray-100 hover:text-foreground dark:hover:bg-gray-800"
+					class="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 					aria-label="Cerrar detalle"
 				>
 					<XIcon class="h-5 w-5" />
@@ -458,7 +458,7 @@
 						bind:value={formComentario}
 						placeholder="Escribe un comentario..."
 						required
-						class="min-h-[2.5rem] flex-1 resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+						class="min-h-[2.5rem] flex-1 resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						rows="1"></textarea>
 					<button
 						type="submit"
@@ -642,7 +642,7 @@
 	<!-- Floating action button -->
 	<Button
 		onclick={openCreate}
-		class="fab fixed right-6 bottom-6 z-30 h-14 w-14 rounded-full shadow-lg shadow-primary/30"
+		class="fab fixed right-6 bottom-6 z-30 h-14 w-14 rounded-full shadow-lg"
 		aria-label="Nuevo Ticket"
 	>
 		<PlusIcon class="h-6 w-6" />

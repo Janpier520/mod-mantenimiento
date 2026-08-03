@@ -73,7 +73,7 @@
 			placeholder="Buscar..."
 			value={search}
 			oninput={(e) => onsearch?.((e.target as HTMLInputElement).value)}
-			class="block w-full rounded-xl border border-border bg-card py-2 pr-4 pl-9 text-sm text-foreground transition-all duration-200 placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+			class="block w-full rounded-xl border border-border bg-card py-2 pr-4 pl-9 text-sm text-foreground transition-all duration-200 placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 		/>
 	</div>
 
@@ -82,7 +82,7 @@
 		<select
 			value={values[f.key] ?? ''}
 			onchange={(e) => onfilterchange?.(f.key, (e.target as HTMLSelectElement).value)}
-			class="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 {values[
+			class="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground transition-all duration-200 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 {values[
 				f.key
 			]
 				? 'border-primary/40 bg-primary/5'

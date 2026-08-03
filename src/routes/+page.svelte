@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import { staggerIn, countUp } from '$lib/animations';
 	import EmptyState from '$lib/ui/EmptyState.svelte';
 	import Package from '@lucide/svelte/icons/package';
@@ -26,9 +27,24 @@
 	let chartInstance: Chart | null = null;
 	let timePeriod = $state<'semanal' | 'mensual' | 'anual'>('mensual');
 
+	function hexToRgba(hex: string, alpha: number): string {
+		hex = hex.replace('#', '');
+		const r = parseInt(hex.slice(0, 2), 16);
+		const g = parseInt(hex.slice(2, 4), 16);
+		const b = parseInt(hex.slice(4, 6), 16);
+		return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+	}
+
 	function initChart() {
 		if (!chartCanvas) return;
 		if (chartInstance) chartInstance.destroy();
+
+		const style = getComputedStyle(document.documentElement);
+		const line1 = style.getPropertyValue('--chart-line-1').trim() || '#3b82f6';
+		const line2 = style.getPropertyValue('--chart-line-2').trim() || '#22c55e';
+		const tooltipBg = style.getPropertyValue('--chart-tooltip-bg').trim() || '#1e293b';
+		const gridLine = style.getPropertyValue('--chart-grid-line').trim() || '#e2e8f0';
+		const gridColor = style.getPropertyValue('--chart-grid-color').trim() || '#94a3b8';
 
 		const labels =
 			timePeriod === 'semanal'
@@ -60,8 +76,8 @@
 					{
 						label: 'Mantenimientos',
 						data: mantenimientos,
-						borderColor: '#10b981',
-						backgroundColor: 'rgba(16, 185, 129, 0.1)',
+						borderColor: line1,
+						backgroundColor: hexToRgba(line1, 0.1),
 						fill: true,
 						tension: 0.4,
 						pointRadius: 3,
@@ -70,8 +86,8 @@
 					{
 						label: 'Tickets',
 						data: tickets,
-						borderColor: '#3b82f6',
-						backgroundColor: 'rgba(59, 130, 246, 0.1)',
+						borderColor: line2,
+						backgroundColor: hexToRgba(line2, 0.1),
 						fill: true,
 						tension: 0.4,
 						pointRadius: 3,
@@ -98,7 +114,7 @@
 						}
 					},
 					tooltip: {
-						backgroundColor: '#1f2937',
+						backgroundColor: tooltipBg,
 						titleFont: { size: 13 },
 						bodyFont: { size: 12 },
 						padding: 12,
@@ -110,11 +126,11 @@
 				scales: {
 					x: {
 						grid: { display: false },
-						ticks: { font: { size: 11 }, color: '#9ca3af' }
+						ticks: { font: { size: 11 }, color: gridColor }
 					},
 					y: {
-						grid: { color: '#f3f4f6' },
-						ticks: { font: { size: 11 }, color: '#9ca3af' },
+						grid: { color: gridLine },
+						ticks: { font: { size: 11 }, color: gridColor },
 						beginAtZero: true
 					}
 				}
@@ -122,8 +138,24 @@
 		});
 	}
 
+	let isDark = $state(browser ? document.documentElement.classList.contains('dark') : false);
+
 	$effect(() => {
-		initChart();
+		if (!browser) return;
+		const observer = new MutationObserver(() => {
+			const now = document.documentElement.classList.contains('dark');
+			if (now !== isDark) isDark = now;
+		});
+		observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+		return () => observer.disconnect();
+	});
+
+	$effect(() => {
+		if (!browser) return;
+		isDark;
+		timePeriod;
+		const id = requestAnimationFrame(() => initChart());
+		return () => cancelAnimationFrame(id);
 	});
 
 	onMount(() => {
@@ -134,7 +166,6 @@
 			const val = parseInt(el.textContent || '', 10);
 			if (!isNaN(val)) countUp(el, val);
 		});
-		initChart();
 	});
 </script>
 
@@ -149,13 +180,13 @@
 		</p>
 	</div>
 
-	<!-- Stats — 4 cards con trend indicators (bolder) -->
-	<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-		<!-- Featured: Equipos — card hero con gradiente brand -->
-		<div bind:this={featuredEl} class="stat-card-featured col-span-2 text-white">
+	<!-- Stats — 2×2 grid -->
+	<div class="grid gap-4 sm:grid-cols-2">
+		<!-- Featured: Equipos — card hero con brand -->
+		<div bind:this={featuredEl} class="stat-card-featured text-white">
 			<div class="relative z-10 flex items-start justify-between">
 				<div>
-					<p class="text-sm font-medium text-white/80">Total Equipos</p>
+					<p class="text-xs font-medium tracking-wider text-white/70 uppercase">Total Equipos</p>
 					<p bind:this={featuredVal} class="stat-value mt-1 text-white">{data.equipmentCount}</p>
 				</div>
 				<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-card/15 text-white">
@@ -189,9 +220,7 @@
 					<p class="stat-value mt-1">
 						{data.totalPlans}
 					</p>
-					<div
-						class="mt-2 flex items-center gap-1.5 text-xs text-success dark:text-success"
-					>
+					<div class="mt-2 flex items-center gap-1.5 text-xs text-success dark:text-success">
 						<TrendingUp class="h-3.5 w-3.5" />
 						<span class="font-medium">+8%</span>
 						<span class="text-muted-foreground">vs mes anterior</span>
@@ -223,7 +252,9 @@
 					<p class="stat-value mt-1">
 						{data.pendingCount}
 					</p>
-					<div class="mt-2 flex items-center gap-1.5 text-xs text-destructive dark:text-destructive">
+					<div
+						class="mt-2 flex items-center gap-1.5 text-xs text-destructive dark:text-destructive"
+					>
 						<TrendingDown class="h-3.5 w-3.5" />
 						<span class="font-medium">-3%</span>
 						<span class="text-muted-foreground">vs mes anterior</span>
@@ -272,7 +303,7 @@
 				</button>
 			</div>
 		</div>
-		<div class="h-72">
+		<div class="h-56">
 			<canvas bind:this={chartCanvas}></canvas>
 		</div>
 	</div>
@@ -280,10 +311,10 @@
 	<!-- Quick actions -->
 	<div bind:this={quickActions} class="rounded-xl border bg-card p-6">
 		<h2 class="mb-4 text-lg font-bold text-foreground">Acciones Rápidas</h2>
-		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+		<div class="grid gap-3 sm:grid-cols-2">
 			<a
 				href="/equipos"
-				class="group flex items-center gap-3 rounded-xl border border-border-light bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm hover:shadow-blue-500/10"
+				class="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm"
 			>
 				<div
 					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20"
@@ -294,7 +325,7 @@
 			</a>
 			<a
 				href="/tickets"
-				class="group flex items-center gap-3 rounded-xl border border-border-light bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm hover:shadow-blue-500/10"
+				class="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm"
 			>
 				<div
 					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20"
@@ -305,7 +336,7 @@
 			</a>
 			<a
 				href="/mantenimiento"
-				class="group flex items-center gap-3 rounded-xl border border-border-light bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm hover:shadow-blue-500/10"
+				class="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm"
 			>
 				<div
 					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20"
@@ -316,7 +347,7 @@
 			</a>
 			<a
 				href="/reportes"
-				class="group flex items-center gap-3 rounded-xl border border-border-light bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm hover:shadow-blue-500/10"
+				class="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm"
 			>
 				<div
 					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20"
@@ -346,7 +377,7 @@
 					{#each data.upcomingMaintenance as item}
 						<a
 							href="/mantenimiento"
-							class="flex items-center justify-between rounded-lg border border-border-light bg-card px-4 py-3 transition-colors hover:bg-muted/50 dark:bg-card dark:hover:bg-muted/50"
+							class="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/50 dark:bg-card dark:hover:bg-muted/50"
 						>
 							<div class="min-w-0 flex-1">
 								<p class="truncate text-sm font-medium text-foreground dark:text-foreground">
@@ -383,7 +414,7 @@
 					{#each data.recentTickets as ticket}
 						<a
 							href="/tickets"
-							class="flex items-center justify-between rounded-lg border border-border-light bg-card px-4 py-3 transition-colors hover:bg-muted/50 dark:bg-card dark:hover:bg-muted/50"
+							class="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/50 dark:bg-card dark:hover:bg-muted/50"
 						>
 							<div class="min-w-0 flex-1">
 								<p class="truncate text-sm font-medium text-foreground dark:text-foreground">

@@ -267,7 +267,7 @@
 							type="password"
 							name="password"
 							bind:value={formPassword}
-							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						/>
 					</div>
 				{:else}
@@ -290,7 +290,7 @@
 							name="rol"
 							bind:value={formRol}
 							required
-							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						>
 							<option value="admin">Administrador</option>
 							<option value="tecnico">Técnico</option>
@@ -298,12 +298,12 @@
 						</select>
 					</div>
 					<div class="flex items-end pb-2.5">
-						<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+						<label class="flex items-center gap-2 text-sm text-popover-foreground/80">
 							<input
 								type="checkbox"
 								name="activo"
 								bind:checked={formActivo}
-								class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary dark:border-gray-600"
+								class="h-4 w-4 rounded border-input text-primary focus-visible:ring-ring"
 							/>
 							Usuario activo
 						</label>
@@ -362,7 +362,7 @@
 	<!-- Floating action button -->
 	<button
 		onclick={openCreate}
-		class="fab fixed right-6 bottom-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 hover:bg-primary-hover hover:shadow-xl hover:shadow-primary/40 focus:ring-2 focus:ring-primary/50 focus:outline-none"
+		class="fab fixed right-6 bottom-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary-hover hover:shadow-xl focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
 		aria-label="Nuevo Usuario"
 	>
 		<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

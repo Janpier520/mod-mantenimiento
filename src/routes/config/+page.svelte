@@ -34,7 +34,7 @@
 				}
 			};
 		}}
-		class="space-y-6 rounded-xl border border-border bg-card p-6 shadow-xl dark:border-border dark:bg-background"
+		class="space-y-6 rounded-xl border border-border bg-card p-6 shadow-lg dark:border-border dark:bg-background"
 	>
 		<input type="hidden" name="_keys" value={settings.map((s) => s.key).join(',')} />
 
@@ -48,7 +48,7 @@
 					name={setting.key}
 					type={setting.tipo}
 					value={setting.value}
-					class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+					class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none"
 				/>
 			</div>
 		{/each}
