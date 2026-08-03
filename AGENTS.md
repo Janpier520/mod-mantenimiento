@@ -26,6 +26,7 @@ npm run lint          # prettier --check . && eslint .
 npm run format        # prettier --write .
 npm run test          # vitest run (patrón: src/**/*.test.ts)
 npm run db:push       # drizzle-kit push (esquema → DB directo)
+npm run db:reset      # recrea DB desde cero: borra archivos + push --force + seed (parar dev server antes)
 npm run db:generate   # drizzle-kit generate (migraciones)
 npm run db:migrate    # drizzle-kit migrate
 npm run db:studio     # drizzle-kit studio (UI de inspección DB)

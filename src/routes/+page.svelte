@@ -418,10 +418,11 @@
 						>
 							<div class="min-w-0 flex-1">
 								<p class="truncate text-sm font-medium text-foreground dark:text-foreground">
-									{ticket.titulo || ticket.equipo?.nombre || 'Ticket'}
+									{ticket.titulo ||
+										(ticket.equipo ? `${ticket.equipo.marca} ${ticket.equipo.modelo}` : 'Ticket')}
 								</p>
 								<p class="truncate text-xs text-muted-foreground dark:text-muted-foreground">
-									{ticket.equipo?.nombre ?? 'Sin equipo'}
+									{ticket.equipo ? `${ticket.equipo.marca} ${ticket.equipo.modelo}` : 'Sin equipo'}
 									<span class="mx-1">&middot;</span>
 									{ticket.reporta
 										? `${ticket.reporta.nombre} ${ticket.reporta.apellido}`
@@ -430,17 +431,20 @@
 							</div>
 							<div class="ml-3 shrink-0 text-right">
 								<span
-									class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {ticket.estado === 'abierto'
+									class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {ticket.estado ===
+									'abierto'
 										? 'bg-primary/15 text-primary dark:bg-primary/15 dark:text-primary'
-										: ticket.estado === 'en_progreso'
+										: ticket.estado === 'en_proceso'
 											? 'bg-warning/15 text-warning dark:bg-warning/15 dark:text-warning'
 											: 'bg-muted text-muted-foreground dark:bg-card dark:text-muted-foreground'}"
 								>
 									{ticket.estado === 'abierto'
 										? 'Abierto'
-										: ticket.estado === 'en_progreso'
-											? 'En progreso'
-											: ticket.estado ?? ticket.estado}
+										: ticket.estado === 'en_proceso'
+											? 'En proceso'
+											: ticket.estado === 'resuelto'
+												? 'Resuelto'
+												: (ticket.estado ?? ticket.estado)}
 								</span>
 							</div>
 						</a>
