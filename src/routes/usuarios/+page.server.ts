@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
-import { requireRole } from '$lib/server/auth';
+import { requireRole, requireAuth } from '$lib/server/auth';
 import { eq, or, and } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
@@ -41,6 +41,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 export const actions: Actions = {
 	crud: async ({ request, locals }) => {
+		requireAuth(locals);
 		requireRole(locals, 'admin');
 
 		const form = await request.formData();
