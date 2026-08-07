@@ -1,7 +1,7 @@
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { requireRole, requireAuth } from '$lib/server/auth';
-import { eq, or, and } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { createUser, updateUser, deleteUser } from '$lib/server/services/usuarios';

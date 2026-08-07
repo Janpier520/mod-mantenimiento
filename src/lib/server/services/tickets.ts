@@ -5,7 +5,9 @@ import {
 	isValidTransition,
 	canTransition,
 	VALID_TICKET_STATES,
-	VALID_TICKET_PRIORITIES
+	VALID_TICKET_PRIORITIES,
+	type TicketPriority,
+	type TicketState
 } from '$lib/server/state-machines';
 import type { ServiceResult, Actor } from './types';
 
@@ -58,7 +60,7 @@ export async function createTicket(
 		return { ok: false, error: 'El título del ticket es obligatorio', status: 400 };
 	}
 
-	if (!VALID_TICKET_PRIORITIES.includes(prioridad as any)) {
+	if (!VALID_TICKET_PRIORITIES.includes(prioridad as TicketPriority)) {
 		return { ok: false, error: 'Prioridad no válida', status: 400 };
 	}
 
@@ -82,7 +84,7 @@ export async function createTicket(
 			numero_ticket,
 			titulo: titulo.trim(),
 			descripcion: descripcion.trim(),
-			prioridad: prioridad as any,
+			prioridad: prioridad as TicketPriority,
 			usuario_reporta: actor.id,
 			equipo_id: equipo_id || null
 		})
@@ -106,10 +108,10 @@ export async function updateTicket(
 		return { ok: false, error: 'El título del ticket es obligatorio', status: 400 };
 	}
 
-	if (!VALID_TICKET_PRIORITIES.includes(prioridad as any)) {
+	if (!VALID_TICKET_PRIORITIES.includes(prioridad as TicketPriority)) {
 		return { ok: false, error: 'Prioridad no válida', status: 400 };
 	}
-	if (!VALID_TICKET_STATES.includes(estado as any)) {
+	if (!VALID_TICKET_STATES.includes(estado as TicketState)) {
 		return { ok: false, error: 'Estado no válido', status: 400 };
 	}
 
@@ -153,8 +155,8 @@ export async function updateTicket(
 		.set({
 			titulo: titulo.trim(),
 			descripcion: descripcion.trim(),
-			prioridad: prioridad as any,
-			estado: estado as any,
+			prioridad: prioridad as TicketPriority,
+			estado: estado as TicketState,
 			tecnico_asignado: tecnico_asignado || null,
 			equipo_id: equipo_id || null,
 			updated_at: new Date().toISOString()

@@ -39,7 +39,7 @@ function validateEquipoInputs(input: EquipoInput): string | null {
 	if (!modelo || modelo.trim().length === 0) return 'El modelo es obligatorio';
 	if (!marca || marca.trim().length === 0) return 'La marca es obligatoria';
 	if (!tipo_id) return 'El tipo de equipo es obligatorio';
-	if (!VALID_EQUIPMENT_STATES.includes(estado as any)) return 'Estado no válido';
+	if (!VALID_EQUIPMENT_STATES.includes(estado)) return 'Estado no válido';
 	return null;
 }
 

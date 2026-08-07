@@ -9,6 +9,7 @@ import {
 } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { createEquipo, updateEquipo, deleteEquipo } from './equipos';
+import type { EquipmentState } from '$lib/server/state-machines';
 import type { Actor } from './types';
 
 let ids: SeedIds;
@@ -69,7 +70,11 @@ describe('equipos service', () => {
 		const noTipo = await createEquipo({ ...input, tipo_id: '' });
 		expect(noTipo).toEqual({ ok: false, error: 'El tipo de equipo es obligatorio', status: 400 });
 
-		const badEstado = await createEquipo({ ...input, estado: 'volando' as any });
+		// 'volando' is intentionally outside EquipmentState to exercise the validator
+		const badEstado = await createEquipo({
+			...input,
+			estado: 'volando' as unknown as EquipmentState
+		});
 		expect(badEstado).toEqual({ ok: false, error: 'Estado no válido', status: 400 });
 	});
 

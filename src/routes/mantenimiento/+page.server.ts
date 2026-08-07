@@ -1,5 +1,4 @@
 import { db } from '$lib/server/db';
-import { eq, asc } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { requireAuth } from '$lib/server/auth';

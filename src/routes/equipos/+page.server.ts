@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
-import { equipment, equipment_types, proveedores } from '$lib/server/db/schema';
-import { eq, like, or, and, count, asc } from 'drizzle-orm';
+import { equipment } from '$lib/server/db/schema';
+import { eq, like, or, and, count } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { escapeLike } from '$lib/server/validators';
@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const search = url.searchParams.get('search') ?? '';
 	const filterEstado = url.searchParams.get('estado') ?? '';
 	const filterTipo = url.searchParams.get('tipo') ?? '';
-	const page = Math.max(1, Number(url.searchParams.get('page')) ?? 1);
+	const page = Math.max(1, Number(url.searchParams.get('page') ?? '1'));
 
 	const conditions = [];
 	if (search) {

@@ -23,9 +23,6 @@ function adminActor(): Actor {
 function tecnicoActor(): Actor {
 	return { id: ids.tecnicoId, rol: 'tecnico' };
 }
-function consultorActor(): Actor {
-	return { id: ids.consultorId, rol: 'consultor' };
-}
 
 async function seedTicket(
 	numero: string,

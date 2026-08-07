@@ -18,9 +18,6 @@ let ids: SeedIds;
 function adminActor(): Actor {
 	return { id: ids.adminId, rol: 'admin' };
 }
-function tecnicoActor(): Actor {
-	return { id: ids.tecnicoId, rol: 'tecnico' };
-}
 
 function createInput() {
 	return {

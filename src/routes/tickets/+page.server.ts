@@ -1,10 +1,11 @@
 import { db } from '$lib/server/db';
-import { tickets, users, equipment } from '$lib/server/db/schema';
-import { eq, like, or, and, count, asc, desc } from 'drizzle-orm';
+import { tickets, users } from '$lib/server/db/schema';
+import { eq, like, or, and, count } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { escapeLike } from '$lib/server/validators';
 import { requireAuth } from '$lib/server/auth';
+import type { TicketState, TicketPriority } from '$lib/server/state-machines';
 import { createTicket, updateTicket, deleteTicket, addComment } from '$lib/server/services/tickets';
 import type { Actor } from '$lib/server/services/types';
 
@@ -28,7 +29,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const search = url.searchParams.get('search') ?? '';
 	const filterEstado = url.searchParams.get('estado') ?? '';
 	const filterPrioridad = url.searchParams.get('prioridad') ?? '';
-	const page = Math.max(1, Number(url.searchParams.get('page')) ?? 1);
+	const page = Math.max(1, Number(url.searchParams.get('page') ?? '1'));
 
 	const conditions: ReturnType<typeof and>[] = [];
 	if (search) {
@@ -41,8 +42,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			)
 		);
 	}
-	if (filterEstado) conditions.push(eq(tickets.estado, filterEstado as any));
-	if (filterPrioridad) conditions.push(eq(tickets.prioridad, filterPrioridad as any));
+	if (filterEstado) conditions.push(eq(tickets.estado, filterEstado as TicketState));
+	if (filterPrioridad) conditions.push(eq(tickets.prioridad, filterPrioridad as TicketPriority));
 
 	const where = conditions.length > 0 ? and(...conditions) : undefined;
 
