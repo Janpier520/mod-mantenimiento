@@ -25,3 +25,6 @@ vite.config.ts.timestamp-*
 *.db
 *.db-wal
 *.db-shm
+
+# Test coverage output
+coverage
