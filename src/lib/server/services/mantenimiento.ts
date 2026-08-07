@@ -1,0 +1,325 @@
+import { db } from '$lib/server/db';
+import {
+	preventive_maintenance_plans,
+	pm_tasks,
+	pm_executions,
+	equipment,
+	equipment_types,
+	users
+} from '$lib/server/db/schema';
+import { eq, count, sql } from 'drizzle-orm';
+import type { ServiceResult, Actor } from './types';
+
+const CONSULTOR_ERROR: ServiceResult<never> = {
+	ok: false,
+	error: 'Los consultores no pueden modificar mantenimiento',
+	status: 403
+};
+
+export interface PlanInput {
+	nombre: string;
+	descripcion: string;
+	frecuencia_dias: number;
+	equipo_id: string;
+	tipo_equipo_id: string;
+}
+export interface TaskInput {
+	nombre: string;
+	descripcion: string;
+}
+export interface ScheduleExecutionInput {
+	plan_id: string;
+	ejecutado_por: string;
+	fecha_programada: string;
+}
+export interface CompleteExecutionInput {
+	id: string;
+	resultado: string;
+	observaciones: string;
+}
+
+export type PlanResult = ServiceResult<{ id: string }>;
+export type TaskResult = ServiceResult<{ id: string; orden: number }>;
+export type ScheduleResult = ServiceResult<{ scheduled: number }>;
+export type CompleteResult = ServiceResult<{ id: string }>;
+
+export async function createPlan(input: PlanInput, actor: Actor): Promise<PlanResult> {
+	if (actor.rol === 'consultor') return CONSULTOR_ERROR;
+
+	const { nombre, descripcion, frecuencia_dias, equipo_id, tipo_equipo_id } = input;
+
+	if (!nombre.trim()) return { ok: false, error: 'El nombre del plan es obligatorio', status: 400 };
+	if (!frecuencia_dias || frecuencia_dias < 1)
+		return { ok: false, error: 'La frecuencia debe ser mayor a 0 días', status: 400 };
+
+	if (equipo_id) {
+		const equip = await db.query.equipment.findFirst({ where: eq(equipment.id, equipo_id) });
+		if (!equip) return { ok: false, error: 'Equipo no encontrado', status: 400 };
+	}
+	if (tipo_equipo_id) {
+		const tipo = await db.query.equipment_types.findFirst({
+			where: eq(equipment_types.id, tipo_equipo_id)
+		});
+		if (!tipo) return { ok: false, error: 'Tipo de equipo no encontrado', status: 400 };
+	}
+
+	const [row] = await db
+		.insert(preventive_maintenance_plans)
+		.values({
+			nombre: nombre.trim(),
+			descripcion: descripcion.trim(),
+			frecuencia_dias,
+			equipo_id: equipo_id || null,
+			tipo_equipo_id: tipo_equipo_id || null
+		})
+		.returning({ id: preventive_maintenance_plans.id });
+
+	return { ok: true, data: { id: row.id } };
+}
+
+export async function updatePlan(
+	input: PlanInput & { id: string },
+	actor: Actor
+): Promise<PlanResult> {
+	if (actor.rol === 'consultor') return CONSULTOR_ERROR;
+
+	const { id, nombre, descripcion, frecuencia_dias, equipo_id, tipo_equipo_id } = input;
+
+	if (!id) return { ok: false, error: 'ID de plan no proporcionado', status: 400 };
+	if (!nombre.trim()) return { ok: false, error: 'El nombre del plan es obligatorio', status: 400 };
+	if (!frecuencia_dias || frecuencia_dias < 1)
+		return { ok: false, error: 'La frecuencia debe ser mayor a 0 días', status: 400 };
+
+	const existingPlan = await db.query.preventive_maintenance_plans.findFirst({
+		where: eq(preventive_maintenance_plans.id, id)
+	});
+	if (!existingPlan) return { ok: false, error: 'Plan no encontrado', status: 404 };
+
+	if (equipo_id) {
+		const equip = await db.query.equipment.findFirst({ where: eq(equipment.id, equipo_id) });
+		if (!equip) return { ok: false, error: 'Equipo no encontrado', status: 400 };
+	}
+	if (tipo_equipo_id) {
+		const tipo = await db.query.equipment_types.findFirst({
+			where: eq(equipment_types.id, tipo_equipo_id)
+		});
+		if (!tipo) return { ok: false, error: 'Tipo de equipo no encontrado', status: 400 };
+	}
+
+	await db
+		.update(preventive_maintenance_plans)
+		.set({
+			nombre: nombre.trim(),
+			descripcion: descripcion.trim(),
+			frecuencia_dias,
+			equipo_id: equipo_id || null,
+			tipo_equipo_id: tipo_equipo_id || null,
+			updated_at: new Date().toISOString()
+		})
+		.where(eq(preventive_maintenance_plans.id, id));
+
+	return { ok: true, data: { id } };
+}
+
+export async function deletePlan(input: { id: string }, actor: Actor): Promise<PlanResult> {
+	if (actor.rol === 'consultor') return CONSULTOR_ERROR;
+
+	const { id } = input;
+
+	if (!id) return { ok: false, error: 'ID de plan no proporcionado', status: 400 };
+
+	const existingPlan = await db.query.preventive_maintenance_plans.findFirst({
+		where: eq(preventive_maintenance_plans.id, id)
+	});
+	if (!existingPlan) return { ok: false, error: 'Plan no encontrado', status: 404 };
+
+	const [execCount] = await db
+		.select({ cnt: count() })
+		.from(pm_executions)
+		.where(eq(pm_executions.plan_id, id));
+
+	if (execCount.cnt > 0) {
+		return {
+			ok: false,
+			error: `El plan tiene ${execCount.cnt} ejecuciones registradas. Eliminalas primero o reagendalas.`,
+			status: 400
+		};
+	}
+
+	await db.delete(preventive_maintenance_plans).where(eq(preventive_maintenance_plans.id, id));
+	return { ok: true, data: { id } };
+}
+
+export async function addTask(
+	input: TaskInput & { plan_id: string },
+	actor: Actor
+): Promise<TaskResult> {
+	if (actor.rol === 'consultor') return CONSULTOR_ERROR;
+
+	const { plan_id, nombre, descripcion } = input;
+
+	if (!plan_id) return { ok: false, error: 'ID de plan no proporcionado', status: 400 };
+
+	const planExists = await db.query.preventive_maintenance_plans.findFirst({
+		where: eq(preventive_maintenance_plans.id, plan_id)
+	});
+	if (!planExists) return { ok: false, error: 'Plan no encontrado', status: 404 };
+
+	if (!nombre.trim())
+		return { ok: false, error: 'El nombre de la tarea es obligatorio', status: 400 };
+
+	const [maxOrden] = await db
+		.select({ max: sql<number>`COALESCE(MAX(${pm_tasks.orden}), 0)` })
+		.from(pm_tasks)
+		.where(eq(pm_tasks.plan_id, plan_id));
+
+	const [row] = await db
+		.insert(pm_tasks)
+		.values({
+			plan_id,
+			nombre: nombre.trim(),
+			descripcion: descripcion.trim(),
+			orden: (maxOrden?.max ?? 0) + 1
+		})
+		.returning({ id: pm_tasks.id, orden: pm_tasks.orden });
+
+	return { ok: true, data: { id: row.id, orden: row.orden } };
+}
+
+export async function updateTask(
+	input: TaskInput & { id: string },
+	actor: Actor
+): Promise<TaskResult> {
+	if (actor.rol === 'consultor') return CONSULTOR_ERROR;
+
+	const { id, nombre, descripcion } = input;
+
+	if (!id) return { ok: false, error: 'ID de tarea no proporcionado', status: 400 };
+
+	const existingTask = await db.query.pm_tasks.findFirst({ where: eq(pm_tasks.id, id) });
+	if (!existingTask) return { ok: false, error: 'Tarea no encontrada', status: 404 };
+
+	if (!nombre.trim())
+		return { ok: false, error: 'El nombre de la tarea es obligatorio', status: 400 };
+
+	await db
+		.update(pm_tasks)
+		.set({ nombre: nombre.trim(), descripcion: descripcion.trim() })
+		.where(eq(pm_tasks.id, id));
+
+	return { ok: true, data: { id, orden: existingTask.orden } };
+}
+
+export async function deleteTask(input: { id: string }, actor: Actor): Promise<TaskResult> {
+	if (actor.rol === 'consultor') return CONSULTOR_ERROR;
+
+	const { id } = input;
+
+	if (!id) return { ok: false, error: 'ID de tarea no proporcionado', status: 400 };
+
+	const existingTask = await db.query.pm_tasks.findFirst({ where: eq(pm_tasks.id, id) });
+	if (!existingTask) return { ok: false, error: 'Tarea no encontrada', status: 404 };
+
+	const [execCount] = await db
+		.select({ cnt: count() })
+		.from(pm_executions)
+		.where(eq(pm_executions.tarea_id, id));
+
+	if (execCount.cnt > 0) {
+		return {
+			ok: false,
+			error: `La tarea tiene ${execCount.cnt} ejecuciones registradas. Eliminalas primero.`,
+			status: 400
+		};
+	}
+
+	await db.delete(pm_tasks).where(eq(pm_tasks.id, id));
+	return { ok: true, data: { id, orden: existingTask.orden } };
+}
+
+export async function scheduleExecution(
+	input: ScheduleExecutionInput,
+	actor: Actor
+): Promise<ScheduleResult> {
+	if (actor.rol === 'consultor') return CONSULTOR_ERROR;
+
+	const { plan_id, ejecutado_por, fecha_programada } = input;
+
+	if (!plan_id) return { ok: false, error: 'ID de plan no proporcionado', status: 400 };
+	if (!ejecutado_por) return { ok: false, error: 'Selecciona un técnico', status: 400 };
+	if (!fecha_programada)
+		return { ok: false, error: 'Selecciona una fecha programada', status: 400 };
+
+	const planExists = await db.query.preventive_maintenance_plans.findFirst({
+		where: eq(preventive_maintenance_plans.id, plan_id)
+	});
+	if (!planExists) return { ok: false, error: 'Plan no encontrado', status: 404 };
+
+	const tech = await db.query.users.findFirst({ where: eq(users.id, ejecutado_por) });
+	if (!tech) return { ok: false, error: 'Técnico no encontrado', status: 400 };
+	if (tech.rol !== 'tecnico' && tech.rol !== 'admin') {
+		return {
+			ok: false,
+			error: 'El usuario seleccionado no es técnico ni administrador',
+			status: 400
+		};
+	}
+
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha_programada)) {
+		return { ok: false, error: 'Formato de fecha no válido (usa YYYY-MM-DD)', status: 400 };
+	}
+
+	const tasks = await db.query.pm_tasks.findMany({ where: eq(pm_tasks.plan_id, plan_id) });
+
+	if (tasks.length === 0) {
+		return { ok: false, error: 'El plan no tiene tareas. Agrega tareas primero.', status: 400 };
+	}
+
+	const rows = await db
+		.insert(pm_executions)
+		.values(
+			tasks.map((t) => ({
+				plan_id,
+				tarea_id: t.id,
+				ejecutado_por,
+				fecha_programada,
+				resultado: 'pendiente' as const
+			}))
+		)
+		.returning({ id: pm_executions.id });
+
+	return { ok: true, data: { scheduled: rows.length } };
+}
+
+export async function completeExecution(
+	input: CompleteExecutionInput,
+	actor: Actor
+): Promise<CompleteResult> {
+	if (actor.rol === 'consultor') return CONSULTOR_ERROR;
+
+	const { id, resultado, observaciones } = input;
+
+	if (!id) return { ok: false, error: 'ID de ejecución no proporcionado', status: 400 };
+
+	const execution = await db.query.pm_executions.findFirst({ where: eq(pm_executions.id, id) });
+	if (!execution) return { ok: false, error: 'Ejecución no encontrada', status: 404 };
+
+	if (execution.resultado !== 'pendiente') {
+		return { ok: false, error: 'Esta ejecución ya fue procesada', status: 400 };
+	}
+
+	if (!['completado', 'fallido', 'omitido'].includes(resultado)) {
+		return { ok: false, error: 'Resultado no válido', status: 400 };
+	}
+
+	await db
+		.update(pm_executions)
+		.set({
+			fecha_ejecucion: new Date().toISOString(),
+			resultado: resultado as 'completado' | 'fallido' | 'omitido',
+			observaciones: observaciones.trim()
+		})
+		.where(eq(pm_executions.id, id));
+
+	return { ok: true, data: { id } };
+}
