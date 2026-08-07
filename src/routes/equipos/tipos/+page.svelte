@@ -93,8 +93,18 @@
 	>
 		{#snippet children(item)}
 			<div class="flex items-center gap-1">
-				<ActionIconButton icon={Pencil} variant="edit" onclick={() => openEdit(item)} label="Editar" />
-				<ActionIconButton icon={Trash2} variant="delete" onclick={() => openDelete(item)} label="Eliminar" />
+				<ActionIconButton
+					icon={Pencil}
+					variant="edit"
+					onclick={() => openEdit(item)}
+					label="Editar"
+				/>
+				<ActionIconButton
+					icon={Trash2}
+					variant="delete"
+					onclick={() => openDelete(item)}
+					label="Eliminar"
+				/>
 			</div>
 		{/snippet}
 	</DataTable>

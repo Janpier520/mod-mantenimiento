@@ -304,16 +304,12 @@
 
 					<!-- Expanded content -->
 					{#if expandedPlanId === plan.id}
-						<div
-							class="animate-in fade-in space-y-4 border-t border-border px-6 py-4 duration-150"
-						>
+						<div class="animate-in fade-in space-y-4 border-t border-border px-6 py-4 duration-150">
 							<!-- Tasks table -->
 							{#if (plan.tareas ?? []).length === 0}
 								<p class="text-sm text-muted-foreground">No hay tareas en este plan.</p>
 							{:else}
-								<div
-									class="table-card-mobile overflow-hidden rounded-xl border border-border"
-								>
+								<div class="table-card-mobile overflow-hidden rounded-xl border border-border">
 									<table class="w-full text-sm">
 										<thead>
 											<tr class="bg-muted">
@@ -347,8 +343,18 @@
 														>{task.descripcion || '—'}</td
 													>
 													<td data-label="Acción" class="px-4 py-2.5 text-right">
-												<ActionIconButton icon={Pencil} variant="edit" onclick={() => openEditTask(task)} label="Editar tarea" />
-												<ActionIconButton icon={Trash2} variant="delete" onclick={() => openDeleteTask(task)} label="Eliminar tarea" />
+														<ActionIconButton
+															icon={Pencil}
+															variant="edit"
+															onclick={() => openEditTask(task)}
+															label="Editar tarea"
+														/>
+														<ActionIconButton
+															icon={Trash2}
+															variant="delete"
+															onclick={() => openDeleteTask(task)}
+															label="Eliminar tarea"
+														/>
 													</td>
 												</tr>
 											{/each}

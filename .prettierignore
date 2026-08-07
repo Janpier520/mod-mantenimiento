@@ -8,3 +8,6 @@ bun.lockb
 # Miscellaneous
 /static/
 /drizzle/
+
+# SDD artifacts — archive is an audit trail, never re-formatted
+/openspec/

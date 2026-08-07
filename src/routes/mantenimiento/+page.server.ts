@@ -57,7 +57,10 @@ export const actions: Actions = {
 	create_plan: async ({ request, locals }) => {
 		requireAuth(locals);
 		if (locals.user.rol === 'consultor') {
-			return fail(403, { error: 'Los consultores no pueden modificar mantenimiento', _action: 'create_plan' });
+			return fail(403, {
+				error: 'Los consultores no pueden modificar mantenimiento',
+				_action: 'create_plan'
+			});
 		}
 		const form = await request.formData();
 		const nombre = (form.get('nombre') as string) ?? '';
@@ -98,7 +101,10 @@ export const actions: Actions = {
 	update_plan: async ({ request, locals }) => {
 		requireAuth(locals);
 		if (locals.user.rol === 'consultor') {
-			return fail(403, { error: 'Los consultores no pueden modificar mantenimiento', _action: 'update_plan' });
+			return fail(403, {
+				error: 'Los consultores no pueden modificar mantenimiento',
+				_action: 'update_plan'
+			});
 		}
 		const form = await request.formData();
 		const id = (form.get('id') as string) ?? '';
@@ -151,7 +157,10 @@ export const actions: Actions = {
 	delete_plan: async ({ request, locals }) => {
 		requireAuth(locals);
 		if (locals.user.rol === 'consultor') {
-			return fail(403, { error: 'Los consultores no pueden modificar mantenimiento', _action: 'delete_plan' });
+			return fail(403, {
+				error: 'Los consultores no pueden modificar mantenimiento',
+				_action: 'delete_plan'
+			});
 		}
 		const form = await request.formData();
 		const id = (form.get('id') as string) ?? '';
@@ -182,7 +191,10 @@ export const actions: Actions = {
 	add_task: async ({ request, locals }) => {
 		requireAuth(locals);
 		if (locals.user.rol === 'consultor') {
-			return fail(403, { error: 'Los consultores no pueden modificar mantenimiento', _action: 'add_task' });
+			return fail(403, {
+				error: 'Los consultores no pueden modificar mantenimiento',
+				_action: 'add_task'
+			});
 		}
 		const form = await request.formData();
 		const plan_id = (form.get('plan_id') as string) ?? '';
@@ -217,7 +229,10 @@ export const actions: Actions = {
 	update_task: async ({ request, locals }) => {
 		requireAuth(locals);
 		if (locals.user.rol === 'consultor') {
-			return fail(403, { error: 'Los consultores no pueden modificar mantenimiento', _action: 'update_task' });
+			return fail(403, {
+				error: 'Los consultores no pueden modificar mantenimiento',
+				_action: 'update_task'
+			});
 		}
 		const form = await request.formData();
 		const id = (form.get('id') as string) ?? '';
@@ -243,7 +258,10 @@ export const actions: Actions = {
 	delete_task: async ({ request, locals }) => {
 		requireAuth(locals);
 		if (locals.user.rol === 'consultor') {
-			return fail(403, { error: 'Los consultores no pueden modificar mantenimiento', _action: 'delete_task' });
+			return fail(403, {
+				error: 'Los consultores no pueden modificar mantenimiento',
+				_action: 'delete_task'
+			});
 		}
 		const form = await request.formData();
 		const id = (form.get('id') as string) ?? '';
@@ -272,7 +290,10 @@ export const actions: Actions = {
 	schedule_execution: async ({ request, locals }) => {
 		requireAuth(locals);
 		if (locals.user.rol === 'consultor') {
-			return fail(403, { error: 'Los consultores no pueden modificar mantenimiento', _action: 'schedule_execution' });
+			return fail(403, {
+				error: 'Los consultores no pueden modificar mantenimiento',
+				_action: 'schedule_execution'
+			});
 		}
 		const form = await request.formData();
 		const plan_id = (form.get('plan_id') as string) ?? '';
@@ -338,7 +359,10 @@ export const actions: Actions = {
 	complete_execution: async ({ request, locals }) => {
 		requireAuth(locals);
 		if (locals.user.rol === 'consultor') {
-			return fail(403, { error: 'Los consultores no pueden modificar mantenimiento', _action: 'complete_execution' });
+			return fail(403, {
+				error: 'Los consultores no pueden modificar mantenimiento',
+				_action: 'complete_execution'
+			});
 		}
 		const form = await request.formData();
 		const id = (form.get('id') as string) ?? '';

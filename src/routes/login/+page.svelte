@@ -97,11 +97,7 @@
 					</div>
 				{/if}
 
-				<Button
-					type="submit"
-					class="w-full shadow-lg hover:shadow-xl"
-					>Iniciar Sesión</Button
-				>
+				<Button type="submit" class="w-full shadow-lg hover:shadow-xl">Iniciar Sesión</Button>
 			</div>
 		</form>
 	</div>

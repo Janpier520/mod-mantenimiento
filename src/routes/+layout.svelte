@@ -262,7 +262,9 @@
 		<!-- Sidebar -->
 		<aside
 			bind:this={sidebarEl}
-			class="sidebar fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar transition-[width] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] lg:static lg:z-auto {sidebarCollapsed ? 'w-16' : 'w-64'} {sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0"
+			class="sidebar fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar transition-[width] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] lg:static lg:z-auto {sidebarCollapsed
+				? 'w-16'
+				: 'w-64'} {sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0"
 		>
 			<!-- Logo -->
 			<div class="flex h-16 shrink-0 items-center gap-2 border-b border-white/5 px-3">
@@ -292,7 +294,9 @@
 				<!-- Desktop collapse toggle -->
 				<button
 					onclick={toggleCollapse}
-					class="hidden shrink-0 items-center justify-center rounded-lg text-sidebar-text/40 transition-colors hover:text-sidebar-text-active/70 lg:flex {sidebarCollapsed ? 'h-8 w-8' : 'h-6 w-6'}"
+					class="hidden shrink-0 items-center justify-center rounded-lg text-sidebar-text/40 transition-colors hover:text-sidebar-text-active/70 lg:flex {sidebarCollapsed
+						? 'h-8 w-8'
+						: 'h-6 w-6'}"
 					aria-label={sidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
 				>
 					<svg
@@ -407,9 +411,7 @@
 		<!-- Main content -->
 		<div class="flex min-w-0 flex-1 flex-col text-foreground">
 			<!-- Topbar with page title + breadcrumb -->
-			<header
-				class="flex h-16 items-center gap-3 border-b border-border bg-card px-4 lg:px-6"
-			>
+			<header class="flex h-16 items-center gap-3 border-b border-border bg-card px-4 lg:px-6">
 				<!-- Mobile hamburger -->
 				<button
 					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted lg:hidden"
