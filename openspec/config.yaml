@@ -11,8 +11,8 @@ stack:
 adapter: '@sveltejs/adapter-node'
 strict_tdd: false
 testing:
-  runner: none detected
-  note: No test runner configured. Tests can be added with vitest.
+  runner: vitest
+  note: Vitest 4 with v8 coverage. In-memory SQLite via src/lib/server/db/test-helpers.ts (see openspec/changes/2026-08-06-test-coverage).
 formatter: prettier
 linter: eslint
 type_checker: svelte-check
