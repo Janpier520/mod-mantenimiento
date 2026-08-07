@@ -1,22 +1,12 @@
 import { db } from '$lib/server/db';
-import {
-	equipment,
-	equipment_types,
-	equipment_status_history,
-	proveedores,
-	tickets,
-	preventive_maintenance_plans
-} from '$lib/server/db/schema';
-import { eq, like, or, and, count } from 'drizzle-orm';
+import { equipment, equipment_types, proveedores } from '$lib/server/db/schema';
+import { eq, like, or, and, count, asc } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import {
-	isValidTransition,
-	canTransition,
-	VALID_EQUIPMENT_STATES,
-	type EquipmentState
-} from '$lib/server/state-machines';
-import { validateRequired, escapeLike } from '$lib/server/validators';
+import { escapeLike } from '$lib/server/validators';
+import type { EquipmentState } from '$lib/server/state-machines';
+import { createEquipo, updateEquipo, deleteEquipo } from '$lib/server/services/equipos';
+import type { Actor } from '$lib/server/services/types';
 
 const PAGE_SIZE = 10;
 
@@ -126,117 +116,47 @@ export const actions: Actions = {
 		const fecha_adquisicion = (form.get('fecha_adquisicion') as string) ?? '';
 		const proveedor_id = (form.get('proveedor_id') as string) ?? '';
 		const notas = (form.get('notas') as string) ?? '';
-
-		if (_action === 'create' || _action === 'update') {
-			if (!modelo || modelo.trim().length === 0) {
-				return fail(400, { error: 'El modelo es obligatorio', _action });
-			}
-			if (!marca || marca.trim().length === 0) {
-				return fail(400, { error: 'La marca es obligatoria', _action });
-			}
-			if (!tipo_id) {
-				return fail(400, { error: 'El tipo de equipo es obligatorio', _action });
-			}
-			if (!VALID_EQUIPMENT_STATES.includes(estado as any)) {
-				return fail(400, { error: 'Estado no válido', _action });
-			}
-		}
+		const actor: Actor = { id: locals.user.id, rol: locals.user.rol };
 
 		if (_action === 'create') {
-			await db.insert(equipment).values({
+			const res = await createEquipo({
 				tipo_id,
-				modelo: modelo.trim(),
-				marca: marca.trim(),
-				numero_serie: numero_serie.trim(),
+				modelo,
+				marca,
+				numero_serie,
 				estado,
-				ubicacion: ubicacion.trim(),
-				fecha_adquisicion: fecha_adquisicion || null,
-				proveedor_id: proveedor_id || null,
-				notas: notas.trim()
+				ubicacion,
+				fecha_adquisicion,
+				proveedor_id,
+				notas
 			});
+			if (!res.ok) return fail(res.status ?? 400, { error: res.error, _action });
 			return { success: true, _action };
 		}
 
 		if (_action === 'update') {
-			if (!id) return fail(400, { error: 'ID de equipo no proporcionado', _action });
-
-			const existing = await db.query.equipment.findFirst({
-				where: eq(equipment.id, id)
-			});
-
-			if (!existing) return fail(400, { error: 'Equipo no encontrado', _action });
-
-			// Validate state transition
-			if (existing.estado !== estado && !isValidTransition(existing.estado, estado, 'equipment')) {
-				return fail(400, {
-					error: `Transición de estado no permitida: ${existing.estado} → ${estado}`,
-					_action
-				});
-			}
-
-			// Validate role-based transition for equipment
-			if (existing.estado !== estado) {
-				const roleCheck = canTransition(existing.estado, estado, locals.user.rol, 'equipment');
-				if (!roleCheck.allowed) {
-					return fail(403, { error: roleCheck.error, _action });
-				}
-			}
-
-			// If estado changed, record status history
-			if (existing.estado !== estado) {
-				await db.insert(equipment_status_history).values({
-					equipo_id: id,
-					estado_anterior: existing.estado,
-					estado_nuevo: estado,
-					cambiado_por: locals.user.id
-				});
-			}
-
-			await db
-				.update(equipment)
-				.set({
+			const res = await updateEquipo(
+				{
+					id,
 					tipo_id,
-					modelo: modelo.trim(),
-					marca: marca.trim(),
-					numero_serie: numero_serie.trim(),
+					modelo,
+					marca,
+					numero_serie,
 					estado,
-					ubicacion: ubicacion.trim(),
-					fecha_adquisicion: fecha_adquisicion || null,
-					proveedor_id: proveedor_id || null,
-					notas: notas.trim(),
-					updated_at: new Date().toISOString()
-				})
-				.where(eq(equipment.id, id));
-
+					ubicacion,
+					fecha_adquisicion,
+					proveedor_id,
+					notas
+				},
+				actor
+			);
+			if (!res.ok) return fail(res.status ?? 400, { error: res.error, _action });
 			return { success: true, _action };
 		}
 
 		if (_action === 'delete') {
-			if (!id) return fail(400, { error: 'ID de equipo no proporcionado', _action });
-
-			const ref = await db.query.tickets.findFirst({
-				where: eq(tickets.equipo_id, id)
-			});
-
-			if (ref) {
-				return fail(400, {
-					error: 'No se puede eliminar: hay tickets que referencian este equipo',
-					_action
-				});
-			}
-
-			const pmPlanRef = await db.query.preventive_maintenance_plans.findFirst({
-				where: eq(preventive_maintenance_plans.equipo_id, id)
-			});
-
-			if (pmPlanRef) {
-				return fail(400, {
-					error: 'No se puede eliminar: hay planes de mantenimiento que referencian este equipo',
-					_action
-				});
-			}
-
-			await db.delete(equipment).where(eq(equipment.id, id));
+			const res = await deleteEquipo({ id });
+			if (!res.ok) return fail(res.status ?? 400, { error: res.error, _action });
 			return { success: true, _action };
 		}
 
