@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import gsap from 'gsap';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 
-	let { data, form } = $props();
+	let { form } = $props();
 	let step = $state(1);
 	let username = $state('');
 	let error = $derived(form?.error || '');

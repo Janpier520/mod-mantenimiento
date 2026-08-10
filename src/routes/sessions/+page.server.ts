@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	revoke: async ({ request, locals, cookies }) => {
+	revoke: async ({ request, locals }) => {
 		if (!locals.user) throw redirect(303, '/login');
 
 		const form = await request.formData();

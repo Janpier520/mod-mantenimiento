@@ -47,8 +47,7 @@ async function clearAttempts(identifier: string): Promise<void> {
 }
 
 export async function checkLoginRateLimit(
-	username: string,
-	ipAddress: string
+	username: string
 ): Promise<{ allowed: boolean; error?: string; retryAfterMs?: number }> {
 	const attempts = await getRecentAttempts(username, LOGIN_LOCKOUT_MS);
 

@@ -99,9 +99,9 @@
 			</Table.Header>
 			<Table.Body>
 				{#if loading}
-					{#each { length: 5 } as _, i}
+					{#each { length: 5 }}
 						<Table.Row class="animate-pulse">
-							{#each columns as col}
+							{#each columns}
 								<Table.Cell>
 									<div class="h-4 w-3/4 rounded bg-muted"></div>
 								</Table.Cell>

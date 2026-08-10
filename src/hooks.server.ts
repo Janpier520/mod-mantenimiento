@@ -1,9 +1,4 @@
-import {
-	validateSession,
-	getSessionToken,
-	clearSessionCookie,
-	setSessionCookie
-} from '$lib/server/auth';
+import { validateSession, getSessionToken, setSessionCookie } from '$lib/server/auth';
 import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 

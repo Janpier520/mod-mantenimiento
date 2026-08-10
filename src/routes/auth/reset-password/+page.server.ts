@@ -1,7 +1,6 @@
 import {
 	getUserSecurityQuestions,
 	verifyPassword,
-	hashPassword,
 	resetPassword,
 	checkResetRateLimit,
 	recordFailedReset,

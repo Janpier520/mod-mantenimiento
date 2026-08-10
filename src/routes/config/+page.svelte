@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { fade } from 'svelte/transition';
 	import { addToast } from '$lib/stores/toast.svelte';
 
 	let { data } = $props();

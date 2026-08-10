@@ -41,7 +41,7 @@
 					method="post"
 					action="?/revoke"
 					use:enhance={() => {
-						return async ({ result, update }) => {
+						return async ({ result }) => {
 							if (result.type === 'success' && result.data?.success) {
 								addToast('Sesión cerrada');
 								await invalidate($page.url.pathname);

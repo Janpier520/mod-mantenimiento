@@ -2,7 +2,6 @@
 	import './layout.css';
 	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
-	import { fade } from 'svelte/transition';
 	import type { NavItem } from '$lib/types';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import Package from '@lucide/svelte/icons/package';

@@ -96,7 +96,7 @@ describe('rate limiting (TC-6)', () => {
 				created_at: new Date(now - 60 * 1000).toISOString()
 			});
 		}
-		const res = await checkLoginRateLimit(username, '1.2.3.4');
+		const res = await checkLoginRateLimit(username);
 		expect(res.allowed).toBe(false);
 		expect(res.retryAfterMs).toBeGreaterThan(0);
 		expect(res.error).toContain('Demasiados intentos fallidos');
@@ -118,7 +118,7 @@ describe('rate limiting (TC-6)', () => {
 			ip_address: '1.2.3.4',
 			created_at: new Date(now - 20 * 60 * 1000).toISOString()
 		});
-		const res = await checkLoginRateLimit(username, '1.2.3.4');
+		const res = await checkLoginRateLimit(username);
 		expect(res.allowed).toBe(true);
 	});
 
@@ -127,7 +127,7 @@ describe('rate limiting (TC-6)', () => {
 		for (let i = 0; i < 3; i++) {
 			await recordFailedReset(username);
 		}
-		const loginRes = await checkLoginRateLimit(username, '1.2.3.4');
+		const loginRes = await checkLoginRateLimit(username);
 		expect(loginRes.allowed).toBe(true);
 
 		const resetRes = await checkResetRateLimit(username);

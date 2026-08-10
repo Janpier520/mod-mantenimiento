@@ -24,7 +24,7 @@ export const VALID_EQUIPMENT_STATES = [
 ] as const;
 export const VALID_TICKET_STATES = ['abierto', 'en_proceso', 'resuelto', 'cerrado'] as const;
 export const VALID_TICKET_PRIORITIES = ['baja', 'media', 'alta', 'critica'] as const;
-const VALID_USER_ROLES = ['admin', 'tecnico', 'consultor'] as const;
+export const VALID_USER_ROLES = ['admin', 'tecnico', 'consultor'] as const;
 export const VALID_PM_RESULTS = ['pendiente', 'completado', 'fallido', 'omitido'] as const;
 
 export type EquipmentState = (typeof VALID_EQUIPMENT_STATES)[number];

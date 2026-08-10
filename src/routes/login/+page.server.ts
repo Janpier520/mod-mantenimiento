@@ -32,7 +32,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Completa todos los campos', username: username ?? '' });
 		}
 
-		const rateCheck = await checkLoginRateLimit(username, ipAddress);
+		const rateCheck = await checkLoginRateLimit(username);
 		if (!rateCheck.allowed) {
 			return fail(429, { error: rateCheck.error!, username });
 		}

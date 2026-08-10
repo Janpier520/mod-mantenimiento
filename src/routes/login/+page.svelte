@@ -5,7 +5,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 
-	let { data, form } = $props();
+	let { form } = $props();
 
 	let username = $state('');
 	let password = $state('');

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import gsap from 'gsap';
@@ -182,11 +181,6 @@
 		}
 	];
 
-	interface FilteredSection {
-		type: 'nav' | 'actions';
-		items: (NavItem & { icon: string })[] | ActionItem[];
-	}
-
 	let filteredSections = $derived.by(() => {
 		const q = query.toLowerCase();
 
@@ -201,8 +195,6 @@
 				(!item.roles || (userRole && item.roles.includes(userRole))) &&
 				(!q || item.label.toLowerCase().includes(q) || item.href.toLowerCase().includes(q))
 		);
-
-		const sections: FilteredSection[] = [];
 
 		// If there's a search query, merge everything together
 		if (q) {
