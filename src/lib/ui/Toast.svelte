@@ -149,7 +149,9 @@
 		}
 		try {
 			el.releasePointerCapture(e.pointerId);
-		} catch {}
+		} catch {
+			// releasePointerCapture failure is non-fatal (pointer already released)
+		}
 	}
 </script>
 

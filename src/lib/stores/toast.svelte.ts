@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { SvelteMap } from 'svelte/reactivity';
 
 export type ToastType = 'success' | 'error';
 
@@ -12,9 +13,9 @@ export interface Toast {
 let toasts = $state<Toast[]>([]);
 
 // Internal timer tracking for pause/resume
-const timers = new Map<string, ReturnType<typeof setTimeout>>();
-const remaining = new Map<string, number>();
-const startedAt = new Map<string, number>();
+const timers = new SvelteMap<string, ReturnType<typeof setTimeout>>();
+const remaining = new SvelteMap<string, number>();
+const startedAt = new SvelteMap<string, number>();
 const DEFAULT_DURATION = 4000;
 
 function startTimer(id: string, ms: number) {

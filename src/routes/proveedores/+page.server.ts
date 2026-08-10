@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	if (!locals.user) return { proveedores: [], total: 0, page: 1, totalPages: 1, search: '' };
 
 	const search = url.searchParams.get('search') ?? '';
-	const page = Math.max(1, Number(url.searchParams.get('page')) ?? 1);
+	const page = Math.max(1, Number(url.searchParams.get('page') ?? 1));
 
 	const conditions = search
 		? [
