@@ -357,7 +357,6 @@
 </script>
 
 {#if open}
-	<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
 	<div
 		bind:this={overlayEl}
 		class="fixed inset-0 z-[999] flex items-start justify-center bg-black/30 pt-[15vh] backdrop-blur-sm"

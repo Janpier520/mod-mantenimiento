@@ -17,7 +17,6 @@
 
 	let { data } = $props();
 
-	// svelte-ignore state_referenced_locally — intentional: capture server data into local state
 	let proveedores = $state(data.proveedores);
 	// svelte-ignore state_referenced_locally
 	let total = $state(data.total);

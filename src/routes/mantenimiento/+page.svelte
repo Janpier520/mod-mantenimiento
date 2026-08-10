@@ -242,7 +242,6 @@
 			{#each plans as plan (plan.id)}
 				<div class="overflow-hidden rounded-xl border bg-card">
 					<!-- Plan header (always visible) -->
-					<!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events -->
 					<div
 						onclick={() => toggleExpand(plan.id)}
 						onkeydown={(e) => e.key === 'Enter' && toggleExpand(plan.id)}

@@ -5,7 +5,6 @@
 
 	let { data } = $props();
 
-	// svelte-ignore state_referenced_locally — intentional: capture server data into local state
 	let settings = $state(data.settings);
 	let saving = $state(false);
 

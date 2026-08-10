@@ -7,7 +7,6 @@
 
 	let { data } = $props();
 
-	// svelte-ignore state_referenced_locally — intentional: capture server data into local state
 	let sessions = $state(data.sessions);
 
 	$effect(() => {
