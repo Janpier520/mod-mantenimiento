@@ -521,7 +521,7 @@
 							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						>
 							<option value="">Cualquier equipo</option>
-							{#each equipmentList as eq}
+							{#each equipmentList as eq (eq.id)}
 								<option value={eq.id}>{eq.marca} {eq.modelo}</option>
 							{/each}
 						</select>
@@ -538,7 +538,7 @@
 							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						>
 							<option value="">Todos los tipos</option>
-							{#each equipmentTypesList as et}
+							{#each equipmentTypesList as et (et.id)}
 								<option value={et.id}>{et.nombre}</option>
 							{/each}
 						</select>
@@ -672,7 +672,7 @@
 							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 						>
 							<option value="">Seleccionar técnico</option>
-							{#each technicians as t}
+							{#each technicians as t (t.id)}
 								<option value={t.id}>{t.nombre} {t.apellido}</option>
 							{/each}
 						</select>

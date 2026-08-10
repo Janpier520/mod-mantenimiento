@@ -261,7 +261,7 @@
 				</div>
 			</div>
 			<div class="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-				{#each data.equipmentByStatus as s}
+				{#each data.equipmentByStatus as s (s.estado)}
 					<span class="flex items-center gap-1">
 						<span
 							class="inline-block h-2 w-2 rounded-full"
@@ -397,7 +397,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each data.topEquipment as item, i}
+						{#each data.topEquipment as item, i (item.equipo_id)}
 							<tr class="border-b border-border last:border-0">
 								<td data-label="#" class="py-2 pr-4 text-muted-foreground">{i + 1}</td>
 								<td data-label="Equipo" class="py-2 pr-4 font-medium text-foreground">

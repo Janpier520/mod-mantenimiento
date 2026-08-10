@@ -374,7 +374,7 @@
 			</h2>
 			{#if data.upcomingMaintenance.length > 0}
 				<div class="space-y-2">
-					{#each data.upcomingMaintenance as item}
+					{#each data.upcomingMaintenance as item (item.id)}
 						<a
 							href="/mantenimiento"
 							class="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/50 dark:bg-card dark:hover:bg-muted/50"
@@ -411,7 +411,7 @@
 			<h2 class="mb-4 text-lg font-bold text-foreground">Tickets Recientes</h2>
 			{#if data.recentTickets.length > 0}
 				<div class="space-y-2">
-					{#each data.recentTickets as ticket}
+					{#each data.recentTickets as ticket (ticket.id)}
 						<a
 							href="/tickets"
 							class="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/50 dark:bg-card dark:hover:bg-muted/50"

@@ -36,7 +36,7 @@
 	>
 		<input type="hidden" name="_keys" value={settings.map((s) => s.key).join(',')} />
 
-		{#each settings as setting}
+		{#each settings as setting (setting.key)}
 			<div>
 				<label for={setting.key} class="mb-1 block text-sm font-medium text-foreground">
 					{setting.descripcion}

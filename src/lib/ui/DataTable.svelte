@@ -83,7 +83,7 @@
 		<Table.Table>
 			<Table.Header class="sticky top-0 z-10">
 				<Table.Row class="bg-muted/80 backdrop-blur-sm">
-					{#each columns as col}
+					{#each columns as col (col.key)}
 						<Table.Head
 							class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
 						>
@@ -99,9 +99,9 @@
 			</Table.Header>
 			<Table.Body>
 				{#if loading}
-					{#each { length: 5 }}
+					{#each [0, 1, 2, 3, 4] as n (n)}
 						<Table.Row class="animate-pulse">
-							{#each columns}
+							{#each columns as col (col.key)}
 								<Table.Cell>
 									<div class="h-4 w-3/4 rounded bg-muted"></div>
 								</Table.Cell>
@@ -134,7 +134,7 @@
 						</Table.Cell>
 					</Table.Row>
 				{:else}
-					{#each items as item}
+					{#each items as item (item.id)}
 						<Table.Row
 							tabindex={0}
 							class="group cursor-pointer transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] even:bg-muted/20 hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring active:scale-[0.999]"
@@ -148,7 +148,7 @@
 								}
 							}}
 						>
-							{#each columns as col}
+							{#each columns as col (col.key)}
 								<Table.Cell
 									data-label={col.label}
 									class="transition-colors duration-150 group-hover:text-foreground"

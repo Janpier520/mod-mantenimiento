@@ -316,8 +316,8 @@
 				{#if sidebarCollapsed}
 					<!-- Collapsed: flat icon list -->
 					<ul class="flex flex-col items-center gap-1">
-						{#each navGroups as group}
-							{#each group.items as item}
+						{#each navGroups as group (group.label)}
+							{#each group.items as item (item.href)}
 								{@const IconCmp = iconMap[item.icon]}
 								<li>
 									<a
@@ -337,7 +337,7 @@
 						{/each}
 					</ul>
 				{:else}
-					{#each navGroups as group}
+					{#each navGroups as group (group.label)}
 						{@const isCollapsed = collapsedGroups.has(group.label)}
 						<div class="mb-4">
 							<!-- Collapsible group header -->
@@ -358,7 +358,7 @@
 							</button>
 							{#if !isCollapsed}
 								<ul class="space-y-1">
-									{#each group.items as item}
+									{#each group.items as item (item.href)}
 										{@const IconCmp = iconMap[item.icon]}
 										<li>
 											<a

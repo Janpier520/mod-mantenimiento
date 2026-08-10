@@ -427,7 +427,7 @@
 				</h3>
 
 				<div class="mb-4 max-h-64 space-y-3 overflow-y-auto">
-					{#each selectedTicket.comentarios ?? [] as comment}
+					{#each selectedTicket.comentarios ?? [] as comment (comment.id)}
 						<div class="rounded-lg bg-muted p-3">
 							<div class="flex items-center gap-2 text-xs text-muted-foreground">
 								<span class="font-medium text-foreground">

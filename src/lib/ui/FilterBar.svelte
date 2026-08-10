@@ -78,7 +78,7 @@
 	</div>
 
 	<!-- Dynamic filter selects -->
-	{#each filters as f}
+	{#each filters as f (f.key)}
 		<select
 			value={values[f.key] ?? ''}
 			onchange={(e) => onfilterchange?.(f.key, (e.target as HTMLSelectElement).value)}
@@ -89,7 +89,7 @@
 				: ''}"
 		>
 			<option value="">{f.label}</option>
-			{#each f.options as opt}
+			{#each f.options as opt (opt.value)}
 				<option value={opt.value}>{opt.label}</option>
 			{/each}
 		</select>

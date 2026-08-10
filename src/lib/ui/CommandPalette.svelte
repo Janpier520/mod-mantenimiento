@@ -405,7 +405,7 @@
 							Acciones rápidas
 						</p>
 						<ul class="mb-3 space-y-0.5">
-							{#each filteredItems.filter((i) => i.__section === 'actions') as item, ai}
+							{#each filteredItems.filter((i) => i.__section === 'actions') as item, ai (item.href)}
 								{@const idx = ai}
 								{@const ActionIcon = item.icon === 'home' ? Home : Plus}
 								<li>
@@ -454,7 +454,7 @@
 						</p>
 					{/if}
 					<ul class="space-y-0.5">
-						{#each filteredItems as item, i}
+						{#each filteredItems as item, i (item.href)}
 							{@const globalIdx = i}
 							{#if item.__section !== 'actions' || query}
 								{@const IconCmp = iconMap[item.icon] || Plus}

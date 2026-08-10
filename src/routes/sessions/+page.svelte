@@ -25,7 +25,7 @@
 	</div>
 
 	<div class="space-y-3">
-		{#each sessions as session}
+		{#each sessions as session (session.id)}
 			<div
 				class="flex items-center justify-between rounded-xl bg-card p-4 shadow-sm dark:bg-background"
 			>
