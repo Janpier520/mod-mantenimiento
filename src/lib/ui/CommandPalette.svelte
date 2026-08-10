@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import type { PathnameWithSearchOrHash } from '$app/types';
+	import type { PathnameWithSearchOrHash, ResolvedPathname } from '$app/types';
 	import { page } from '$app/stores';
 	import gsap from 'gsap';
 	import type { NavItem, UserRole } from '$lib/types';
@@ -145,6 +145,11 @@
 		shortcut?: string;
 	}
 
+	type PaletteItem = (NavItem | ActionItem) & {
+		__type?: 'nav' | 'action';
+		__section?: 'nav' | 'actions';
+	};
+
 	const actionItems: ActionItem[] = [
 		{
 			label: 'Volver al Dashboard',
@@ -200,7 +205,7 @@
 
 		// If there's a search query, merge everything together
 		if (q) {
-			const merged = [
+			const merged: PaletteItem[] = [
 				...filteredNav.map((i) => ({ ...i, __type: 'nav' as const })),
 				...filteredActions.map((i) => ({ ...i, __type: 'action' as const }))
 			].slice(0, 8);
@@ -222,13 +227,13 @@
 		};
 	});
 
-	let flatItems = $derived.by((): any[] => {
+	let flatItems = $derived.by((): PaletteItem[] => {
 		if (filteredSections.hasQuery) {
 			return filteredSections.merged ?? [];
 		}
 		return [
-			...(filteredSections.actionItems ?? []).map((i: any) => ({ ...i, __section: 'actions' })),
-			...(filteredSections.navItems ?? []).map((i: any) => ({ ...i, __section: 'nav' }))
+			...(filteredSections.actionItems ?? []).map((i) => ({ ...i, __section: 'actions' as const })),
+			...(filteredSections.navItems ?? []).map((i) => ({ ...i, __section: 'nav' as const }))
 		];
 	});
 
@@ -337,7 +342,7 @@
 		});
 	}
 
-	function navigate(href: PathnameWithSearchOrHash) {
+	function navigate(href: PathnameWithSearchOrHash | ResolvedPathname) {
 		close();
 		// Small delay so close animation plays before navigation
 		// ponytail: resolve() can't be typed for dynamic query-bearing hrefs

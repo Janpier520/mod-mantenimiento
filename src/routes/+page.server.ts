@@ -5,19 +5,23 @@ import {
 	pm_executions,
 	preventive_maintenance_plans
 } from '$lib/server/db/schema';
+import type { Equipment, PMExecution, PMPlan, PMTask, Ticket, User } from '$lib/server/db/schema';
 import { eq, ne, and, asc, desc, gte, lte, count } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
+
+type UpcomingMaintenance = PMExecution & { plan: PMPlan; tarea: PMTask; ejecutante: User };
+type RecentTicket = Ticket & { equipo: Equipment | null; reporta: User };
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		return {
 			equipmentCount: 0,
 			ticketCount: 0,
-			upcomingMaintenance: [] as Array<Record<string, any>>,
+			upcomingMaintenance: [] as UpcomingMaintenance[],
 			overdueMaintenance: 0,
 			totalPlans: 0,
 			pendingCount: 0,
-			recentTickets: [] as Array<Record<string, any>>
+			recentTickets: [] as RecentTicket[]
 		};
 	}
 

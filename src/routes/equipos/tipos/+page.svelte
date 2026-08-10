@@ -15,12 +15,14 @@
 
 	let { data } = $props();
 
+	type TipoRow = (typeof data.tipos)[number];
+
 	// svelte-ignore state_referenced_locally
 	let tipos = $state(data.tipos);
 	let showModal = $state(false);
-	let editingTipo = $state<Record<string, string> | null>(null);
+	let editingTipo = $state<TipoRow | null>(null);
 	let showDelete = $state(false);
-	let deletingTipo = $state<Record<string, string> | null>(null);
+	let deletingTipo = $state<TipoRow | null>(null);
 	let formError = $state('');
 
 	let formNombre = $state('');
@@ -45,7 +47,7 @@
 		showModal = true;
 	}
 
-	function openEdit(t: Record<string, string>) {
+	function openEdit(t: TipoRow) {
 		editingTipo = t;
 		formNombre = t.nombre ?? '';
 		formDescripcion = t.descripcion ?? '';
@@ -54,7 +56,7 @@
 		showModal = true;
 	}
 
-	function openDelete(t: Record<string, string>) {
+	function openDelete(t: TipoRow) {
 		deletingTipo = t;
 		showDelete = true;
 	}

@@ -37,10 +37,12 @@
 	// svelte-ignore state_referenced_locally
 	let filterTipo = $state(data.filterTipo);
 
+	type EquipoRow = (typeof data.equipment)[number];
+
 	let showModal = $state(false);
-	let editingEquipo = $state<Record<string, string> | null>(null);
+	let editingEquipo = $state<EquipoRow | null>(null);
 	let showDelete = $state(false);
-	let deletingEquipo = $state<Record<string, string> | null>(null);
+	let deletingEquipo = $state<EquipoRow | null>(null);
 	let formError = $state('');
 
 	// Form fields
@@ -94,7 +96,7 @@
 		showModal = true;
 	}
 
-	function openEdit(e: Record<string, string>) {
+	function openEdit(e: EquipoRow) {
 		editingEquipo = e;
 		formTipoId = e.tipo_id ?? '';
 		formModelo = e.modelo ?? '';
@@ -109,7 +111,7 @@
 		showModal = true;
 	}
 
-	function openDelete(e: Record<string, string>) {
+	function openDelete(e: EquipoRow) {
 		deletingEquipo = e;
 		showDelete = true;
 	}
@@ -164,14 +166,14 @@
 	});
 </script>
 
-{#snippet cell(item: Record<string, string>, col: { key: string })}
+{#snippet cell(item: EquipoRow, col: { key: string })}
 	{#if col.key === 'estado'}
 		<Badge
 			text={estadoLabels[item.estado] ?? item.estado}
 			variant={estadoBadgeVariant[item.estado] ?? 'default'}
 		/>
 	{:else}
-		{item[col.key] ?? ''}
+		{(item as unknown as Record<string, unknown>)[col.key] ?? ''}
 	{/if}
 {/snippet}
 

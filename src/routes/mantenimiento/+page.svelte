@@ -25,11 +25,15 @@
 	// svelte-ignore state_referenced_locally
 	let technicians = $state(data.technicians);
 
+	type PlanRow = (typeof data.plans)[number];
+	type TaskRow = PlanRow['tareas'][number];
+	type ExecRow = PlanRow['ejecuciones'][number];
+
 	let expandedPlanId = $state<string | null>(null);
 
 	// Plan modal
 	let showPlanModal = $state(false);
-	let editingPlan = $state<Record<string, any> | null>(null);
+	let editingPlan = $state<PlanRow | null>(null);
 	let formPlanNombre = $state('');
 	let formPlanDescripcion = $state('');
 	let formPlanFrecuencia = $state(30);
@@ -41,7 +45,7 @@
 
 	// Task modal
 	let showTaskModal = $state(false);
-	let editingTask = $state<Record<string, any> | null>(null);
+	let editingTask = $state<TaskRow | null>(null);
 	let taskPlanId = $state('');
 	let formTaskNombre = $state('');
 	let formTaskDescripcion = $state('');
@@ -55,18 +59,18 @@
 	let schedulePlanName = $state('');
 	let formScheduleTecnico = $state('');
 	let formScheduleFecha = $state('');
-	let scheduleTasks = $state<Record<string, any>[]>([]);
+	let scheduleTasks = $state<TaskRow[]>([]);
 	let formScheduleError = $state('');
 
 	// Delete confirmations
 	let showDeletePlan = $state(false);
-	let deletingPlan = $state<Record<string, any> | null>(null);
+	let deletingPlan = $state<PlanRow | null>(null);
 	let showDeleteTask = $state(false);
-	let deletingTask = $state<Record<string, any> | null>(null);
+	let deletingTask = $state<TaskRow | null>(null);
 
 	// Execution detail
 	let showExecModal = $state(false);
-	let selectedExec = $state<Record<string, any> | null>(null);
+	let selectedExec = $state<ExecRow | null>(null);
 	let formExecResultado = $state('completado');
 	let formExecObservaciones = $state('');
 	let formExecError = $state('');
@@ -99,7 +103,7 @@
 		});
 	}
 
-	function getPlanEquipoLabel(plan: Record<string, any>): string {
+	function getPlanEquipoLabel(plan: PlanRow): string {
 		if (plan.equipo) return `${plan.equipo.marca} ${plan.equipo.modelo}`;
 		if (plan.tipo_equipo) return `Todos: ${plan.tipo_equipo.nombre}`;
 		return 'Todos los equipos';
@@ -116,7 +120,7 @@
 		showPlanModal = true;
 	}
 
-	function openEditPlan(plan: Record<string, any>) {
+	function openEditPlan(plan: PlanRow) {
 		editingPlan = plan;
 		formPlanNombre = plan.nombre ?? '';
 		formPlanDescripcion = plan.descripcion ?? '';
@@ -132,7 +136,7 @@
 		formPlanError = '';
 	}
 
-	function openDeletePlan(plan: Record<string, any>) {
+	function openDeletePlan(plan: PlanRow) {
 		deletingPlan = plan;
 		showDeletePlan = true;
 	}
@@ -146,7 +150,7 @@
 		showTaskModal = true;
 	}
 
-	function openEditTask(task: Record<string, any>) {
+	function openEditTask(task: TaskRow) {
 		editingTask = task;
 		taskPlanId = task.plan_id;
 		formTaskNombre = task.nombre ?? '';
@@ -160,12 +164,12 @@
 		formTaskError = '';
 	}
 
-	function openDeleteTask(task: Record<string, any>) {
+	function openDeleteTask(task: TaskRow) {
 		deletingTask = task;
 		showDeleteTask = true;
 	}
 
-	function openSchedule(plan: Record<string, any>) {
+	function openSchedule(plan: PlanRow) {
 		schedulePlanId = plan.id;
 		schedulePlanName = plan.nombre;
 		scheduleTasks = plan.tareas ?? [];
@@ -180,7 +184,7 @@
 		formScheduleError = '';
 	}
 
-	function openCompleteExec(exec: Record<string, any>) {
+	function openCompleteExec(exec: ExecRow) {
 		selectedExec = exec;
 		formExecResultado = 'completado';
 		formExecObservaciones = '';
@@ -194,7 +198,7 @@
 		formExecError = '';
 	}
 
-	function getLastExecution(plan: Record<string, any>): Record<string, any> | null {
+	function getLastExecution(plan: PlanRow): ExecRow | null {
 		if (!plan.ejecuciones || plan.ejecuciones.length === 0) return null;
 		return plan.ejecuciones[0];
 	}

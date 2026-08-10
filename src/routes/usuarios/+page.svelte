@@ -18,6 +18,8 @@
 
 	let { data } = $props();
 
+	type UsuarioRow = (typeof data.usuarios)[number];
+
 	// svelte-ignore state_referenced_locally
 	let usuarios = $state(data.usuarios);
 	// svelte-ignore state_referenced_locally
@@ -26,9 +28,9 @@
 	let filterActivo = $state(data.filterActivo ?? '');
 
 	let showModal = $state(false);
-	let editingUser = $state<Record<string, any> | null>(null);
+	let editingUser = $state<UsuarioRow | null>(null);
 	let showDelete = $state(false);
-	let deletingUser = $state<Record<string, any> | null>(null);
+	let deletingUser = $state<UsuarioRow | null>(null);
 	let formError = $state('');
 
 	// Form fields
@@ -80,7 +82,7 @@
 		showModal = true;
 	}
 
-	function openEdit(u: Record<string, any>) {
+	function openEdit(u: UsuarioRow) {
 		editingUser = u;
 		formUsername = u.username ?? '';
 		formEmail = u.email ?? '';
@@ -93,7 +95,7 @@
 		showModal = true;
 	}
 
-	function openDelete(u: Record<string, any>) {
+	function openDelete(u: UsuarioRow) {
 		deletingUser = u;
 		showDelete = true;
 	}
@@ -196,13 +198,13 @@
 		onpagechange={() => {}}
 		hideSearch
 	>
-		{#snippet cell(item: Record<string, any>, col: { key: string })}
+		{#snippet cell(item: UsuarioRow, col: { key: string })}
 			{#if col.key === 'rol'}
 				<Badge text={roleLabel(item.rol)} variant={roleVariants[item.rol] ?? 'default'} />
 			{:else if col.key === 'activo'}
 				<Badge text={item.activo ? 'Sí' : 'No'} variant={item.activo ? 'success' : 'danger'} />
 			{:else}
-				{item[col.key] ?? ''}
+				{(item as unknown as Record<string, unknown>)[col.key] ?? ''}
 			{/if}
 		{/snippet}
 

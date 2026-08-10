@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { LucideIcon } from '@lucide/svelte';
+
 	let {
 		icon: Icon,
 		variant = 'default',
@@ -6,7 +8,7 @@
 		onclick,
 		label = ''
 	}: {
-		icon: any; // Lucide icon component
+		icon: LucideIcon;
 		variant?: 'default' | 'edit' | 'delete';
 		size?: 'sm' | 'md' | 'lg';
 		onclick?: (e: MouseEvent) => void;

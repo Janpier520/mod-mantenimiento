@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="T extends Record<string, unknown>">
 	import type { Snippet } from 'svelte';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -25,7 +25,7 @@
 		hideSearch = false
 	}: {
 		columns: { key: string; label: string; sortable?: boolean }[];
-		items: any[];
+		items: T[];
 		loading?: boolean;
 		search: string;
 		onsearch: (value: string) => void;
@@ -33,9 +33,9 @@
 		totalPages: number;
 		total: number;
 		onpagechange: (page: number) => void;
-		children?: Snippet<[item: any]>;
+		children?: Snippet<[item: T]>;
 		empty?: Snippet;
-		cell?: Snippet<[item: any, column: { key: string; label: string }]>;
+		cell?: Snippet<[item: T, column: { key: string; label: string }]>;
 		hideSearch?: boolean;
 	} = $props();
 

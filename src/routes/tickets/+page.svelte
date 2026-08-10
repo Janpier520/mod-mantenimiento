@@ -20,6 +20,8 @@
 
 	let { data } = $props();
 
+	type TicketRow = (typeof data.tickets)[number];
+
 	// svelte-ignore state_referenced_locally
 	let tickets = $state(data.tickets);
 	// svelte-ignore state_referenced_locally
@@ -39,11 +41,11 @@
 	// svelte-ignore state_referenced_locally
 	let filterPrioridad = $state(data.filterPrioridad);
 
-	let selectedTicket = $state<Record<string, any> | null>(null);
+	let selectedTicket = $state<TicketRow | null>(null);
 	let showModal = $state(false);
-	let editingTicket = $state<Record<string, any> | null>(null);
+	let editingTicket = $state<TicketRow | null>(null);
 	let showDelete = $state(false);
-	let deletingTicket = $state<Record<string, any> | null>(null);
+	let deletingTicket = $state<TicketRow | null>(null);
 	let formError = $state('');
 	let formComentario = $state('');
 
@@ -100,7 +102,7 @@
 		{ key: 'fecha', label: 'Fecha' }
 	];
 
-	function selectTicket(t: Record<string, any>) {
+	function selectTicket(t: TicketRow) {
 		selectedTicket = selectedTicket?.id === t.id ? null : t;
 	}
 
@@ -120,7 +122,7 @@
 		showModal = true;
 	}
 
-	function openEdit(t: Record<string, any>) {
+	function openEdit(t: TicketRow) {
 		editingTicket = t;
 		formTitulo = t.titulo ?? '';
 		formDescripcion = t.descripcion ?? '';
@@ -132,7 +134,7 @@
 		showModal = true;
 	}
 
-	function openDelete(t: Record<string, any>) {
+	function openDelete(t: TicketRow) {
 		deletingTicket = t;
 		showDelete = true;
 	}
@@ -182,7 +184,7 @@
 		filterPrioridad = data.filterPrioridad;
 		// Keep selected ticket reference in sync after reload
 		if (currentId) {
-			const updated = data.tickets.find((t: any) => t.id === currentId);
+			const updated = data.tickets.find((t) => t.id === currentId);
 			if (updated) selectedTicket = updated;
 		}
 	});
@@ -198,7 +200,7 @@
 		});
 	}
 
-	function getEquipoLabel(e: Record<string, any> | null | undefined): string {
+	function getEquipoLabel(e: (typeof data.equipos)[number] | null | undefined): string {
 		if (!e) return '—';
 		return `${e.marca} ${e.modelo}`;
 	}
@@ -210,7 +212,7 @@
 	});
 </script>
 
-{#snippet cell(item: Record<string, any>, col: { key: string })}
+{#snippet cell(item: TicketRow, col: { key: string })}
 	{#if col.key === 'numero_ticket'}
 		<button onclick={() => selectTicket(item)} class="font-medium text-primary hover:underline">
 			{item.numero_ticket}
@@ -232,7 +234,7 @@
 	{:else if col.key === 'fecha'}
 		{new Date(item.created_at).toLocaleDateString('es-AR')}
 	{:else}
-		{item[col.key] ?? ''}
+		{(item as unknown as Record<string, unknown>)[col.key] ?? ''}
 	{/if}
 {/snippet}
 
@@ -461,7 +463,10 @@
 								await update();
 								await invalidate($page.url.pathname);
 							} else if (result.type === 'failure') {
-								addToast((result.data as any)?.error ?? 'Error al enviar comentario', 'error');
+								addToast(
+									(result.data as { error?: string } | null)?.error ?? 'Error al enviar comentario',
+									'error'
+								);
 							}
 						};
 					}}
@@ -557,7 +562,7 @@
 						bind:value={formEquipoId}
 						options={[
 							{ value: '', label: 'Sin equipo' },
-							...equipos.map((e: any) => ({ value: e.id, label: `${e.marca} ${e.modelo}` }))
+							...equipos.map((e) => ({ value: e.id, label: `${e.marca} ${e.modelo}` }))
 						]}
 					/>
 				</div>
@@ -583,7 +588,7 @@
 							bind:value={formTecnicoAsignado}
 							options={[
 								{ value: '', label: 'Sin técnico' },
-								...tecnicos.map((t: any) => ({ value: t.id, label: `${t.nombre} ${t.apellido}` }))
+								...tecnicos.map((t) => ({ value: t.id, label: `${t.nombre} ${t.apellido}` }))
 							]}
 						/>
 					</div>

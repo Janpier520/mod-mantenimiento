@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import gsap from 'gsap';
 	import Inbox from '@lucide/svelte/icons/inbox';
 
@@ -10,7 +10,7 @@
 	}: {
 		title: string;
 		description?: string;
-		children?: any;
+		children?: Snippet;
 	} = $props();
 
 	let el: HTMLElement;

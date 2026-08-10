@@ -18,6 +18,8 @@
 
 	let { data } = $props();
 
+	type ProveedorRow = (typeof data.proveedores)[number];
+
 	let proveedores = $state(data.proveedores);
 	// svelte-ignore state_referenced_locally
 	let total = $state(data.total);
@@ -29,9 +31,9 @@
 	let search = $state(data.search);
 
 	let showModal = $state(false);
-	let editingProveedor = $state<Record<string, string> | null>(null);
+	let editingProveedor = $state<ProveedorRow | null>(null);
 	let showDelete = $state(false);
-	let deletingProveedor = $state<Record<string, string> | null>(null);
+	let deletingProveedor = $state<ProveedorRow | null>(null);
 	let formError = $state('');
 
 	// Form fields
@@ -62,7 +64,7 @@
 		showModal = true;
 	}
 
-	function openEdit(p: Record<string, string>) {
+	function openEdit(p: ProveedorRow) {
 		editingProveedor = p;
 		formNombre = p.nombre ?? '';
 		formContacto = p.contacto ?? '';
@@ -73,7 +75,7 @@
 		showModal = true;
 	}
 
-	function openDelete(p: Record<string, string>) {
+	function openDelete(p: ProveedorRow) {
 		deletingProveedor = p;
 		showDelete = true;
 	}

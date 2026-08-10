@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
 	import type { NavItem } from '$lib/types';
+	import type { LucideIcon } from '@lucide/svelte';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import Package from '@lucide/svelte/icons/package';
 	import Ticket from '@lucide/svelte/icons/ticket';
@@ -151,7 +152,7 @@
 		Object.entries(pageTitles).find(([path]) => activePath.startsWith(path))?.[1] ?? ''
 	);
 
-	const iconMap: Record<string, any> = {
+	const iconMap: Record<string, LucideIcon> = {
 		dashboard: LayoutDashboard,
 		equipos: Package,
 		tickets: Ticket,
@@ -210,7 +211,7 @@
 			: []
 	);
 
-	let pageTitleIcon = $state<typeof LayoutDashboard | undefined>(undefined);
+	let pageTitleIcon = $state<LucideIcon | undefined>(undefined);
 
 	$effect(() => {
 		for (const group of navGroups) {
