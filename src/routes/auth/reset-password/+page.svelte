@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import gsap from 'gsap';
@@ -63,7 +64,7 @@
 				>
 					{success}
 				</div>
-				<a href="/login" class="block">
+				<a href={resolve('/login')} class="block">
 					<Button class="w-full">Volver al inicio de sesión</Button>
 				</a>
 			</div>
@@ -144,7 +145,9 @@
 			</form>
 
 			<div class="mt-6 text-center">
-				<a href="/login" class="text-sm text-muted-foreground transition-colors hover:text-primary"
+				<a
+					href={resolve('/login')}
+					class="text-sm text-muted-foreground transition-colors hover:text-primary"
 					>Volver al inicio de sesión</a
 				>
 			</div>

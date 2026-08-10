@@ -32,10 +32,12 @@ export type TicketPriority = 'baja' | 'media' | 'alta' | 'critica';
 export type PMResult = 'pendiente' | 'completado' | 'fallido' | 'omitido';
 
 // ─── Navigation items ─────────────────────────────────────────────────────────
+import type { ResolvedPathname } from '$app/types';
+
 export interface NavItem {
 	label: string;
 	icon: string;
-	href: string;
+	href: ResolvedPathname;
 	roles?: UserRole[];
 	shortcut?: string;
 }

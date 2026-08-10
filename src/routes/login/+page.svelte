@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import gsap from 'gsap';
 	import { Input } from '$lib/components/ui/input';
@@ -105,7 +106,7 @@
 	<!-- Footer -->
 	<div bind:this={footerEl} class="mt-8 text-center">
 		<a
-			href="/auth/forgot-password"
+			href={resolve('/auth/forgot-password')}
 			class="text-sm text-muted-foreground underline-offset-2 transition-colors hover:text-primary hover:underline"
 		>
 			¿Olvidaste tu contraseña?

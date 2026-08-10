@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import type { PathnameWithSearchOrHash } from '$app/types';
 	import { page } from '$app/stores';
 	import gsap from 'gsap';
 	import type { NavItem, UserRole } from '$lib/types';
@@ -45,7 +47,7 @@
 		key: string;
 		ctrl?: boolean;
 		shift?: boolean;
-		href: string;
+		href: PathnameWithSearchOrHash;
 		label: string;
 		roles?: UserRole[];
 		display: string;
@@ -138,7 +140,7 @@
 		label: string;
 		icon: string;
 		action: string;
-		href: string;
+		href: PathnameWithSearchOrHash;
 		roles?: UserRole[];
 		shortcut?: string;
 	}
@@ -267,7 +269,10 @@
 			for (const shortcut of shortcuts) {
 				if (shortcut.key === key && e.shiftKey === !!shortcut.shift && isAuthorized(shortcut)) {
 					e.preventDefault();
-					goto(shortcut.href);
+					// ponytail: resolve() can't be typed for dynamic query-bearing hrefs
+					// (candidate route union is not assignable), so bypass the check.
+					// @ts-expect-error - dynamic PathnameWithSearchOrHash arg
+					goto(resolve(shortcut.href));
 					return;
 				}
 			}
@@ -332,10 +337,13 @@
 		});
 	}
 
-	function navigate(href: string) {
+	function navigate(href: PathnameWithSearchOrHash) {
 		close();
 		// Small delay so close animation plays before navigation
-		setTimeout(() => goto(href), 100);
+		// ponytail: resolve() can't be typed for dynamic query-bearing hrefs
+		// (candidate route union is not assignable), so bypass the check.
+		// @ts-expect-error - dynamic PathnameWithSearchOrHash arg
+		setTimeout(() => goto(resolve(href)), 100);
 	}
 
 	function isActive(href: string): boolean {

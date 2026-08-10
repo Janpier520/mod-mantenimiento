@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { resolve } from '$app/paths';
 	import { staggerIn, countUp } from '$lib/animations';
 	import EmptyState from '$lib/ui/EmptyState.svelte';
 	import Package from '@lucide/svelte/icons/package';
@@ -313,7 +314,7 @@
 		<h2 class="mb-4 text-lg font-bold text-foreground">Acciones Rápidas</h2>
 		<div class="grid gap-3 sm:grid-cols-2">
 			<a
-				href="/equipos"
+				href={resolve('/equipos')}
 				class="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm"
 			>
 				<div
@@ -324,7 +325,7 @@
 				<span>Nuevo Equipo</span>
 			</a>
 			<a
-				href="/tickets"
+				href={resolve('/tickets')}
 				class="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm"
 			>
 				<div
@@ -335,7 +336,7 @@
 				<span>Nuevo Ticket</span>
 			</a>
 			<a
-				href="/mantenimiento"
+				href={resolve('/mantenimiento')}
 				class="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm"
 			>
 				<div
@@ -346,7 +347,7 @@
 				<span>Programar Mantenimiento</span>
 			</a>
 			<a
-				href="/reportes"
+				href={resolve('/reportes')}
 				class="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm"
 			>
 				<div
@@ -376,7 +377,7 @@
 				<div class="space-y-2">
 					{#each data.upcomingMaintenance as item (item.id)}
 						<a
-							href="/mantenimiento"
+							href={resolve('/mantenimiento')}
 							class="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/50 dark:bg-card dark:hover:bg-muted/50"
 						>
 							<div class="min-w-0 flex-1">
@@ -413,7 +414,7 @@
 				<div class="space-y-2">
 					{#each data.recentTickets as ticket (ticket.id)}
 						<a
-							href="/tickets"
+							href={resolve('/tickets')}
 							class="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/50 dark:bg-card dark:hover:bg-muted/50"
 						>
 							<div class="min-w-0 flex-1">

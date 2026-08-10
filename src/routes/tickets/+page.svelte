@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto, invalidate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
@@ -149,7 +150,11 @@
 		if (currentPage > 1) params.set('page', String(currentPage));
 		const qs = params.toString();
 		const url = qs ? `${$page.url.pathname}?${qs}` : $page.url.pathname;
-		await goto(url, { keepFocus: true, noScroll: true, replaceState: true });
+		await goto(resolve(url as '/tickets'), {
+			keepFocus: true,
+			noScroll: true,
+			replaceState: true
+		});
 	}
 
 	async function handleSearch(value: string) {

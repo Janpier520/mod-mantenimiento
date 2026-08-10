@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import gsap from 'gsap';
 	import { Input } from '$lib/components/ui/input';
@@ -80,7 +81,9 @@
 		{/if}
 
 		<div class="mt-6 text-center">
-			<a href="/login" class="text-sm text-muted-foreground transition-colors hover:text-primary"
+			<a
+				href={resolve('/login')}
+				class="text-sm text-muted-foreground transition-colors hover:text-primary"
 				>Volver al inicio de sesión</a
 			>
 		</div>
