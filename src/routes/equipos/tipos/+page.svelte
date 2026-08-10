@@ -87,7 +87,7 @@
 		page={1}
 		totalPages={1}
 		total={tipos.length}
-		search={''}
+		search=""
 		onsearch={() => {}}
 		onpagechange={() => {}}
 	>

@@ -317,7 +317,7 @@
 		page={currentPage}
 		{totalPages}
 		{total}
-		search={''}
+		search=""
 		onsearch={() => {}}
 		onpagechange={handlePageChange}
 		hideSearch

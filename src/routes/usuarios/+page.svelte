@@ -137,7 +137,7 @@
 
 	<!-- Filter bar with chips + URL params -->
 	<FilterBar
-		search={''}
+		search=""
 		onsearch={() => {}}
 		values={{
 			rol: filterRol,
@@ -186,7 +186,7 @@
 		page={1}
 		totalPages={1}
 		total={usuarios.length}
-		search={''}
+		search=""
 		onsearch={() => {}}
 		onpagechange={() => {}}
 		hideSearch
