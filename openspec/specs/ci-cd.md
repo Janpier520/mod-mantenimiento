@@ -40,13 +40,13 @@ The workflow MUST install dependencies with `npm ci` (not `npm install`) so inst
 
 ### CC-4: Gate Order and Coverage
 
-The workflow MUST run gates in order: `npm run check` → `npm run format:check` → `npm run test` → `npm run test:coverage`. `package.json` MUST add a `format:check` script running Prettier in check mode over all files not excluded by `.prettierignore`. `test:coverage` MUST fail when statement coverage drops below 70% (threshold enforced in `vitest.config.ts`).
+The workflow MUST run gates in order: `npm run check` → `npm run format:check` → `npm run lint` → `npm run test` → `npm run test:coverage`. `package.json` MUST provide a `format:check` script running Prettier in check mode over all files not excluded by `.prettierignore`. `test:coverage` MUST fail when statement coverage drops below 70% (threshold enforced in `vitest.config.ts`).
 
 #### Scenario: Green pipeline
 
-- GIVEN a PR that typechecks, is Prettier-clean, passes all tests, and has ≥70% statement coverage
+- GIVEN a PR that typechecks, is Prettier-clean, passes lint, passes all tests, and has ≥70% statement coverage
 - WHEN the pipeline runs
-- THEN all four gates MUST pass in order
+- THEN all five gates MUST pass in order
 
 #### Scenario: Coverage regression
 
@@ -78,14 +78,21 @@ The 12 pre-existing unformatted files (11 `src/**` + `DESIGN.md`) MUST be format
 
 ### CC-6: Lint Policy
 
-`npm run lint` SHALL remain red (170 pre-existing eslint errors — explicitly out of scope) and MUST NOT gate CI. CI gates on `format:check` instead; this decision MUST be recorded in the design.
+`npm run lint` MUST pass on the whole repository and MUST gate CI: the workflow MUST run `npm run lint` after `format:check` and before `test`, and a non-zero exit MUST fail the pipeline. The workflow header comment MUST state that lint gates CI. This reversal MUST be recorded in the change's design.
 
-#### Scenario: Lint excluded from CI
+#### Scenario: Lint gates CI
 
 - GIVEN the workflow's step list
 - WHEN CI runs
-- THEN no lint step MUST execute
-- AND a green pipeline MUST NOT require a passing `npm run lint`
+- THEN a lint step MUST execute after `format:check` and before `test`
+- AND a failing `npm run lint` MUST fail the pipeline
+
+#### Scenario: Green pipeline requires lint
+
+- GIVEN a pipeline where every gate except lint passes
+- WHEN `npm run lint` exits non-zero
+- THEN the pipeline MUST report failure
+- AND the workflow header comment MUST NOT claim lint is excluded from CI
 
 ### CC-7: Coverage Artifact
 

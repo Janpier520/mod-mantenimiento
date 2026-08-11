@@ -65,13 +65,20 @@ The README MUST document test/coverage commands (`npm run test`, `npm run test:c
 
 ### RD-6: CI section
 
-The README MUST summarize `.github/workflows/ci.yml`: push + PR to `main`, Node 24, `npm ci`, gates `check`→`format:check`→`test`→`test:coverage` (≥70% statements).
+The README MUST summarize `.github/workflows/ci.yml`: push + PR to `main`, Node 24, `npm ci`, gates `check`→`format:check`→`lint`→`test`→`test:coverage` (≥70% statements), and MUST state that lint is a CI gate.
 
 #### Scenario: CI summary matches workflow
 
 - GIVEN the CI section
 - WHEN comparing against `ci.yml`
-- THEN triggers, Node version, gate order, and the 70% threshold MUST match
+- THEN triggers, Node version, gate order including lint, and the 70% threshold MUST match
+
+#### Scenario: No stale exclusion statement
+
+- GIVEN the CI section
+- WHEN searching for "ESLint no es gate" or the 170-error count
+- THEN neither MUST be present
+- AND lint MUST be described as a required CI gate
 
 ### RD-7: SDD/OpenSpec section
 
