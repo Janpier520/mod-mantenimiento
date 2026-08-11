@@ -22,9 +22,11 @@ npm run dev           # vite dev (http://localhost:5173)
 npm run build         # build producción → build/
 npm run preview       # preview del build
 npm run check         # svelte-kit sync + svelte-check (typecheck)
-npm run lint          # prettier --check . && eslint .
+npm run lint          # prettier --check . && eslint . (gate de CI)
 npm run format        # prettier --write .
+npm run format:check  # prettier --check . (gate de CI)
 npm run test          # vitest run (patrón: src/**/*.test.ts)
+npm run test:coverage # vitest run + reporte v8 (umbral ≥70% statements, gate de CI)
 npm run db:push       # drizzle-kit push (esquema → DB directo)
 npm run db:reset      # recrea DB desde cero: borra archivos + push --force + seed (parar dev server antes)
 npm run db:generate   # drizzle-kit generate (migraciones)
@@ -33,11 +35,12 @@ npm run db:studio     # drizzle-kit studio (UI de inspección DB)
 npm run db:seed       # npx tsx src/lib/server/db/seed.ts
 ```
 
-**Orden típico pre-commit**: `format → lint → check → test`
+**Orden de gates CI** (`.github/workflows/ci.yml`): `check → format:check → lint → test → test:coverage` (≥70% statements).
 
 ## Arquitectura
 
 - **Sin API layer**: todo es server load functions (`+page.server.ts`) + form actions con `use:enhance`. No hay endpoints REST ni tRPC.
+- **Capa de servicio**: `src/lib/server/services/` concentra la lógica de dominio (tickets, equipos, usuarios, mantenimiento); las rutas son adapters finos que delegan en servicios. Cada servicio tiene su test (`services/<x>.test.ts`).
 - **Auth en hooks.server.ts**: session validation + role guard (`admin`/`tecnico`/`consultor`) por prefijo de ruta.
 - **Dark mode**: clase `.dark` en `<html>`, persistida en localStorage (`equip-lab-theme`).
 - **Layout único**: sidebar fija con nav filtrada por rol, topbar con logout + dark mode toggle.
@@ -78,13 +81,16 @@ npm run db:seed       # npx tsx src/lib/server/db/seed.ts
 ## Testing
 
 - Vitest con patrón `src/**/*.test.ts` (config en vitest.config.ts).
-- Solo hay un test: `src/lib/server/auth.test.ts` (hashing de passwords).
+- **177 tests en 12 archivos** (estado 2026-08-07): auth, servicios, state machines, validators y CRUD de rutas.
+- DB en tests: in-memory SQLite via `test-helpers.ts` (`initTestDb()` idempotente, push con `drizzle-kit/api`).
+- Coverage: `test:coverage` con umbral **≥70% statements** (actual ~82%).
 - **No hay strict TDD** — no hay expectativas de test-first.
 
 ## SDD / OpenSpec
 
 - El proyecto usa SDD (Spec-Driven Development).
 - Artefactos: `openspec/{proposals,specs,designs,tasks,archive}`.
+- Cambios activos: `openspec/changes/{fecha}-{cambio}/` (proposal, specs delta, design, tasks, verify-report); al archivar se mueven a `openspec/changes/archive/` y las specs delta se fusionan en `openspec/specs/`.
 - Config: `openspec/config.yaml`.
 - Estrategia PR: stacked-to-main via feature branches.
 
@@ -94,4 +100,5 @@ npm run db:seed       # npx tsx src/lib/server/db/seed.ts
 - `.svelte-kit/` es generado por `svelte-kit sync` (parte de `npm run check`), no se toca manualmente.
 - `build/` es output del adapter-node.
 - Los archivos `*.db`, `*.db-wal`, `*.db-shm` son SQLite y están gitignored.
-- No hay CI/CD configurado.
+- **CI/CD**: `.github/workflows/ci.yml` — Node 24, `npm ci`, gates `check → format:check → lint → test → test:coverage` (≥70%), upload de coverage como artifact. ESLint es gate obligatorio (0 errores, 0 warnings).
+- **Windows CRLF**: `git status` puede mostrar `M` fantasma en archivos tocados (autocrlf). Verificar con `git diff --quiet <file>` antes de commitear.
