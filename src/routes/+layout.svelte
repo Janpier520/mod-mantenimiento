@@ -18,6 +18,7 @@
 	import CommandPalette from '$lib/ui/CommandPalette.svelte';
 	import { getToasts } from '$lib/stores/toast.svelte';
 	import gsap from 'gsap';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	const { toasts } = getToasts();
 
@@ -47,16 +48,14 @@
 	let sidebarTl: gsap.core.Timeline | null = null;
 
 	// Collapsible nav groups — persisted in a Set
-	let collapsedGroups = $state<Set<string>>(new Set());
+	let collapsedGroups = new SvelteSet<string>();
 
 	function toggleGroup(label: string) {
-		const next = new Set(collapsedGroups);
-		if (next.has(label)) {
-			next.delete(label);
+		if (collapsedGroups.has(label)) {
+			collapsedGroups.delete(label);
 		} else {
-			next.add(label);
+			collapsedGroups.add(label);
 		}
-		collapsedGroups = next;
 	}
 
 	// ponytail: localStorage dark mode persistence, default dark

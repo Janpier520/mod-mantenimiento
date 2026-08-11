@@ -239,11 +239,6 @@
 
 	let filteredItems = $derived(flatItems.slice(0, 12));
 
-	// Reset selection when filter changes
-	$effect(() => {
-		selectedIndex = 0;
-	});
-
 	// Keyboard listener for Ctrl+K / Cmd+K and global shortcuts
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger global shortcuts when typing in inputs

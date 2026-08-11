@@ -4,12 +4,8 @@
 
 	let { data } = $props();
 
-	let settings = $state(data.settings);
+	let settings = $derived(data.settings);
 	let saving = $state(false);
-
-	$effect(() => {
-		settings = data.settings;
-	});
 </script>
 
 <svelte:head>

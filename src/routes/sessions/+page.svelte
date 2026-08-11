@@ -7,11 +7,7 @@
 
 	let { data } = $props();
 
-	let sessions = $state(data.sessions);
-
-	$effect(() => {
-		sessions = data.sessions;
-	});
+	let sessions = $derived(data.sessions);
 </script>
 
 <svelte:head>

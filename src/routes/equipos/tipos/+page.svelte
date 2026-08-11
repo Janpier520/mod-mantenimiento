@@ -17,8 +17,7 @@
 
 	type TipoRow = (typeof data.tipos)[number];
 
-	// svelte-ignore state_referenced_locally
-	let tipos = $state(data.tipos);
+	let tipos = $derived(data.tipos);
 	let showModal = $state(false);
 	let editingTipo = $state<TipoRow | null>(null);
 	let showDelete = $state(false);
@@ -65,10 +64,6 @@
 		showModal = false;
 		formError = '';
 	}
-
-	$effect(() => {
-		tipos = data.tipos;
-	});
 </script>
 
 <svelte:head>

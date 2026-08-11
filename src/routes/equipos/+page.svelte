@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
 	import { goto, invalidate } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -122,7 +123,7 @@
 	}
 
 	async function reload() {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		if (search) params.set('search', search);
 		if (filterEstado) params.set('estado', filterEstado);
 		if (filterTipo) params.set('tipo', filterTipo);
