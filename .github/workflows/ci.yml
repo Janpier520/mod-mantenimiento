@@ -1,6 +1,6 @@
 # CI quality gate for mod-mantenimiento.
-# ESLint is intentionally NOT a gate: 170 pre-existing errors (verified 2026-08-06).
-# Follow-up change: eslint-debt.
+# Quality gates, in order: check -> format:check -> lint -> test -> test:coverage.
+# ESLint (npm run lint) IS a required gate: a non-zero exit fails the pipeline.
 name: CI
 
 on:
@@ -38,6 +38,9 @@ jobs:
 
       - name: Format check
         run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
 
       - name: Tests
         run: npm run test
