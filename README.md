@@ -94,10 +94,11 @@ Los 17 scripts de `package.json`:
 
 1. `npm run check` — typecheck
 2. `npm run format:check` — formato Prettier
-3. `npm run test` — suite de tests
-4. `npm run test:coverage` — cobertura ≥70% statements
+3. `npm run lint` — ESLint (gate obligatorio)
+4. `npm run test` — suite de tests
+5. `npm run test:coverage` — cobertura ≥70% statements
 
-Además sube el reporte de cobertura como artifact. ESLint **no** es gate: hay ~170 errores preexistentes (verificado 2026-08-06, seguimiento en el cambio `eslint-debt`).
+Además sube el reporte de cobertura como artifact. ESLint es un gate obligatorio de CI: `npm run lint` corre después de `format:check` y cualquier error de lint falla el pipeline.
 
 ## Arquitectura
 
@@ -141,7 +142,7 @@ Además sube el reporte de cobertura como artifact. ESLint **no** es gate: hay ~
 │       └── test/mocks/$app      # mocks de $app para vitest
 ├── scripts/
 │   └── db-reset.mjs             # respalda a npm run db:reset
-├── .github/workflows/ci.yml     # quality gate (check → format → test → coverage)
+├── .github/workflows/ci.yml     # quality gate (check → format:check → lint → test → test:coverage)
 ├── openspec/                    # artefactos SDD (ver sección siguiente)
 ├── AGENTS.md                    # fuente de verdad: arquitectura y convenciones
 ├── DESIGN.md                    # sistema de diseño (tokens, paleta, tipografía)
