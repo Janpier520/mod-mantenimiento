@@ -153,8 +153,8 @@
 
 	$effect(() => {
 		if (!browser) return;
-		isDark;
-		timePeriod;
+		void isDark;
+		void timePeriod;
 		const id = requestAnimationFrame(() => initChart());
 		return () => cancelAnimationFrame(id);
 	});

@@ -248,7 +248,8 @@
 		// Ctrl+K / Cmd+K → open/close palette
 		if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
 			e.preventDefault();
-			open ? close() : openPalette();
+			if (open) close();
+			else openPalette();
 			return;
 		}
 
