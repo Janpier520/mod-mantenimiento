@@ -42,7 +42,10 @@
 	// svelte-ignore state_referenced_locally
 	let filterPrioridad = $state(data.filterPrioridad);
 
-	let selectedTicket = $state<TicketRow | null>(null);
+	let selectedId = $state<string | null>(null);
+	let selectedTicket = $derived(
+		selectedId ? (data.tickets.find((t) => t.id === selectedId) ?? null) : null
+	);
 	let showModal = $state(false);
 	let editingTicket = $state<TicketRow | null>(null);
 	let showDelete = $state(false);
@@ -104,11 +107,11 @@
 	];
 
 	function selectTicket(t: TicketRow) {
-		selectedTicket = selectedTicket?.id === t.id ? null : t;
+		selectedId = selectedId === t.id ? null : t.id;
 	}
 
 	function closeDetail() {
-		selectedTicket = null;
+		selectedId = null;
 	}
 
 	function openCreate() {
@@ -163,7 +166,7 @@
 	async function handleSearch(value: string) {
 		search = value;
 		currentPage = 1;
-		selectedTicket = null;
+		selectedId = null;
 		await reload();
 	}
 
@@ -173,7 +176,6 @@
 	}
 
 	$effect(() => {
-		const currentId = selectedTicket?.id;
 		tickets = data.tickets;
 		tecnicos = data.tecnicos;
 		equipos = data.equipos;
@@ -183,11 +185,6 @@
 		search = data.search;
 		filterEstado = data.filterEstado;
 		filterPrioridad = data.filterPrioridad;
-		// Keep selected ticket reference in sync after reload
-		if (currentId) {
-			const updated = data.tickets.find((t) => t.id === currentId);
-			if (updated) selectedTicket = updated;
-		}
 	});
 
 	function formatDate(iso: string): string {
@@ -287,7 +284,7 @@
 				if (key === 'estado') filterEstado = value;
 				if (key === 'prioridad') filterPrioridad = value;
 				currentPage = 1;
-				selectedTicket = null;
+				selectedId = null;
 				reload();
 			}}
 			onremovechip={(key) => {
@@ -299,7 +296,7 @@
 				if (key === 'estado') filterEstado = '';
 				if (key === 'prioridad') filterPrioridad = '';
 				currentPage = 1;
-				selectedTicket = null;
+				selectedId = null;
 				reload();
 			}}
 			onclearall={() => {
@@ -307,7 +304,7 @@
 				filterEstado = '';
 				filterPrioridad = '';
 				currentPage = 1;
-				selectedTicket = null;
+				selectedId = null;
 				goto($page.url.pathname, { keepFocus: true, noScroll: true, replaceState: true });
 			}}
 		/>
@@ -646,7 +643,7 @@
 						deletingTicket = null;
 
 						if (body.success) {
-							if (wasSelected) selectedTicket = null;
+							if (wasSelected) selectedId = null;
 							addToast('Ticket eliminado correctamente');
 							await invalidate($page.url.pathname);
 						} else {
