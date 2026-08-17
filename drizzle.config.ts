@@ -3,7 +3,7 @@ import { defineConfig } from 'drizzle-kit';
 export default defineConfig({
 	schema: './src/lib/server/db/schema.ts',
 	dialect: 'sqlite',
-	dbCredentials: { url: process.env.DATABASE_URL ?? 'file:equip-lab.db' },
+	dbCredentials: { url: process.env.DATABASE_URL ?? 'file:overhaul.db' },
 	verbose: true,
 	strict: true
 });

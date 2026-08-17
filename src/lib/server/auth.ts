@@ -7,7 +7,7 @@ import type { Cookies } from '@sveltejs/kit';
 
 const SALT_ROUNDS = 10;
 export const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
-const COOKIE_NAME = 'equip-lab-session';
+const COOKIE_NAME = 'overhaul-session';
 
 // ─── Password hashing ─────────────────────────────────────────────────────────
 

@@ -35,7 +35,7 @@ npm install
 
 ```bash
 # .env
-DATABASE_URL=file:equip-lab.db
+DATABASE_URL=file:overhaul.db
 ```
 
 3. Inicializar la base de datos. Para una base desde cero (esquema + datos demo) usar `db:reset`; si el esquema ya existe, `db:seed` siembra de forma idempotente:

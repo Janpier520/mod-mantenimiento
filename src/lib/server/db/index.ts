@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import * as schema from './schema';
 
-const url = process.env.DATABASE_URL ?? 'file:equip-lab.db';
+const url = process.env.DATABASE_URL ?? 'file:overhaul.db';
 const client = createClient({ url });
 
 // ponytail: WAL mode prevents DB corruption on crash, improves concurrent reads

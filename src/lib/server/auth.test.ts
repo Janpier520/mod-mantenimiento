@@ -217,11 +217,11 @@ describe('session lifecycle (TC-6)', () => {
 });
 
 describe('cookie helpers (TC-6)', () => {
-	it('setSessionCookie sets the httpOnly equip-lab-session cookie', () => {
+	it('setSessionCookie sets the httpOnly overhaul-session cookie', () => {
 		const cookies = { set: vi.fn(), get: vi.fn(), delete: vi.fn() } as unknown as Cookies;
 		setSessionCookie(cookies, 'token-123');
 		expect(cookies.set).toHaveBeenCalledWith(
-			'equip-lab-session',
+			'overhaul-session',
 			'token-123',
 			expect.objectContaining({ path: '/', httpOnly: true, sameSite: 'lax' })
 		);
@@ -239,7 +239,7 @@ describe('cookie helpers (TC-6)', () => {
 	it('clearSessionCookie deletes the cookie', () => {
 		const cookies = { set: vi.fn(), get: vi.fn(), delete: vi.fn() } as unknown as Cookies;
 		clearSessionCookie(cookies);
-		expect(cookies.delete).toHaveBeenCalledWith('equip-lab-session', { path: '/' });
+		expect(cookies.delete).toHaveBeenCalledWith('overhaul-session', { path: '/' });
 	});
 });
 

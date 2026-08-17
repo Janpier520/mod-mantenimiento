@@ -42,7 +42,7 @@
 
 	// Sidebar collapse (desktop only — persisted in localStorage)
 	let sidebarCollapsed = $state(
-		browser ? localStorage.getItem('equip-lab-sidebar-collapsed') === 'true' : false
+		browser ? localStorage.getItem('overhaul-sidebar-collapsed') === 'true' : false
 	);
 
 	let sidebarTl: gsap.core.Timeline | null = null;
@@ -59,7 +59,7 @@
 	}
 
 	// ponytail: localStorage dark mode persistence, default dark
-	let darkMode = $state(browser ? localStorage.getItem('equip-lab-theme') !== 'light' : true);
+	let darkMode = $state(browser ? localStorage.getItem('overhaul-theme') !== 'light' : true);
 
 	function toggleSidebar() {
 		sidebarOpen = !sidebarOpen;
@@ -71,13 +71,13 @@
 
 	$effect(() => {
 		if (!browser) return;
-		localStorage.setItem('equip-lab-sidebar-collapsed', String(sidebarCollapsed));
+		localStorage.setItem('overhaul-sidebar-collapsed', String(sidebarCollapsed));
 	});
 
 	$effect(() => {
 		if (!browser) return;
 		document.documentElement.classList.toggle('dark', darkMode);
-		localStorage.setItem('equip-lab-theme', darkMode ? 'dark' : 'light');
+		localStorage.setItem('overhaul-theme', darkMode ? 'dark' : 'light');
 	});
 
 	// GSAP sidebar + overlay + nav-item stagger on mobile only

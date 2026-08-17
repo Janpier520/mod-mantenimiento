@@ -42,7 +42,7 @@ npm run db:seed       # npx tsx src/lib/server/db/seed.ts
 - **Sin API layer**: todo es server load functions (`+page.server.ts`) + form actions con `use:enhance`. No hay endpoints REST ni tRPC.
 - **Capa de servicio**: `src/lib/server/services/` concentra la lógica de dominio (tickets, equipos, usuarios, mantenimiento); las rutas son adapters finos que delegan en servicios. Cada servicio tiene su test (`services/<x>.test.ts`).
 - **Auth en hooks.server.ts**: session validation + role guard (`admin`/`tecnico`/`consultor`) por prefijo de ruta.
-- **Dark mode**: clase `.dark` en `<html>`, persistida en localStorage (`equip-lab-theme`).
+- **Dark mode**: clase `.dark` en `<html>`, persistida en localStorage (`overhaul-theme`).
 - **Layout único**: sidebar fija con nav filtrada por rol, topbar con logout + dark mode toggle.
 - **CRUD unificado**: cada ruta expone una sola action `crud` que switchea por campo `_action` (`create`/`update`/`delete`).
 
@@ -67,8 +67,8 @@ npm run db:seed       # npx tsx src/lib/server/db/seed.ts
 - Schema + relations: `src/lib/server/db/schema.ts` (todo en un archivo).
 - Init: `src/lib/server/db/index.ts` — PRAGMA WAL + busy_timeout.
 - Seed: `src/lib/server/db/seed.ts` crea admin (`admin` / `admin123`), tipos de equipo, proveedores y config por defecto.
-- DB local: `equip-lab.db` (gitignored, generado por seed o drizzle push).
-- `DATABASE_URL` en `.env` (default `file:equip-lab.db`).
+- DB local: `overhaul.db` (gitignored, generado por seed o drizzle push).
+- `DATABASE_URL` en `.env` (default `file:overhaul.db`).
 
 ## Convenciones de código
 

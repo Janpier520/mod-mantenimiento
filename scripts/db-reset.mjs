@@ -1,11 +1,11 @@
 // db-reset.mjs — Recreate the SQLite database from scratch (schema + demo seed).
 // Usage: npm run db:reset
-// Note: assumes default DATABASE_URL (file:equip-lab.db). Stop the dev server first,
+// Note: assumes default DATABASE_URL (file:overhaul.db). Stop the dev server first,
 // otherwise the DB file is locked on Windows.
 import { rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
-const files = ['equip-lab.db', 'equip-lab.db-wal', 'equip-lab.db-shm'];
+const files = ['overhaul.db', 'overhaul.db-wal', 'overhaul.db-shm'];
 
 for (const f of files) {
 	try {
