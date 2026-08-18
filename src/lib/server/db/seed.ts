@@ -124,12 +124,6 @@ export async function seed() {
 	// Config defaults
 	const DEFAULT_CONFIG = [
 		{
-			key: 'empresa_nombre',
-			value: 'Módulo Mantenimiento de Equipos',
-			descripcion: 'Nombre de la empresa',
-			tipo: 'text' as const
-		},
-		{
 			key: 'email_contacto',
 			value: 'soporte@equiplab.com',
 			descripcion: 'Email de contacto',

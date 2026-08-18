@@ -286,9 +286,11 @@
 				</div>
 				<div class="min-w-0 flex-1 overflow-hidden {sidebarCollapsed ? 'hidden' : ''}">
 					<span class="block truncate text-xs font-bold tracking-tight text-white">
-						Módulo Mantenimiento
+						World Enterprise D&E
 					</span>
-					<span class="block truncate text-[11px] text-sidebar-text/60">Gestión de Equipos</span>
+					<span class="block truncate text-[11px] text-sidebar-text/60"
+						>Módulo de Mantenimiento</span
+					>
 				</div>
 				<!-- Desktop collapse toggle -->
 				<button
