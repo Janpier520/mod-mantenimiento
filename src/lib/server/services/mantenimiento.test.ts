@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import { initTestDb, type SeedIds } from '$lib/server/db/test-helpers';
 import { preventive_maintenance_plans, pm_tasks, pm_executions } from '$lib/server/db/schema';
 import { eq, count } from 'drizzle-orm';
+import { addDaysToDate } from '$lib/server/dates';
 import {
 	createPlan,
 	updatePlan,
@@ -53,7 +54,8 @@ async function insertTask(planId: string, nombre = 'Tarea Directa') {
 async function insertExecution(
 	planId: string,
 	taskId: string,
-	resultado: 'pendiente' | 'completado'
+	resultado: 'pendiente' | 'completado',
+	fecha = '2026-08-01'
 ) {
 	const [row] = await db
 		.insert(pm_executions)
@@ -61,7 +63,7 @@ async function insertExecution(
 			plan_id: planId,
 			tarea_id: taskId,
 			ejecutado_por: ids.tecnicoId,
-			fecha_programada: '2026-08-01',
+			fecha_programada: fecha,
 			resultado
 		})
 		.returning({ id: pm_executions.id });
@@ -401,5 +403,47 @@ describe('mantenimiento service', () => {
 		expect(
 			await completeExecution({ id: execId, resultado: 'fallido', observaciones: '' }, adminActor())
 		).toEqual({ ok: false, error: 'Esta ejecución ya fue procesada', status: 400 });
+	});
+
+	it('auto-creates the next pendiente execution on completion (fecha + frecuencia_dias)', async () => {
+		const planId = await insertPlan('Plan auto');
+		const taskId = await insertTask(planId);
+		const execId = await insertExecution(planId, taskId, 'pendiente', '2026-08-01');
+
+		const res = await completeExecution(
+			{ id: execId, resultado: 'completado', observaciones: '' },
+			adminActor()
+		);
+		expect(res).toEqual({ ok: true, data: { id: execId } });
+
+		const execs = await db.query.pm_executions.findMany({
+			where: eq(pm_executions.plan_id, planId),
+			orderBy: (e, { asc }) => [asc(e.fecha_programada)]
+		});
+		expect(execs).toHaveLength(2);
+		const next = execs.find((e) => e.resultado === 'pendiente');
+		expect(next?.tarea_id).toBe(taskId);
+		expect(next?.plan_id).toBe(planId);
+		expect(next?.fecha_programada).toBe(addDaysToDate('2026-08-01', 30));
+		expect(next?.ejecutado_por).toBe(ids.tecnicoId);
+	});
+
+	it('does not duplicate the next execution when one already exists for that date', async () => {
+		const planId = await insertPlan('Plan no dup');
+		const taskId = await insertTask(planId);
+		const execId = await insertExecution(planId, taskId, 'pendiente', '2026-08-01');
+		await insertExecution(planId, taskId, 'pendiente', addDaysToDate('2026-08-01', 30));
+
+		const res = await completeExecution(
+			{ id: execId, resultado: 'completado', observaciones: '' },
+			adminActor()
+		);
+		expect(res).toEqual({ ok: true, data: { id: execId } });
+
+		const [cnt] = await db
+			.select({ cnt: count() })
+			.from(pm_executions)
+			.where(eq(pm_executions.plan_id, planId));
+		expect(cnt.cnt).toBe(2);
 	});
 });

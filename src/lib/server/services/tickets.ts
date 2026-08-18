@@ -6,9 +6,11 @@ import {
 	canTransition,
 	VALID_TICKET_STATES,
 	VALID_TICKET_PRIORITIES,
+	SLA_DAYS_BY_PRIORITY,
 	type TicketPriority,
 	type TicketState
 } from '$lib/server/state-machines';
+import { todayISO, addDaysToDate, isValidDateISO } from '$lib/server/dates';
 import type { ServiceResult, Actor } from './types';
 
 export interface CreateTicketInput {
@@ -16,6 +18,7 @@ export interface CreateTicketInput {
 	descripcion: string;
 	prioridad: string;
 	equipo_id: string;
+	fecha_limite?: string;
 }
 export interface UpdateTicketInput {
 	id: string;
@@ -25,6 +28,7 @@ export interface UpdateTicketInput {
 	estado: string;
 	tecnico_asignado: string;
 	equipo_id: string;
+	fecha_limite?: string;
 }
 export interface DeleteTicketInput {
 	id: string;
@@ -78,6 +82,13 @@ export async function createTicket(
 
 	const numero_ticket = await generateTicketNumber();
 
+	const slaDays = SLA_DAYS_BY_PRIORITY[prioridad as TicketPriority];
+	const explicitLimite = input.fecha_limite?.trim();
+	if (explicitLimite && !isValidDateISO(explicitLimite)) {
+		return { ok: false, error: 'Formato de fecha límite no válido (usa YYYY-MM-DD)', status: 400 };
+	}
+	const fechaLimite = explicitLimite ? explicitLimite : addDaysToDate(todayISO(), slaDays);
+
 	const [row] = await db
 		.insert(tickets)
 		.values({
@@ -85,6 +96,7 @@ export async function createTicket(
 			titulo: titulo.trim(),
 			descripcion: descripcion.trim(),
 			prioridad: prioridad as TicketPriority,
+			fecha_limite: fechaLimite,
 			usuario_reporta: actor.id,
 			equipo_id: equipo_id || null
 		})
@@ -97,7 +109,8 @@ export async function updateTicket(
 	input: UpdateTicketInput,
 	actor: Actor
 ): Promise<UpdateTicketResult> {
-	const { id, titulo, descripcion, prioridad, estado, tecnico_asignado, equipo_id } = input;
+	const { id, titulo, descripcion, prioridad, estado, tecnico_asignado, equipo_id, fecha_limite } =
+		input;
 
 	if (!id) return { ok: false, error: 'ID de ticket no proporcionado', status: 400 };
 
@@ -150,6 +163,17 @@ export async function updateTicket(
 		}
 	}
 
+	const explicitLimite = fecha_limite?.trim();
+	if (explicitLimite && !isValidDateISO(explicitLimite)) {
+		return { ok: false, error: 'Formato de fecha límite no válido (usa YYYY-MM-DD)', status: 400 };
+	}
+	let fechaLimite = existing.fecha_limite;
+	if (explicitLimite) {
+		fechaLimite = explicitLimite;
+	} else if (existing.prioridad !== prioridad) {
+		fechaLimite = addDaysToDate(todayISO(), SLA_DAYS_BY_PRIORITY[prioridad as TicketPriority]);
+	}
+
 	await db
 		.update(tickets)
 		.set({
@@ -157,6 +181,7 @@ export async function updateTicket(
 			descripcion: descripcion.trim(),
 			prioridad: prioridad as TicketPriority,
 			estado: estado as TicketState,
+			fecha_limite: fechaLimite,
 			tecnico_asignado: tecnico_asignado || null,
 			equipo_id: equipo_id || null,
 			updated_at: new Date().toISOString()

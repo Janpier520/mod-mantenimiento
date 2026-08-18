@@ -60,6 +60,7 @@
 	let formScheduleTecnico = $state('');
 	let formScheduleFecha = $state('');
 	let scheduleTasks = $state<TaskRow[]>([]);
+	let scheduleExecutions = $state<ExecRow[]>([]);
 	let formScheduleError = $state('');
 
 	// Delete confirmations
@@ -173,6 +174,7 @@
 		schedulePlanId = plan.id;
 		schedulePlanName = plan.nombre;
 		scheduleTasks = plan.tareas ?? [];
+		scheduleExecutions = plan.ejecuciones ?? [];
 		formScheduleTecnico = '';
 		formScheduleFecha = new Date().toISOString().split('T')[0];
 		formScheduleError = '';
@@ -203,11 +205,34 @@
 		return plan.ejecuciones[0];
 	}
 
+	function getNextPendingExec(plan: PlanRow, taskId: string): ExecRow | null {
+		if (!plan.ejecuciones || plan.ejecuciones.length === 0) return null;
+		const pendientes = plan.ejecuciones.filter(
+			(e) => e.tarea_id === taskId && e.resultado === 'pendiente'
+		);
+		if (pendientes.length === 0) return null;
+		return pendientes.reduce((min, e) => (e.fecha_programada < min.fecha_programada ? e : min));
+	}
+
+	function getPendingExecForTask(taskId: string): ExecRow | null {
+		const pendientes = scheduleExecutions.filter(
+			(e) => e.tarea_id === taskId && e.resultado === 'pendiente'
+		);
+		if (pendientes.length === 0) return null;
+		return pendientes.reduce((min, e) => (e.fecha_programada < min.fecha_programada ? e : min));
+	}
+
 	$effect(() => {
 		plans = data.plans;
 		equipmentList = data.equipment;
 		equipmentTypesList = data.equipmentTypes;
 		technicians = data.technicians;
+	});
+
+	$effect(() => {
+		if ($page.url.searchParams.get('nuevo') === 'true') {
+			openCreatePlan();
+		}
 	});
 </script>
 
@@ -324,6 +349,10 @@
 													class="hidden px-4 py-2.5 text-left font-medium text-muted-foreground sm:table-cell"
 													>Descripción</th
 												>
+												<th
+													class="hidden px-4 py-2.5 text-left font-medium text-muted-foreground md:table-cell"
+													>Próxima ejecución</th
+												>
 												<th class="w-24 px-4 py-2.5 text-right font-medium text-muted-foreground"
 													>Acción</th
 												>
@@ -343,6 +372,14 @@
 														class="hidden px-4 py-2.5 text-muted-foreground sm:table-cell"
 														>{task.descripcion || '—'}</td
 													>
+													<td
+														data-label="Próxima ejecución"
+														class="hidden px-4 py-2.5 text-muted-foreground md:table-cell"
+													>
+														{#if getNextPendingExec(plan, task.id)}
+															{formatDate(getNextPendingExec(plan, task.id)!.fecha_programada)}
+														{:else}—{/if}
+													</td>
 													<td data-label="Acción" class="px-4 py-2.5 text-right">
 														<ActionIconButton
 															icon={Pencil}
@@ -711,6 +748,12 @@
 								<span class="text-sm text-foreground">
 									{task.orden}. {task.nombre}
 								</span>
+								{#if getPendingExecForTask(task.id)}
+									<span class="ml-auto text-xs text-muted-foreground">
+										Ya programada para
+										{formatDate(getPendingExecForTask(task.id)!.fecha_programada)}
+									</span>
+								{/if}
 							</div>
 						{/each}
 					</div>

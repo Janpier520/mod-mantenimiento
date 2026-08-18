@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
 	import { goto, invalidate } from '$app/navigation';
@@ -27,6 +26,14 @@
 	let filterRol = $state(data.filterRol ?? '');
 	// svelte-ignore state_referenced_locally
 	let filterActivo = $state(data.filterActivo ?? '');
+	// svelte-ignore state_referenced_locally
+	let total = $state(data.total ?? 0);
+	// svelte-ignore state_referenced_locally
+	let currentPage = $state(data.page ?? 1);
+	// svelte-ignore state_referenced_locally
+	let totalPages = $state(data.totalPages ?? 1);
+	// svelte-ignore state_referenced_locally
+	let search = $state(data.search ?? '');
 
 	let showModal = $state(false);
 	let editingUser = $state<UsuarioRow | null>(null);
@@ -108,8 +115,10 @@
 
 	async function reload() {
 		const params = new SvelteURLSearchParams();
+		if (search) params.set('search', search);
 		if (filterRol) params.set('rol', filterRol);
 		if (filterActivo) params.set('activo', filterActivo);
+		if (currentPage > 1) params.set('page', String(currentPage));
 		const qs = params.toString();
 		const url = qs ? `${$page.url.pathname}?${qs}` : $page.url.pathname;
 		await goto(resolve(url as '/usuarios'), {
@@ -119,13 +128,28 @@
 		});
 	}
 
+	async function handleSearch(value: string) {
+		search = value;
+		currentPage = 1;
+		await reload();
+	}
+
+	async function handlePageChange(newPage: number) {
+		currentPage = newPage;
+		await reload();
+	}
+
 	$effect(() => {
 		usuarios = data.usuarios;
+		total = data.total ?? 0;
+		currentPage = data.page ?? 1;
+		totalPages = data.totalPages ?? 1;
+		search = data.search ?? '';
 		filterRol = data.filterRol ?? '';
 		filterActivo = data.filterActivo ?? '';
 	});
 
-	onMount(() => {
+	$effect(() => {
 		if ($page.url.searchParams.get('nuevo') === 'true') {
 			openCreate();
 		}
@@ -145,8 +169,8 @@
 
 	<!-- Filter bar with chips + URL params -->
 	<FilterBar
-		search=""
-		onsearch={() => {}}
+		{search}
+		onsearch={handleSearch}
 		values={{
 			rol: filterRol,
 			activo: filterActivo
@@ -173,16 +197,25 @@
 		onfilterchange={(key, value) => {
 			if (key === 'rol') filterRol = value;
 			if (key === 'activo') filterActivo = value;
+			currentPage = 1;
 			reload();
 		}}
 		onremovechip={(key) => {
+			if (key === 'search') {
+				search = '';
+				handleSearch('');
+				return;
+			}
 			if (key === 'rol') filterRol = '';
 			if (key === 'activo') filterActivo = '';
+			currentPage = 1;
 			reload();
 		}}
 		onclearall={() => {
+			search = '';
 			filterRol = '';
 			filterActivo = '';
+			currentPage = 1;
 			goto($page.url.pathname, { keepFocus: true, noScroll: true, replaceState: true });
 		}}
 	/>
@@ -191,12 +224,12 @@
 	<DataTable
 		{columns}
 		items={usuarios}
-		page={1}
-		totalPages={1}
-		total={usuarios.length}
-		search=""
-		onsearch={() => {}}
-		onpagechange={() => {}}
+		page={currentPage}
+		{totalPages}
+		{total}
+		{search}
+		onsearch={handleSearch}
+		onpagechange={handlePageChange}
 		hideSearch
 	>
 		{#snippet cell(item: UsuarioRow, col: { key: string })}

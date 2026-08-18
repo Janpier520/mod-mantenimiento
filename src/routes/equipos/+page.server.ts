@@ -55,7 +55,14 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 	const items = await db.query.equipment.findMany({
 		where,
-		with: { tipo: true, proveedor: true },
+		with: {
+			tipo: true,
+			proveedor: true,
+			historial: {
+				with: { cambiado_por_user: { columns: { id: true, nombre: true, apellido: true } } },
+				orderBy: (history, { desc }) => [desc(history.created_at)]
+			}
+		},
 		orderBy: (equipment, { asc }) => [asc(equipment.modelo)],
 		limit: PAGE_SIZE,
 		offset
@@ -84,7 +91,20 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			created_at: eq.created_at,
 			updated_at: eq.updated_at,
 			tipo_nombre: eq.tipo?.nombre ?? '',
-			proveedor_nombre: eq.proveedor?.nombre ?? ''
+			proveedor_nombre: eq.proveedor?.nombre ?? '',
+			historial: (eq.historial ?? []).map((h) => ({
+				id: h.id,
+				estado_anterior: h.estado_anterior,
+				estado_nuevo: h.estado_nuevo,
+				created_at: h.created_at,
+				cambiado_por: h.cambiado_por_user
+					? {
+							id: h.cambiado_por_user.id,
+							nombre: h.cambiado_por_user.nombre,
+							apellido: h.cambiado_por_user.apellido
+						}
+					: null
+			}))
 		})),
 		tipos: allTipos,
 		proveedores: allProveedores,

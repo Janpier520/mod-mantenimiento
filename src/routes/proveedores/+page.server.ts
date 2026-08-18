@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 export const actions: Actions = {
 	crud: async ({ request, locals }) => {
 		if (!locals.user) throw redirect(303, '/login');
-		if (!['admin', 'consultor'].includes(locals.user.rol)) throw redirect(303, '/');
+		if (!['admin'].includes(locals.user.rol)) throw redirect(303, '/');
 
 		const form = await request.formData();
 		const _action = form.get('_action') as string;

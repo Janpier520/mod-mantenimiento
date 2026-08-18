@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
 	import { goto, invalidate } from '$app/navigation';
@@ -60,6 +59,11 @@
 	let formEstado = $state('abierto');
 	let formEquipoId = $state('');
 	let formTecnicoAsignado = $state('');
+	let formFechaLimite = $state('');
+
+	// Attachments
+	let uploadError = $state('');
+	let uploadForm: HTMLFormElement | undefined = $state();
 
 	let isEditing = $derived(editingTicket !== null);
 	let modalTitle = $derived(isEditing ? 'Editar Ticket' : 'Nuevo Ticket');
@@ -101,6 +105,7 @@
 		{ key: 'titulo', label: 'Título' },
 		{ key: 'estado', label: 'Estado' },
 		{ key: 'prioridad', label: 'Prioridad' },
+		{ key: 'fecha_limite', label: 'F. límite' },
 		{ key: 'reportado_por', label: 'Reportado por' },
 		{ key: 'tecnico', label: 'Técnico' },
 		{ key: 'fecha', label: 'Fecha' }
@@ -122,6 +127,7 @@
 		formEstado = 'abierto';
 		formEquipoId = '';
 		formTecnicoAsignado = '';
+		formFechaLimite = '';
 		formError = '';
 		showModal = true;
 	}
@@ -134,6 +140,7 @@
 		formEstado = t.estado ?? 'abierto';
 		formEquipoId = t.equipo_id ?? '';
 		formTecnicoAsignado = t.tecnico_asignado ?? '';
+		formFechaLimite = t.fecha_limite ?? '';
 		formError = '';
 		showModal = true;
 	}
@@ -187,6 +194,12 @@
 		filterPrioridad = data.filterPrioridad;
 	});
 
+	$effect(() => {
+		if ($page.url.searchParams.get('nuevo') === 'true') {
+			openCreate();
+		}
+	});
+
 	function formatDate(iso: string): string {
 		if (!iso) return '';
 		return new Date(iso).toLocaleDateString('es-AR', {
@@ -203,11 +216,36 @@
 		return `${e.marca} ${e.modelo}`;
 	}
 
-	onMount(() => {
-		if ($page.url.searchParams.get('nuevo') === 'true') {
-			openCreate();
+	function formatDateOnly(iso: string | null | undefined): string {
+		if (!iso) return '';
+		return new Date(iso).toLocaleDateString('es-AR', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric'
+		});
+	}
+
+	function isVencido(t: TicketRow): boolean {
+		if (!t.fecha_limite) return false;
+		if (t.estado === 'cerrado' || t.estado === 'resuelto') return false;
+		return t.fecha_limite < new Date().toISOString().slice(0, 10);
+	}
+
+	async function deleteAttachment(attachmentId: string) {
+		const formData = new FormData();
+		formData.set('id', attachmentId);
+		const res = await fetch(`${$page.url.pathname}?/delete_attachment`, {
+			method: 'POST',
+			body: formData
+		});
+		const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+		if (body.success) {
+			addToast('Archivo eliminado correctamente');
+			await invalidate($page.url.pathname);
+		} else {
+			addToast((body.error as string) ?? 'Error al eliminar el archivo', 'error');
 		}
-	});
+	}
 </script>
 
 {#snippet cell(item: TicketRow, col: { key: string })}
@@ -225,6 +263,15 @@
 			text={prioridadLabels[item.prioridad] ?? item.prioridad}
 			variant={prioridadBadgeVariant[item.prioridad] ?? 'default'}
 		/>
+	{:else if col.key === 'fecha_limite'}
+		{#if item.fecha_limite}
+			<div class="flex items-center gap-1.5">
+				{formatDateOnly(item.fecha_limite)}
+				{#if isVencido(item)}
+					<Badge text="Vencido" variant="danger" />
+				{/if}
+			</div>
+		{:else}—{/if}
 	{:else if col.key === 'reportado_por'}
 		{item.reporta?.nombre ?? ''} {item.reporta?.apellido ?? ''}
 	{:else if col.key === 'tecnico'}
@@ -410,6 +457,19 @@
 						>
 					</p>
 				</div>
+				<div>
+					<span class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+						>Fecha límite</span
+					>
+					<p class="flex items-center gap-2 text-sm text-foreground">
+						{#if selectedTicket.fecha_limite}
+							{formatDateOnly(selectedTicket.fecha_limite)}
+							{#if isVencido(selectedTicket)}
+								<Badge text="Vencido" variant="danger" />
+							{/if}
+						{:else}—{/if}
+					</p>
+				</div>
 			</div>
 
 			<!-- Description -->
@@ -488,6 +548,85 @@
 					</button>
 				</form>
 			</div>
+
+			<!-- Attachments -->
+			<div class="mt-6">
+				<hr class="mb-4 border-border" />
+				<h3 class="mb-3 text-sm font-semibold text-foreground">
+					Adjuntos ({selectedTicket.adjuntos?.length ?? 0})
+				</h3>
+
+				<div class="mb-4 space-y-2">
+					{#if (selectedTicket.adjuntos ?? []).length === 0}
+						<p class="text-sm text-muted-foreground">Sin archivos adjuntos.</p>
+					{:else}
+						{#each selectedTicket.adjuntos ?? [] as adj (adj.id)}
+							<div class="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm">
+								<a
+									href={`/tickets/attachments/${adj.id}`}
+									target="_blank"
+									rel="noopener"
+									class="min-w-0 truncate font-medium text-primary hover:underline"
+								>
+									{adj.filename}
+								</a>
+								<span class="ml-auto shrink-0 text-xs text-muted-foreground">
+									{adj.mime_type || '—'}
+								</span>
+								{#if ($page.data.user?.id === adj.uploaded_by || $page.data.user?.rol === 'admin') && $page.data.user?.rol !== 'consultor'}
+									<button
+										onclick={() => deleteAttachment(adj.id)}
+										class="shrink-0 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+										aria-label="Eliminar archivo"
+									>
+										<Trash2Icon class="h-4 w-4" />
+									</button>
+								{/if}
+							</div>
+						{/each}
+					{/if}
+				</div>
+
+				<!-- Upload form -->
+				<form
+					method="post"
+					action="?/upload_attachment"
+					enctype="multipart/form-data"
+					bind:this={uploadForm}
+					class="flex flex-wrap items-center gap-3"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							if (result.type === 'success' && result.data?.success) {
+								uploadError = '';
+								uploadForm?.reset();
+								await update();
+								await invalidate($page.url.pathname);
+							} else if (result.type === 'failure') {
+								const d = (result.data as Record<string, unknown>) ?? {};
+								uploadError = (d.error as string) ?? 'Error al subir el archivo';
+							}
+						};
+					}}
+				>
+					<input type="hidden" name="ticket_id" value={selectedTicket.id} />
+					<input
+						type="file"
+						name="file"
+						required
+						accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.txt,.doc,.docx,.xls,.xlsx"
+						class="block max-w-full text-sm text-foreground file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground"
+					/>
+					<button
+						type="submit"
+						class="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-hover"
+					>
+						Subir
+					</button>
+				</form>
+				{#if uploadError}
+					<p class="mt-2 text-xs text-red-500">{uploadError}</p>
+				{/if}
+			</div>
 		</div>
 	{/if}
 
@@ -564,6 +703,16 @@
 						]}
 					/>
 				</div>
+
+				<FormField
+					label="Fecha límite"
+					name="fecha_limite"
+					type="date"
+					bind:value={formFechaLimite}
+				/>
+				<p class="-mt-2 text-xs text-muted-foreground">
+					Si se deja vacía, se calcula automáticamente según la prioridad (SLA).
+				</p>
 
 				{#if isEditing}
 					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

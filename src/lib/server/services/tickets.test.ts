@@ -3,6 +3,8 @@ import { db } from '$lib/server/db';
 import { initTestDb, type SeedIds } from '$lib/server/db/test-helpers';
 import { tickets, ticket_comments } from '$lib/server/db/schema';
 import { eq, count } from 'drizzle-orm';
+import { todayISO, addDaysToDate } from '$lib/server/dates';
+import { SLA_DAYS_BY_PRIORITY } from '$lib/server/state-machines';
 import {
 	generateTicketNumber,
 	createTicket,
@@ -214,5 +216,97 @@ describe('tickets service', () => {
 		});
 		const [after] = await db.select({ cnt: count() }).from(tickets);
 		expect(after.cnt).toBe(before.cnt);
+	});
+
+	it('computes fecha_limite from SLA when creating (critica → today + 1)', async () => {
+		const res = await createTicket(
+			{ titulo: 'SLA critica', descripcion: '', prioridad: 'critica', equipo_id: '' },
+			tecnicoActor()
+		);
+		expect(res.ok).toBe(true);
+		const createdId = res.ok ? res.data.id : null;
+		const row = await db.query.tickets.findFirst({ where: eq(tickets.id, createdId ?? '') });
+		expect(row?.fecha_limite).toBe(addDaysToDate(todayISO(), SLA_DAYS_BY_PRIORITY.critica));
+	});
+
+	it('recomputes fecha_limite when prioridad changes on update', async () => {
+		const res = await createTicket(
+			{ titulo: 'SLA update', descripcion: '', prioridad: 'media', equipo_id: '' },
+			tecnicoActor()
+		);
+		expect(res.ok).toBe(true);
+		const ticketId = res.ok ? res.data.id : '';
+		const before = await db.query.tickets.findFirst({ where: eq(tickets.id, ticketId) });
+		expect(before?.fecha_limite).toBe(addDaysToDate(todayISO(), SLA_DAYS_BY_PRIORITY.media));
+
+		const upd = await updateTicket(
+			{
+				id: ticketId,
+				titulo: 'SLA update',
+				descripcion: '',
+				prioridad: 'critica',
+				estado: 'abierto',
+				tecnico_asignado: '',
+				equipo_id: ''
+			},
+			tecnicoActor()
+		);
+		expect(upd).toEqual({ ok: true, data: { id: ticketId } });
+
+		const after = await db.query.tickets.findFirst({ where: eq(tickets.id, ticketId) });
+		expect(after?.fecha_limite).toBe(addDaysToDate(todayISO(), SLA_DAYS_BY_PRIORITY.critica));
+	});
+
+	it('keeps an explicit fecha_limite over the recomputed SLA value', async () => {
+		const res = await createTicket(
+			{
+				titulo: 'SLA explicit',
+				descripcion: '',
+				prioridad: 'critica',
+				equipo_id: '',
+				fecha_limite: '2030-01-15'
+			},
+			tecnicoActor()
+		);
+		expect(res.ok).toBe(true);
+		const ticketId = res.ok ? res.data.id : '';
+		const row = await db.query.tickets.findFirst({ where: eq(tickets.id, ticketId) });
+		expect(row?.fecha_limite).toBe('2030-01-15');
+
+		const upd = await updateTicket(
+			{
+				id: ticketId,
+				titulo: 'SLA explicit',
+				descripcion: '',
+				prioridad: 'media',
+				estado: 'abierto',
+				tecnico_asignado: '',
+				equipo_id: '',
+				fecha_limite: '2030-02-20'
+			},
+			tecnicoActor()
+		);
+		expect(upd.ok).toBe(true);
+
+		const after = await db.query.tickets.findFirst({ where: eq(tickets.id, ticketId) });
+		expect(after?.fecha_limite).toBe('2030-02-20');
+	});
+
+	it('rejects an invalid fecha_limite format', async () => {
+		const res = await createTicket(
+			{
+				titulo: 'SLA bad',
+				descripcion: '',
+				prioridad: 'media',
+				equipo_id: '',
+				fecha_limite: '15/01/2030'
+			},
+			tecnicoActor()
+		);
+		expect(res).toEqual({
+			ok: false,
+			error: 'Formato de fecha límite no válido (usa YYYY-MM-DD)',
+			status: 400
+		});
 	});
 });

@@ -42,7 +42,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const technicians = await db.query.users.findMany({
 		where: (users, { or, eq }) => or(eq(users.rol, 'tecnico'), eq(users.rol, 'admin')),
-		orderBy: (users, { asc }) => [asc(users.nombre)]
+		orderBy: (users, { asc }) => [asc(users.nombre)],
+		columns: { id: true, nombre: true, apellido: true, email: true, rol: true }
 	});
 
 	return {

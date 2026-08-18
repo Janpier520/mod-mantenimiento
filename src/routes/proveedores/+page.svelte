@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
 	import { goto, invalidate } from '$app/navigation';
@@ -118,7 +117,7 @@
 		search = data.search;
 	});
 
-	onMount(() => {
+	$effect(() => {
 		if ($page.url.searchParams.get('nuevo') === 'true') {
 			openCreate();
 		}

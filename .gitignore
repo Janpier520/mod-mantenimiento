@@ -28,3 +28,6 @@ vite.config.ts.timestamp-*
 
 # Test coverage output
 coverage
+
+# Uploaded attachments
+uploads/

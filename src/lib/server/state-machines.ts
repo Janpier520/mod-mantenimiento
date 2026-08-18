@@ -27,6 +27,15 @@ export const VALID_TICKET_PRIORITIES = ['baja', 'media', 'alta', 'critica'] as c
 export const VALID_USER_ROLES = ['admin', 'tecnico', 'consultor'] as const;
 export const VALID_PM_RESULTS = ['pendiente', 'completado', 'fallido', 'omitido'] as const;
 
+// ─── SLA (fecha límite) por prioridad de ticket ───────────────────────────────
+
+export const SLA_DAYS_BY_PRIORITY: Record<TicketPriority, number> = {
+	critica: 1,
+	alta: 3,
+	media: 7,
+	baja: 14
+};
+
 export type EquipmentState = (typeof VALID_EQUIPMENT_STATES)[number];
 export type TicketState = (typeof VALID_TICKET_STATES)[number];
 export type TicketPriority = (typeof VALID_TICKET_PRIORITIES)[number];

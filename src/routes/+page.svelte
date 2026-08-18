@@ -28,6 +28,11 @@
 	let chartInstance: Chart | null = null;
 	let timePeriod = $state<'semanal' | 'mensual' | 'anual'>('mensual');
 
+	// ponytail: resolve() can't be typed for query-bearing route strings
+	const nuevoEquipoHref = resolve('/equipos?nuevo=true' as '/equipos');
+	const nuevoTicketHref = resolve('/tickets?nuevo=true' as '/tickets');
+	const nuevoMantenimientoHref = resolve('/mantenimiento?nuevo=true' as '/mantenimiento');
+
 	function hexToRgba(hex: string, alpha: number): string {
 		hex = hex.replace('#', '');
 		const r = parseInt(hex.slice(0, 2), 16);
@@ -54,20 +59,11 @@
 					? ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4']
 					: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-		// ponytail: datos placeholder, reemplazar con reales del server
-		const mantenimientos =
-			timePeriod === 'semanal'
-				? [3, 5, 2, 4, 6, 1, 3]
-				: timePeriod === 'mensual'
-					? [12, 18, 15, 20]
-					: [45, 52, 38, 61, 55, 70, 62, 48, 58, 65, 72, 80];
+		const periodKey =
+			timePeriod === 'semanal' ? 'daily' : timePeriod === 'mensual' ? 'weekly' : 'monthly';
 
-		const tickets =
-			timePeriod === 'semanal'
-				? [2, 4, 3, 5, 2, 1, 2]
-				: timePeriod === 'mensual'
-					? [8, 12, 10, 14]
-					: [30, 35, 28, 42, 38, 48, 45, 32, 40, 46, 50, 55];
+		const mantenimientos = data.maintenanceByPeriod[periodKey];
+		const tickets = data.ticketsByPeriod[periodKey];
 
 		chartInstance = new Chart(chartCanvas, {
 			type: 'line',
@@ -221,11 +217,28 @@
 					<p class="stat-value mt-1">
 						{data.totalPlans}
 					</p>
-					<div class="mt-2 flex items-center gap-1.5 text-xs text-success dark:text-success">
-						<TrendingUp class="h-3.5 w-3.5" />
-						<span class="font-medium">+8%</span>
-						<span class="text-muted-foreground">vs mes anterior</span>
-					</div>
+					{#if data.maintenanceDelta !== null}
+						<div
+							class="mt-2 flex items-center gap-1.5 text-xs {data.maintenanceDelta >= 0
+								? 'text-success dark:text-success'
+								: 'text-destructive dark:text-destructive'}"
+						>
+							{#if data.maintenanceDelta >= 0}
+								<TrendingUp class="h-3.5 w-3.5" />
+							{:else}
+								<TrendingDown class="h-3.5 w-3.5" />
+							{/if}
+							<span class="font-medium"
+								>{data.maintenanceDelta > 0 ? '+' : ''}{data.maintenanceDelta}%</span
+							>
+							<span class="text-muted-foreground">vs mes anterior</span>
+						</div>
+					{:else}
+						<div class="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+							<span class="font-medium">&mdash;</span>
+							<span>Sin datos previos</span>
+						</div>
+					{/if}
 				</div>
 				<div
 					class="flex h-10 w-10 items-center justify-center rounded-lg bg-success/15 text-success dark:bg-success/15 dark:text-success"
@@ -253,13 +266,26 @@
 					<p class="stat-value mt-1">
 						{data.pendingCount}
 					</p>
-					<div
-						class="mt-2 flex items-center gap-1.5 text-xs text-destructive dark:text-destructive"
-					>
-						<TrendingDown class="h-3.5 w-3.5" />
-						<span class="font-medium">-3%</span>
-						<span class="text-muted-foreground">vs mes anterior</span>
-					</div>
+					{#if data.ticketDelta !== null}
+						<div
+							class="mt-2 flex items-center gap-1.5 text-xs {data.ticketDelta >= 0
+								? 'text-success dark:text-success'
+								: 'text-destructive dark:text-destructive'}"
+						>
+							{#if data.ticketDelta >= 0}
+								<TrendingUp class="h-3.5 w-3.5" />
+							{:else}
+								<TrendingDown class="h-3.5 w-3.5" />
+							{/if}
+							<span class="font-medium">{data.ticketDelta > 0 ? '+' : ''}{data.ticketDelta}%</span>
+							<span class="text-muted-foreground">vs mes anterior</span>
+						</div>
+					{:else}
+						<div class="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+							<span class="font-medium">&mdash;</span>
+							<span>Sin datos previos</span>
+						</div>
+					{/if}
 				</div>
 				<div
 					class="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/15 text-warning dark:bg-warning/15 dark:text-warning"
@@ -314,7 +340,7 @@
 		<h2 class="mb-4 text-lg font-bold text-foreground">Acciones Rápidas</h2>
 		<div class="grid gap-3 sm:grid-cols-2">
 			<a
-				href={resolve('/equipos')}
+				href={nuevoEquipoHref}
 				class="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm"
 			>
 				<div
@@ -325,7 +351,7 @@
 				<span>Nuevo Equipo</span>
 			</a>
 			<a
-				href={resolve('/tickets')}
+				href={nuevoTicketHref}
 				class="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm"
 			>
 				<div
@@ -336,7 +362,7 @@
 				<span>Nuevo Ticket</span>
 			</a>
 			<a
-				href={resolve('/mantenimiento')}
+				href={nuevoMantenimientoHref}
 				class="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:shadow-sm"
 			>
 				<div

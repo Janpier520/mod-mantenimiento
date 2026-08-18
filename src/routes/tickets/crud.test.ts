@@ -1,10 +1,19 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { RequestEvent } from './$types';
 import { actions } from './+page.server';
 import { db } from '$lib/server/db';
 import { initTestDb, type SeedIds } from '$lib/server/db/test-helpers';
-import { tickets, ticket_comments } from '$lib/server/db/schema';
+import { tickets, ticket_comments, ticket_attachments } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+
+// Mock only the disk-write step so upload tests never touch the filesystem.
+vi.mock('$lib/server/services/attachments', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('$lib/server/services/attachments')>();
+	return {
+		...actual,
+		saveAttachmentFile: vi.fn(async () => 'uploads/test-mocked.txt')
+	};
+});
 
 // TC-10: tickets crud action — create validations, sequential numbering,
 // transition/role guards, delete creator-or-admin, add_comment.
@@ -74,6 +83,37 @@ async function invokeCrud(
 		request,
 		locals
 	} as unknown as RequestEvent) as unknown as Promise<CrudOutcome>;
+}
+
+async function invokeUpload(locals: App.Locals, formData: FormData): Promise<CrudOutcome> {
+	const request = new Request('http://localhost/test', {
+		method: 'POST',
+		body: formData
+	});
+	return actions.upload_attachment({
+		request,
+		locals
+	} as unknown as RequestEvent) as unknown as Promise<CrudOutcome>;
+}
+
+async function invokeDeleteAttachment(locals: App.Locals, id: string): Promise<CrudOutcome> {
+	const fd = new FormData();
+	fd.set('id', id);
+	const request = new Request('http://localhost/test', {
+		method: 'POST',
+		body: fd
+	});
+	return actions.delete_attachment({
+		request,
+		locals
+	} as unknown as RequestEvent) as unknown as Promise<CrudOutcome>;
+}
+
+function buildUploadFormData(ticketId: string, file: File): FormData {
+	const fd = new FormData();
+	fd.set('ticket_id', ticketId);
+	fd.set('file', file);
+	return fd;
 }
 
 const createFields = {
@@ -284,5 +324,93 @@ describe('tickets crud (TC-10)', () => {
 		const res = await invokeCrud(tecnicoLocals(), { _action: 'add_comment', contenido: 'hola' });
 		expect(res.status).toBe(400);
 		expect(res.data?.error).toBe('ID de ticket no proporcionado');
+	});
+
+	it('upload_attachment blocks consultors with 403', async () => {
+		const ticketId = await seedTicket('TKT-ATT-0', ids.tecnicoId);
+		const res = await invokeUpload(
+			consultorLocals(),
+			buildUploadFormData(ticketId, new File(['x'], 'a.txt', { type: 'text/plain' }))
+		);
+		expect(res.status).toBe(403);
+		expect(res.data?.error).toBe('Los consultores no pueden subir archivos');
+	});
+
+	it('upload_attachment rejects a disallowed mime type with 400', async () => {
+		const ticketId = await seedTicket('TKT-ATT-1', ids.tecnicoId);
+		const file = new File(['x'], 'malware.exe', { type: 'application/x-msdownload' });
+		const res = await invokeUpload(tecnicoLocals(), buildUploadFormData(ticketId, file));
+		expect(res.status).toBe(400);
+		expect(res.data?.error).toBe('Tipo de archivo no permitido');
+	});
+
+	it('upload_attachment rejects a file larger than 5 MB with 400', async () => {
+		const ticketId = await seedTicket('TKT-ATT-2', ids.tecnicoId);
+		const big = new File([new Array(5 * 1024 * 1024 + 1).fill('a').join('')], 'big.pdf', {
+			type: 'application/pdf'
+		});
+		const res = await invokeUpload(tecnicoLocals(), buildUploadFormData(ticketId, big));
+		expect(res.status).toBe(400);
+		expect(res.data?.error).toBe('El archivo supera el tamaño máximo de 5 MB');
+	});
+
+	it('upload_attachment persists a valid file row', async () => {
+		const ticketId = await seedTicket('TKT-ATT-3', ids.tecnicoId);
+		const file = new File(['hola mundo'], 'nota.txt', { type: 'text/plain' });
+		const res = await invokeUpload(tecnicoLocals(), buildUploadFormData(ticketId, file));
+		expect(res).toMatchObject({ success: true, _action: 'upload_attachment' });
+
+		const rows = await db.query.ticket_attachments.findMany({
+			where: eq(ticket_attachments.ticket_id, ticketId)
+		});
+		expect(rows).toHaveLength(1);
+		expect(rows[0].filename).toBe('nota.txt');
+		expect(rows[0].mime_type).toBe('text/plain');
+		expect(rows[0].uploaded_by).toBe(ids.tecnicoId);
+		expect(rows[0].filepath).toBe('uploads/test-mocked.txt');
+	});
+
+	it('upload_attachment fails 404 for a missing ticket', async () => {
+		const file = new File(['x'], 'a.txt', { type: 'text/plain' });
+		const res = await invokeUpload(tecnicoLocals(), buildUploadFormData('no-existe', file));
+		expect(res.status).toBe(404);
+		expect(res.data?.error).toBe('Ticket no encontrado');
+	});
+
+	it('delete_attachment is blocked for a non-owner non-admin', async () => {
+		const ticketId = await seedTicket('TKT-ATT-4', ids.tecnicoId);
+		const upload = await invokeUpload(
+			adminLocals(),
+			buildUploadFormData(ticketId, new File(['x'], 'a.txt', { type: 'text/plain' }))
+		);
+		expect(upload).toMatchObject({ success: true });
+		const rows = await db.query.ticket_attachments.findMany({
+			where: eq(ticket_attachments.ticket_id, ticketId)
+		});
+		expect(rows).toHaveLength(1);
+
+		const res = await invokeDeleteAttachment(tecnicoLocals(), rows[0].id);
+		expect(res.status).toBe(403);
+		expect(res.data?.error).toBe('No tenés permiso para eliminar este archivo');
+	});
+
+	it('delete_attachment removes the row for the owner', async () => {
+		const ticketId = await seedTicket('TKT-ATT-5', ids.tecnicoId);
+		const upload = await invokeUpload(
+			tecnicoLocals(),
+			buildUploadFormData(ticketId, new File(['x'], 'a.txt', { type: 'text/plain' }))
+		);
+		expect(upload).toMatchObject({ success: true });
+		const rows = await db.query.ticket_attachments.findMany({
+			where: eq(ticket_attachments.ticket_id, ticketId)
+		});
+		expect(rows).toHaveLength(1);
+
+		const res = await invokeDeleteAttachment(tecnicoLocals(), rows[0].id);
+		expect(res).toMatchObject({ success: true, _action: 'delete_attachment' });
+		const remaining = await db.query.ticket_attachments.findMany({
+			where: eq(ticket_attachments.ticket_id, ticketId)
+		});
+		expect(remaining).toHaveLength(0);
 	});
 });

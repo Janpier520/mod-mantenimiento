@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
 	import { goto, invalidate } from '$app/navigation';
@@ -14,6 +13,8 @@
 	import PencilIcon from '@lucide/svelte/icons/pencil';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import PlusIcon from '@lucide/svelte/icons/plus';
+	import HistoryIcon from '@lucide/svelte/icons/history';
+	import XIcon from '@lucide/svelte/icons/x';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 
@@ -45,6 +46,10 @@
 	let showDelete = $state(false);
 	let deletingEquipo = $state<EquipoRow | null>(null);
 	let formError = $state('');
+	let selectedId = $state<string | null>(null);
+	let selectedEquipo = $derived(
+		selectedId ? (equipmentList.find((e) => e.id === selectedId) ?? null) : null
+	);
 
 	// Form fields
 	let formTipoId = $state('');
@@ -117,6 +122,14 @@
 		showDelete = true;
 	}
 
+	function selectEquipo(e: EquipoRow) {
+		selectedId = selectedId === e.id ? null : e.id;
+	}
+
+	function closeDetail() {
+		selectedId = null;
+	}
+
 	function closeModal() {
 		showModal = false;
 		formError = '';
@@ -140,11 +153,13 @@
 	async function handleSearch(value: string) {
 		search = value;
 		currentPage = 1;
+		selectedId = null;
 		await reload();
 	}
 
 	async function handlePageChange(newPage: number) {
 		currentPage = newPage;
+		selectedId = null;
 		await reload();
 	}
 
@@ -160,11 +175,22 @@
 		filterTipo = data.filterTipo;
 	});
 
-	onMount(() => {
+	$effect(() => {
 		if ($page.url.searchParams.get('nuevo') === 'true') {
 			openCreate();
 		}
 	});
+
+	function formatDate(iso: string): string {
+		if (!iso) return '';
+		return new Date(iso).toLocaleDateString('es-AR', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	}
 </script>
 
 {#snippet cell(item: EquipoRow, col: { key: string })}
@@ -220,6 +246,7 @@
 			if (key === 'estado') filterEstado = value;
 			if (key === 'tipo') filterTipo = value;
 			currentPage = 1;
+			selectedId = null;
 			reload();
 		}}
 		onremovechip={(key) => {
@@ -231,6 +258,7 @@
 			if (key === 'estado') filterEstado = '';
 			if (key === 'tipo') filterTipo = '';
 			currentPage = 1;
+			selectedId = null;
 			reload();
 		}}
 		onclearall={() => {
@@ -238,6 +266,7 @@
 			filterEstado = '';
 			filterTipo = '';
 			currentPage = 1;
+			selectedId = null;
 			goto($page.url.pathname, { keepFocus: true, noScroll: true, replaceState: true });
 		}}
 	/>
@@ -258,6 +287,12 @@
 		{#snippet children(item)}
 			<div class="flex items-center gap-1">
 				<ActionIconButton
+					icon={HistoryIcon}
+					variant="default"
+					onclick={() => selectEquipo(item)}
+					label="Ver historial"
+				/>
+				<ActionIconButton
 					icon={PencilIcon}
 					variant="edit"
 					onclick={() => openEdit(item)}
@@ -272,6 +307,107 @@
 			</div>
 		{/snippet}
 	</DataTable>
+
+	<!-- Detail panel -->
+	{#if selectedEquipo}
+		<div class="rounded-xl border bg-card p-6 shadow-sm transition-all">
+			<!-- Header row -->
+			<div class="flex items-start justify-between gap-4">
+				<div class="flex-1">
+					<div class="flex items-center gap-3">
+						<h2 class="text-lg font-bold text-foreground">
+							{selectedEquipo.modelo}
+							{selectedEquipo.marca}
+						</h2>
+						<Badge
+							text={estadoLabels[selectedEquipo.estado] ?? selectedEquipo.estado}
+							variant={estadoBadgeVariant[selectedEquipo.estado] ?? 'default'}
+						/>
+					</div>
+					<p class="mt-1 text-sm text-muted-foreground">
+						N° Serie: {selectedEquipo.numero_serie || '—'}
+					</p>
+				</div>
+				<button
+					onclick={closeDetail}
+					class="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+					aria-label="Cerrar detalle"
+				>
+					<XIcon class="h-5 w-5" />
+				</button>
+			</div>
+
+			<!-- Info grid -->
+			<div class="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-3">
+				<div>
+					<span class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+						>Tipo</span
+					>
+					<p class="text-sm text-foreground">{selectedEquipo.tipo_nombre || '—'}</p>
+				</div>
+				<div>
+					<span class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+						>Ubicación</span
+					>
+					<p class="text-sm text-foreground">{selectedEquipo.ubicacion || '—'}</p>
+				</div>
+				<div>
+					<span class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+						>Proveedor</span
+					>
+					<p class="text-sm text-foreground">{selectedEquipo.proveedor_nombre || '—'}</p>
+				</div>
+				<div>
+					<span class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+						>Fecha de adquisición</span
+					>
+					<p class="text-sm text-foreground">
+						{selectedEquipo.fecha_adquisicion
+							? new Date(selectedEquipo.fecha_adquisicion).toLocaleDateString('es-AR')
+							: '—'}
+					</p>
+				</div>
+			</div>
+
+			<!-- Status history -->
+			<div class="mt-6">
+				<hr class="mb-4 border-border" />
+				<h3 class="mb-3 text-sm font-semibold text-foreground">
+					Historial de Estado ({selectedEquipo.historial?.length ?? 0})
+				</h3>
+
+				{#if (selectedEquipo.historial?.length ?? 0) === 0}
+					<p class="rounded-lg bg-muted p-4 text-sm text-muted-foreground">
+						Sin cambios de estado registrados
+					</p>
+				{:else}
+					<div class="space-y-2">
+						{#each selectedEquipo.historial ?? [] as entry (entry.id)}
+							<div
+								class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-muted/50 px-4 py-3"
+							>
+								<Badge
+									text={estadoLabels[entry.estado_nuevo] ?? entry.estado_nuevo}
+									variant={estadoBadgeVariant[entry.estado_nuevo] ?? 'default'}
+								/>
+								{#if entry.estado_anterior && entry.estado_anterior !== entry.estado_nuevo}
+									<span class="text-xs text-muted-foreground">
+										desde {estadoLabels[entry.estado_anterior] ?? entry.estado_anterior}
+									</span>
+								{/if}
+								<span class="ml-auto text-xs text-muted-foreground">
+									{entry.cambiado_por
+										? `${entry.cambiado_por.nombre} ${entry.cambiado_por.apellido}`
+										: 'Sistema'}
+								</span>
+								<span class="text-xs text-muted-foreground">{formatDate(entry.created_at)}</span>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
+		</div>
+	{/if}
 
 	<!-- Dialog form (create/edit) -->
 	<Dialog.Root bind:open={showModal}>

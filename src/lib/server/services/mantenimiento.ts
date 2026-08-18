@@ -7,7 +7,8 @@ import {
 	equipment_types,
 	users
 } from '$lib/server/db/schema';
-import { eq, count, sql } from 'drizzle-orm';
+import { eq, count, and, sql } from 'drizzle-orm';
+import { addDaysToDate } from '$lib/server/dates';
 import type { ServiceResult, Actor } from './types';
 
 const CONSULTOR_ERROR: ServiceResult<never> = {
@@ -321,5 +322,49 @@ export async function completeExecution(
 		})
 		.where(eq(pm_executions.id, id));
 
+	if (resultado === 'completado') {
+		await autoScheduleNextExecution(execution);
+	}
+
 	return { ok: true, data: { id } };
+}
+
+/**
+ * After completing an execution, auto-create the next pendiente execution for
+ * the same plan+tarea with fecha_programada = old date + plan frequency.
+ * Skips if an execution for the same plan+tarea+date already exists.
+ */
+async function autoScheduleNextExecution(execution: {
+	plan_id: string;
+	tarea_id: string;
+	ejecutado_por: string;
+	fecha_programada: string;
+}): Promise<void> {
+	const plan = await db.query.preventive_maintenance_plans.findFirst({
+		where: eq(preventive_maintenance_plans.id, execution.plan_id)
+	});
+	if (!plan) return;
+
+	const nextDate = addDaysToDate(execution.fecha_programada, plan.frecuencia_dias);
+
+	const [existing] = await db
+		.select({ cnt: count() })
+		.from(pm_executions)
+		.where(
+			and(
+				eq(pm_executions.plan_id, execution.plan_id),
+				eq(pm_executions.tarea_id, execution.tarea_id),
+				eq(pm_executions.fecha_programada, nextDate)
+			)
+		);
+
+	if (existing.cnt > 0) return;
+
+	await db.insert(pm_executions).values({
+		plan_id: execution.plan_id,
+		tarea_id: execution.tarea_id,
+		ejecutado_por: execution.ejecutado_por,
+		fecha_programada: nextDate,
+		resultado: 'pendiente'
+	});
 }

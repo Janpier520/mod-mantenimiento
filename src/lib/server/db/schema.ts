@@ -146,6 +146,7 @@ export const tickets = sqliteTable(
 		})
 			.notNull()
 			.default('media'),
+		fecha_limite: text('fecha_limite'),
 		usuario_reporta: text('usuario_reporta')
 			.notNull()
 			.references(() => users.id),

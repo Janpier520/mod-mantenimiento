@@ -13,6 +13,7 @@
 	import Users from '@lucide/svelte/icons/users';
 	import Settings from '@lucide/svelte/icons/settings';
 	import History from '@lucide/svelte/icons/history';
+	import Shapes from '@lucide/svelte/icons/shapes';
 	import { onNavigate } from '$app/navigation';
 	import Toast from '$lib/ui/Toast.svelte';
 	import CommandPalette from '$lib/ui/CommandPalette.svelte';
@@ -129,7 +130,7 @@
 	let activePath = $derived($page.url.pathname);
 
 	function isActive(href: string): boolean {
-		return activePath.startsWith(href);
+		return activePath === href || activePath.startsWith(href + '/');
 	}
 
 	const user = $derived(data.user);
@@ -148,7 +149,9 @@
 	};
 
 	let pageTitle = $derived(
-		Object.entries(pageTitles).find(([path]) => activePath.startsWith(path))?.[1] ?? ''
+		Object.entries(pageTitles)
+			.filter(([path]) => activePath === path || activePath.startsWith(path + '/'))
+			.sort(([a], [b]) => b.length - a.length)[0]?.[1] ?? ''
 	);
 
 	const iconMap: Record<string, LucideIcon> = {
@@ -160,7 +163,8 @@
 		reportes: BarChart3,
 		usuarios: Users,
 		config: Settings,
-		sessions: History
+		sessions: History,
+		tipos: Shapes
 	};
 
 	const navItems: NavItem[] = [
@@ -177,6 +181,7 @@
 		{ label: 'Reportes', icon: 'reportes', href: '/reportes', roles: ['admin', 'consultor'] },
 		{ label: 'Usuarios', icon: 'usuarios', href: '/usuarios', roles: ['admin'] },
 		{ label: 'Configuración', icon: 'config', href: '/config', roles: ['admin'] },
+		{ label: 'Tipos de Equipo', icon: 'tipos', href: '/equipos/tipos', roles: ['admin'] },
 		{ label: 'Mis Sesiones', icon: 'sessions', href: '/sessions' }
 	];
 
@@ -195,7 +200,7 @@
 						label: 'ADMINISTRACIÓN',
 						items: navItems.filter(
 							(item) =>
-								['proveedores', 'reportes', 'usuarios', 'config'].includes(item.icon) &&
+								['proveedores', 'reportes', 'usuarios', 'config', 'tipos'].includes(item.icon) &&
 								(!item.roles || item.roles.includes(user.rol))
 						)
 					},
@@ -213,15 +218,15 @@
 	let pageTitleIcon = $state<LucideIcon | undefined>(undefined);
 
 	$effect(() => {
+		let best: NavItem | undefined;
 		for (const group of navGroups) {
 			for (const item of group.items) {
-				if (isActive(item.href)) {
-					pageTitleIcon = iconMap[item.icon];
-					return;
+				if (activePath === item.href || activePath.startsWith(item.href + '/')) {
+					if (!best || item.href.length > best.href.length) best = item;
 				}
 			}
 		}
-		pageTitleIcon = undefined;
+		pageTitleIcon = best ? iconMap[best.icon] : undefined;
 	});
 </script>
 
@@ -254,6 +259,8 @@
 			class="fixed inset-0 z-40 bg-black/50 lg:hidden"
 			class:pointer-events-auto={sidebarOpen}
 			class:pointer-events-none={!sidebarOpen}
+			tabindex={sidebarOpen ? 0 : -1}
+			aria-hidden={!sidebarOpen}
 			onclick={toggleSidebar}
 			aria-label="Cerrar menú"
 		></button>
@@ -288,7 +295,7 @@
 					<span class="block truncate text-xs font-bold tracking-tight text-white">
 						World Enterprise D&E
 					</span>
-					<span class="block truncate text-[11px] text-sidebar-text/60"
+					<span class="block truncate text-[11px] text-sidebar-text/70"
 						>Módulo de Mantenimiento</span
 					>
 				</div>
@@ -397,7 +404,7 @@
 							{user.nombre}
 							{user.apellido}
 						</p>
-						<p class="truncate text-[11px] text-sidebar-text/50">
+						<p class="truncate text-[11px] text-sidebar-text/60">
 							{user.rol === 'admin'
 								? 'Administrador'
 								: user.rol === 'tecnico'

@@ -64,6 +64,12 @@
 		showModal = false;
 		formError = '';
 	}
+
+	$effect(() => {
+		if ($page.url.searchParams.get('nuevo') === 'true') {
+			openCreate();
+		}
+	});
 </script>
 
 <svelte:head>
@@ -87,6 +93,7 @@
 		search=""
 		onsearch={() => {}}
 		onpagechange={() => {}}
+		hideSearch
 	>
 		{#snippet children(item)}
 			<div class="flex items-center gap-1">

@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { tickets, users } from '$lib/server/db/schema';
+import { tickets, users, ticket_attachments } from '$lib/server/db/schema';
 import { eq, like, or, and, count } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
@@ -7,6 +7,11 @@ import { escapeLike } from '$lib/server/validators';
 import { requireAuth } from '$lib/server/auth';
 import type { TicketState, TicketPriority } from '$lib/server/state-machines';
 import { createTicket, updateTicket, deleteTicket, addComment } from '$lib/server/services/tickets';
+import {
+	validateAttachmentUpload,
+	saveAttachmentFile,
+	deleteAttachmentFile
+} from '$lib/server/services/attachments';
 import type { Actor } from '$lib/server/services/types';
 
 const PAGE_SIZE = 10;
@@ -57,12 +62,28 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const items = await db.query.tickets.findMany({
 		where,
 		with: {
-			reporta: true,
-			asignado: true,
+			reporta: {
+				columns: { id: true, nombre: true, apellido: true, email: true, rol: true }
+			},
+			asignado: {
+				columns: { id: true, nombre: true, apellido: true, email: true, rol: true }
+			},
 			equipo: true,
 			comentarios: {
-				with: { usuario: true },
+				with: {
+					usuario: {
+						columns: { id: true, nombre: true, apellido: true, email: true, rol: true }
+					}
+				},
 				orderBy: (comments, { asc }) => [asc(comments.created_at)]
+			},
+			adjuntos: {
+				with: {
+					subido_por: {
+						columns: { id: true, nombre: true, apellido: true, email: true, rol: true }
+					}
+				},
+				orderBy: (attachments, { asc }) => [asc(attachments.created_at)]
 			}
 		},
 		orderBy: (tickets, { desc }) => [desc(tickets.created_at)],
@@ -72,7 +93,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 	const tecnicos = await db.query.users.findMany({
 		where: or(eq(users.rol, 'tecnico'), eq(users.rol, 'admin')),
-		orderBy: (users, { asc }) => [asc(users.nombre)]
+		orderBy: (users, { asc }) => [asc(users.nombre)],
+		columns: { id: true, nombre: true, apellido: true, email: true, rol: true }
 	});
 
 	const equipos = await db.query.equipment.findMany({
@@ -110,7 +132,8 @@ export const actions: Actions = {
 					titulo: (form.get('titulo') as string) ?? '',
 					descripcion: (form.get('descripcion') as string) ?? '',
 					prioridad: (form.get('prioridad') as string) ?? 'media',
-					equipo_id: (form.get('equipo_id') as string) ?? ''
+					equipo_id: (form.get('equipo_id') as string) ?? '',
+					fecha_limite: (form.get('fecha_limite') as string) ?? ''
 				},
 				actor
 			);
@@ -127,7 +150,8 @@ export const actions: Actions = {
 					prioridad: (form.get('prioridad') as string) ?? 'media',
 					estado: (form.get('estado') as string) ?? 'abierto',
 					tecnico_asignado: (form.get('tecnico_asignado') as string) ?? '',
-					equipo_id: (form.get('equipo_id') as string) ?? ''
+					equipo_id: (form.get('equipo_id') as string) ?? '',
+					fecha_limite: (form.get('fecha_limite') as string) ?? ''
 				},
 				actor
 			);
@@ -154,5 +178,84 @@ export const actions: Actions = {
 		}
 
 		return fail(400, { error: 'Acción no válida', _action });
+	},
+
+	upload_attachment: async ({ request, locals }) => {
+		requireAuth(locals);
+		if (locals.user.rol === 'consultor') {
+			return fail(403, {
+				error: 'Los consultores no pueden subir archivos',
+				_action: 'upload_attachment'
+			});
+		}
+
+		const form = await request.formData();
+		const ticket_id = (form.get('ticket_id') as string) ?? '';
+		const file = form.get('file') as File | null;
+
+		if (!ticket_id) {
+			return fail(400, { error: 'ID de ticket no proporcionado', _action: 'upload_attachment' });
+		}
+		const ticket = await db.query.tickets.findFirst({ where: eq(tickets.id, ticket_id) });
+		if (!ticket) return fail(404, { error: 'Ticket no encontrado', _action: 'upload_attachment' });
+
+		if (!file || !(file instanceof File) || file.size === 0) {
+			return fail(400, { error: 'Selecciona un archivo para subir', _action: 'upload_attachment' });
+		}
+
+		const validation = validateAttachmentUpload(file);
+		if (!validation.ok) return fail(400, { error: validation.error, _action: 'upload_attachment' });
+
+		let filepath: string;
+		try {
+			filepath = await saveAttachmentFile(file);
+		} catch {
+			return fail(500, { error: 'No se pudo guardar el archivo', _action: 'upload_attachment' });
+		}
+
+		await db.insert(ticket_attachments).values({
+			ticket_id,
+			filename: file.name,
+			filepath,
+			mime_type: file.type,
+			uploaded_by: locals.user.id
+		});
+
+		return { success: true, _action: 'upload_attachment' };
+	},
+
+	delete_attachment: async ({ request, locals }) => {
+		requireAuth(locals);
+		if (locals.user.rol === 'consultor') {
+			return fail(403, {
+				error: 'Los consultores no pueden eliminar archivos',
+				_action: 'delete_attachment'
+			});
+		}
+
+		const form = await request.formData();
+		const id = (form.get('id') as string) ?? '';
+
+		if (!id) {
+			return fail(400, { error: 'ID de archivo no proporcionado', _action: 'delete_attachment' });
+		}
+
+		const attachment = await db.query.ticket_attachments.findFirst({
+			where: eq(ticket_attachments.id, id)
+		});
+		if (!attachment)
+			return fail(404, { error: 'Archivo no encontrado', _action: 'delete_attachment' });
+
+		if (attachment.uploaded_by !== locals.user.id && locals.user.rol !== 'admin') {
+			return fail(403, {
+				error: 'No tenés permiso para eliminar este archivo',
+				_action: 'delete_attachment'
+			});
+		}
+
+		await db.delete(ticket_attachments).where(eq(ticket_attachments.id, id));
+		await deleteAttachmentFile(attachment.filepath);
+
+		return { success: true, _action: 'delete_attachment' };
 	}
 };

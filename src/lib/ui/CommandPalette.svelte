@@ -15,6 +15,7 @@
 	import Users from '@lucide/svelte/icons/users';
 	import Settings from '@lucide/svelte/icons/settings';
 	import History from '@lucide/svelte/icons/history';
+	import Shapes from '@lucide/svelte/icons/shapes';
 	import Search from '@lucide/svelte/icons/search';
 	import Command from '@lucide/svelte/icons/command';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -29,6 +30,8 @@
 	let inputEl: HTMLInputElement | undefined = $state();
 	let overlayEl: HTMLElement | undefined = $state();
 	let panelEl: HTMLElement | undefined = $state();
+	let paletteEl: HTMLElement | undefined = $state();
+	let previouslyFocused: HTMLElement | null = null;
 
 	const iconMap: Record<string, typeof LayoutDashboard> = {
 		dashboard: LayoutDashboard,
@@ -39,99 +42,36 @@
 		reportes: BarChart3,
 		usuarios: Users,
 		config: Settings,
-		sessions: History
+		sessions: History,
+		tipos: Shapes
 	};
-
-	// ─── Shortcut registry — maps keyboard combo → href, with role check ───
-	interface Shortcut {
-		key: string;
-		ctrl?: boolean;
-		shift?: boolean;
-		href: PathnameWithSearchOrHash;
-		label: string;
-		roles?: UserRole[];
-		display: string;
-	}
-
-	const shortcuts: Shortcut[] = [
-		{ key: 'D', ctrl: true, href: '/', label: 'Dashboard', display: 'Ctrl+D' },
-		{ key: 'E', ctrl: true, href: '/equipos', label: 'Equipos', display: 'Ctrl+E' },
-		{ key: 'T', ctrl: true, href: '/tickets', label: 'Tickets', display: 'Ctrl+T' },
-		{ key: 'M', ctrl: true, href: '/mantenimiento', label: 'Mantenimiento', display: 'Ctrl+M' },
-		{
-			key: 'P',
-			ctrl: true,
-			href: '/proveedores',
-			label: 'Proveedores',
-			roles: ['admin', 'consultor'],
-			display: 'Ctrl+P'
-		},
-		{
-			key: 'R',
-			ctrl: true,
-			href: '/reportes',
-			label: 'Reportes',
-			roles: ['admin', 'consultor'],
-			display: 'Ctrl+R'
-		},
-		{
-			key: 'U',
-			ctrl: true,
-			href: '/usuarios',
-			label: 'Usuarios',
-			roles: ['admin'],
-			display: 'Ctrl+U'
-		},
-		{
-			key: 'N',
-			ctrl: true,
-			href: '/tickets?nuevo=true',
-			label: 'Nuevo Ticket',
-			display: 'Ctrl+N'
-		},
-		{
-			key: 'E',
-			ctrl: true,
-			shift: true,
-			href: '/equipos?nuevo=true',
-			label: 'Nuevo Equipo',
-			display: 'Ctrl+Shift+E'
-		}
-	];
-
-	// ─── Authorized shortcut helper ────────────────────────────────────────────
-	function isAuthorized(shortcut: Shortcut): boolean {
-		return !shortcut.roles || (userRole ? shortcut.roles.includes(userRole) : false);
-	}
 
 	// ─── Navigation items ──────────────────────────────────────────────────────
 	const allItems: (NavItem & { icon: string })[] = [
-		{ label: 'Dashboard', icon: 'dashboard', href: '/', shortcut: 'Ctrl+D' },
-		{ label: 'Equipos', icon: 'equipos', href: '/equipos', shortcut: 'Ctrl+E' },
-		{ label: 'Tickets', icon: 'tickets', href: '/tickets', shortcut: 'Ctrl+T' },
-		{ label: 'Mantenimiento', icon: 'mantenimiento', href: '/mantenimiento', shortcut: 'Ctrl+M' },
+		{ label: 'Dashboard', icon: 'dashboard', href: '/' },
+		{ label: 'Equipos', icon: 'equipos', href: '/equipos' },
+		{ label: 'Tickets', icon: 'tickets', href: '/tickets' },
+		{ label: 'Mantenimiento', icon: 'mantenimiento', href: '/mantenimiento' },
 		{
 			label: 'Proveedores',
 			icon: 'proveedores',
 			href: '/proveedores',
-			roles: ['admin', 'consultor'],
-			shortcut: 'Ctrl+P'
+			roles: ['admin', 'consultor']
 		},
 		{
 			label: 'Reportes',
 			icon: 'reportes',
 			href: '/reportes',
-			roles: ['admin', 'consultor'],
-			shortcut: 'Ctrl+R'
+			roles: ['admin', 'consultor']
 		},
 		{
 			label: 'Usuarios',
 			icon: 'usuarios',
 			href: '/usuarios',
-			roles: ['admin'],
-			shortcut: 'Ctrl+U'
+			roles: ['admin']
 		},
 		{ label: 'Configuración', icon: 'config', href: '/config', roles: ['admin'] },
+		{ label: 'Tipos de Equipo', icon: 'tipos', href: '/equipos/tipos', roles: ['admin'] },
 		{ label: 'Mis Sesiones', icon: 'sessions', href: '/sessions' }
 	];
 
@@ -142,7 +82,6 @@
 		action: string;
 		href: PathnameWithSearchOrHash;
 		roles?: UserRole[];
-		shortcut?: string;
 	}
 
 	type PaletteItem = (NavItem | ActionItem) & {
@@ -155,22 +94,19 @@
 			label: 'Volver al Dashboard',
 			icon: 'home',
 			action: 'navigate',
-			href: '/',
-			shortcut: 'Ctrl+D'
+			href: '/'
 		},
 		{
 			label: 'Nuevo Ticket',
 			icon: 'plusTicket',
 			action: 'create',
-			href: '/tickets?nuevo=true',
-			shortcut: 'Ctrl+N'
+			href: '/tickets?nuevo=true'
 		},
 		{
 			label: 'Nuevo Equipo',
 			icon: 'plusEquipo',
 			action: 'create',
-			href: '/equipos?nuevo=true',
-			shortcut: 'Ctrl+Shift+E'
+			href: '/equipos?nuevo=true'
 		},
 		{
 			label: 'Nuevo Proveedor',
@@ -239,14 +175,11 @@
 
 	let filteredItems = $derived(flatItems.slice(0, 12));
 
-	// Keyboard listener for Ctrl+K / Cmd+K and global shortcuts
+	// Keyboard listener: only Ctrl+K / Cmd+K opens the palette. Browser-default
+	// shortcuts (Ctrl+T, Ctrl+N, Ctrl+P, etc.) are left untouched.
 	function handleKeydown(e: KeyboardEvent) {
-		// Don't trigger global shortcuts when typing in inputs
-		const tag = (e.target as HTMLElement)?.tagName;
-		const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-
 		// Ctrl+K / Cmd+K → open/close palette
-		if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
 			e.preventDefault();
 			if (open) close();
 			else openPalette();
@@ -258,25 +191,6 @@
 			e.preventDefault();
 			close();
 			return;
-		}
-
-		// Global shortcuts: Ctrl+Letter / Ctrl+Shift+Letter → direct navigation
-		// Skip if palette is open (palette handles its own keyboard) or user is typing
-		if (open || isInput) return;
-
-		if (e.ctrlKey || e.metaKey) {
-			const key = e.key.toUpperCase();
-			// Normalize: if Shift is held, key is already uppercase; if not, still match
-			for (const shortcut of shortcuts) {
-				if (shortcut.key === key && e.shiftKey === !!shortcut.shift && isAuthorized(shortcut)) {
-					e.preventDefault();
-					// ponytail: resolve() can't be typed for dynamic query-bearing hrefs
-					// (candidate route union is not assignable), so bypass the check.
-					// @ts-expect-error - dynamic PathnameWithSearchOrHash arg
-					goto(resolve(shortcut.href));
-					return;
-				}
-			}
 		}
 	}
 
@@ -307,8 +221,12 @@
 		open = true;
 		query = '';
 		selectedIndex = 0;
-		// Animate entrance + focus
+		previouslyFocused =
+			document.activeElement instanceof HTMLElement ? document.activeElement : null;
+		// Animate entrance + focus. Focus the dialog container first (tabindex=-1
+		// keeps focus inside the dialog), then the search input for immediate typing.
 		requestAnimationFrame(() => {
+			paletteEl?.focus();
 			inputEl?.focus();
 			gsap.fromTo(
 				panelEl!,
@@ -317,6 +235,11 @@
 			);
 			gsap.fromTo(overlayEl!, { opacity: 0 }, { opacity: 1, duration: 0.1 });
 		});
+	}
+
+	function restoreFocus() {
+		previouslyFocused?.focus();
+		previouslyFocused = null;
 	}
 
 	function close() {
@@ -329,6 +252,7 @@
 			onComplete: () => {
 				open = false;
 				query = '';
+				restoreFocus();
 			}
 		});
 		gsap.to(overlayEl!, {
@@ -348,7 +272,7 @@
 	}
 
 	function isActive(href: string): boolean {
-		return $page.url.pathname.startsWith(href);
+		return $page.url.pathname === href || $page.url.pathname.startsWith(href + '/');
 	}
 
 	onMount(() => {
@@ -360,8 +284,10 @@
 {#if open}
 	<div
 		bind:this={overlayEl}
+		bind:this={paletteEl}
 		class="fixed inset-0 z-[999] flex items-start justify-center bg-black/30 pt-[15vh] backdrop-blur-sm"
 		style="opacity: 1"
+		tabindex="-1"
 		onclick={(e) => {
 			if (e.target === e.currentTarget) close();
 		}}
@@ -435,12 +361,6 @@
 										<div class="flex-1 text-left">
 											<span class="font-medium">{item.label}</span>
 										</div>
-										{#if item.shortcut}
-											<kbd
-												class="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-												>{item.shortcut}</kbd
-											>
-										{/if}
 										<div
 											class="flex h-5 w-5 items-center justify-center rounded border border-border {idx ===
 											selectedIndex
@@ -491,12 +411,6 @@
 											>
 												Actual
 											</span>
-										{/if}
-										{#if item.shortcut && query}
-											<kbd
-												class="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-												>{item.shortcut}</kbd
-											>
 										{/if}
 										<div
 											class="flex h-5 w-5 items-center justify-center rounded border border-border {globalIdx ===
