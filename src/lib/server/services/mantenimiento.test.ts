@@ -284,14 +284,14 @@ describe('mantenimiento service', () => {
 
 		expect(
 			await scheduleExecution(
-				{ plan_id: '', ejecutado_por: ids.tecnicoId, fecha_programada: '2026-08-15' },
+				{ plan_id: '', ejecutado_por: ids.tecnicoId, fecha_programada: '2026-09-15' },
 				adminActor()
 			)
 		).toEqual({ ok: false, error: 'ID de plan no proporcionado', status: 400 });
 
 		expect(
 			await scheduleExecution(
-				{ plan_id: planId, ejecutado_por: '', fecha_programada: '2026-08-15' },
+				{ plan_id: planId, ejecutado_por: '', fecha_programada: '2026-09-15' },
 				adminActor()
 			)
 		).toEqual({ ok: false, error: 'Selecciona un técnico', status: 400 });
@@ -305,21 +305,21 @@ describe('mantenimiento service', () => {
 
 		expect(
 			await scheduleExecution(
-				{ plan_id: 'no-existe', ejecutado_por: ids.tecnicoId, fecha_programada: '2026-08-15' },
+				{ plan_id: 'no-existe', ejecutado_por: ids.tecnicoId, fecha_programada: '2026-09-15' },
 				adminActor()
 			)
 		).toEqual({ ok: false, error: 'Plan no encontrado', status: 404 });
 
 		expect(
 			await scheduleExecution(
-				{ plan_id: planId, ejecutado_por: 'no-existe', fecha_programada: '2026-08-15' },
+				{ plan_id: planId, ejecutado_por: 'no-existe', fecha_programada: '2026-09-15' },
 				adminActor()
 			)
 		).toEqual({ ok: false, error: 'Técnico no encontrado', status: 400 });
 
 		expect(
 			await scheduleExecution(
-				{ plan_id: planId, ejecutado_por: ids.consultorId, fecha_programada: '2026-08-15' },
+				{ plan_id: planId, ejecutado_por: ids.consultorId, fecha_programada: '2026-09-15' },
 				adminActor()
 			)
 		).toEqual({
@@ -341,7 +341,18 @@ describe('mantenimiento service', () => {
 
 		expect(
 			await scheduleExecution(
-				{ plan_id: planId, ejecutado_por: ids.tecnicoId, fecha_programada: '2026-08-15' },
+				{ plan_id: planId, ejecutado_por: ids.tecnicoId, fecha_programada: '2000-01-01' },
+				adminActor()
+			)
+		).toEqual({
+			ok: false,
+			error: 'La fecha no puede ser anterior a hoy',
+			status: 400
+		});
+
+		expect(
+			await scheduleExecution(
+				{ plan_id: planId, ejecutado_por: ids.tecnicoId, fecha_programada: '2026-09-15' },
 				adminActor()
 			)
 		).toEqual({
@@ -354,7 +365,7 @@ describe('mantenimiento service', () => {
 		await insertTask(planId, 'Tarea 2');
 
 		const res = await scheduleExecution(
-			{ plan_id: planId, ejecutado_por: ids.tecnicoId, fecha_programada: '2026-08-15' },
+			{ plan_id: planId, ejecutado_por: ids.tecnicoId, fecha_programada: '2026-09-15' },
 			adminActor()
 		);
 		expect(res).toEqual({ ok: true, data: { scheduled: 2 } });
@@ -366,7 +377,7 @@ describe('mantenimiento service', () => {
 		for (const exec of execs) {
 			expect(exec.resultado).toBe('pendiente');
 			expect(exec.ejecutado_por).toBe(ids.tecnicoId);
-			expect(exec.fecha_programada).toBe('2026-08-15');
+			expect(exec.fecha_programada).toBe('2026-09-15');
 		}
 	});
 

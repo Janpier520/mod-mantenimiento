@@ -6,7 +6,7 @@ import {
 	preventive_maintenance_plans
 } from '$lib/server/db/schema';
 import type { Equipment, PMExecution, PMPlan, PMTask, Ticket, User } from '$lib/server/db/schema';
-import { eq, ne, and, asc, desc, gte, lte, count } from 'drizzle-orm';
+import { eq, ne, and, asc, desc, gte, lt, count } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 type UpcomingMaintenance = PMExecution & { plan: PMPlan; tarea: PMTask; ejecutante: User };
@@ -126,12 +126,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		limit: 5
 	});
 
-	// Overdue pending executions count
+	// Overdue pending executions count (strict: scheduled for today is not overdue)
 	const [overdueResult] = await db
 		.select({ cnt: count() })
 		.from(pm_executions)
 		.where(
-			and(eq(pm_executions.resultado, 'pendiente'), lte(pm_executions.fecha_programada, today))
+			and(eq(pm_executions.resultado, 'pendiente'), lt(pm_executions.fecha_programada, today))
 		);
 
 	// Last 5 open tickets

@@ -278,6 +278,9 @@ export async function scheduleExecution(
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha_programada)) {
 		return { ok: false, error: 'Formato de fecha no válido (usa YYYY-MM-DD)', status: 400 };
 	}
+	if (fecha_programada < todayISO()) {
+		return { ok: false, error: 'La fecha no puede ser anterior a hoy', status: 400 };
+	}
 
 	const tasks = await db.query.pm_tasks.findMany({ where: eq(pm_tasks.plan_id, plan_id) });
 
