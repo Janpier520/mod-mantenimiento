@@ -330,7 +330,7 @@
 				</button>
 			</div>
 		</div>
-		<div class="h-56">
+		<div class="h-56" role="img" aria-label="Tickets creados por período">
 			<canvas bind:this={chartCanvas}></canvas>
 		</div>
 	</div>

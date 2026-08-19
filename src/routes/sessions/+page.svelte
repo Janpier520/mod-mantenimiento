@@ -41,6 +41,8 @@
 							if (result.type === 'success' && result.data?.success) {
 								addToast('Sesión cerrada');
 								await invalidate($page.url.pathname);
+							} else if (result.type === 'failure') {
+								addToast(String(result.data?.error || 'No se pudo cerrar la sesión'), 'error');
 							}
 						};
 					}}

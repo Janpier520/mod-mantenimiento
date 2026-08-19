@@ -1,4 +1,5 @@
 <script lang="ts" generics="T extends Record<string, unknown>">
+	import { onDestroy } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -41,6 +42,17 @@
 
 	let tableWrapperEl: HTMLElement;
 
+	// Debounce search navigation so the URL only updates ~300ms after the user
+	// stops typing (onsearch triggers a goto/reload on every keystroke otherwise).
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function handleSearchInput() {
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => onsearch(search), 300);
+	}
+
+	onDestroy(() => clearTimeout(searchTimer));
+
 	// Reactive stagger: re-triggers when items change (pagination, search)
 	$effect(() => {
 		if (items.length > 0 && tableWrapperEl) {
@@ -68,8 +80,9 @@
 			<Input
 				type="text"
 				placeholder="Buscar..."
+				aria-label="Buscar"
 				bind:value={search}
-				oninput={() => onsearch(search)}
+				oninput={handleSearchInput}
 				class="pl-9!"
 			/>
 		</div>

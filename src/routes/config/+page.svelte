@@ -6,6 +6,7 @@
 
 	let settings = $derived(data.settings);
 	let saving = $state(false);
+	let errorMessage = $state('');
 </script>
 
 <svelte:head>
@@ -22,14 +23,27 @@
 		method="post"
 		use:enhance={() => {
 			return async ({ result, update }) => {
+				saving = true;
+				errorMessage = '';
 				if (result.type === 'success' && result.data?.success) {
 					addToast('Configuración guardada correctamente');
 					await update();
+				} else if (result.type === 'failure') {
+					errorMessage = String(result.data?.error || 'No se pudo guardar la configuración');
 				}
+				saving = false;
 			};
 		}}
 		class="space-y-6 rounded-xl border border-border bg-card p-6 shadow-lg dark:border-border dark:bg-background"
 	>
+		{#if errorMessage}
+			<div
+				role="alert"
+				class="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+			>
+				{errorMessage}
+			</div>
+		{/if}
 		<input type="hidden" name="_keys" value={settings.map((s) => s.key).join(',')} />
 
 		{#each settings as setting (setting.key)}
@@ -53,7 +67,7 @@
 				disabled={saving}
 				class="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
 			>
-				Guardar Cambios
+				{saving ? 'Guardando...' : 'Guardar Cambios'}
 			</button>
 		</div>
 	</form>

@@ -7,6 +7,7 @@
 	import DataTable from '$lib/ui/DataTable.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
 	import FormField from '$lib/ui/FormField.svelte';
+	import { mapFieldErrors } from '$lib/ui/formErrors';
 	import Badge from '$lib/ui/Badge.svelte';
 	import ActionIconButton from '$lib/ui/ActionIconButton.svelte';
 	import { addToast } from '$lib/stores/toast.svelte';
@@ -46,7 +47,19 @@
 	let showDelete = $state(false);
 	let deletingEquipo = $state<EquipoRow | null>(null);
 	let formError = $state('');
+	let fieldErrors = $state<Record<string, string>>({});
 	let selectedId = $state<string | null>(null);
+
+	// Read-only role: consultors can view but not create/edit records
+	let isConsultor = $derived($page.data.user?.rol === 'consultor');
+
+	// Server error messages routed to the matching form field
+	const fieldErrorMessages: Record<string, string[]> = {
+		tipo_id: ['El tipo de equipo es obligatorio'],
+		modelo: ['El modelo es obligatorio'],
+		marca: ['La marca es obligatoria'],
+		estado: ['Estado no válido']
+	};
 	let selectedEquipo = $derived(
 		selectedId ? (equipmentList.find((e) => e.id === selectedId) ?? null) : null
 	);
@@ -99,6 +112,7 @@
 		formProveedorId = '';
 		formNotas = '';
 		formError = '';
+		fieldErrors = {};
 		showModal = true;
 	}
 
@@ -114,6 +128,7 @@
 		formProveedorId = e.proveedor_id ?? '';
 		formNotas = e.notas ?? '';
 		formError = '';
+		fieldErrors = {};
 		showModal = true;
 	}
 
@@ -133,6 +148,7 @@
 	function closeModal() {
 		showModal = false;
 		formError = '';
+		fieldErrors = {};
 	}
 
 	async function reload() {
@@ -292,18 +308,20 @@
 					onclick={() => selectEquipo(item)}
 					label="Ver historial"
 				/>
-				<ActionIconButton
-					icon={PencilIcon}
-					variant="edit"
-					onclick={() => openEdit(item)}
-					label="Editar"
-				/>
-				<ActionIconButton
-					icon={Trash2Icon}
-					variant="delete"
-					onclick={() => openDelete(item)}
-					label="Eliminar"
-				/>
+				{#if !isConsultor}
+					<ActionIconButton
+						icon={PencilIcon}
+						variant="edit"
+						onclick={() => openEdit(item)}
+						label="Editar"
+					/>
+					<ActionIconButton
+						icon={Trash2Icon}
+						variant="delete"
+						onclick={() => openDelete(item)}
+						label="Eliminar"
+					/>
+				{/if}
 			</div>
 		{/snippet}
 	</DataTable>
@@ -436,7 +454,10 @@
 							await invalidate($page.url.pathname);
 						} else if (result.type === 'failure') {
 							const d = (result.data as Record<string, unknown>) ?? {};
-							formError = (d.error as string) ?? 'Error al guardar el equipo';
+							const err = (d.error as string) ?? 'Error al guardar el equipo';
+							const mapped = mapFieldErrors(err, fieldErrorMessages);
+							fieldErrors = mapped.fields;
+							formError = mapped.general;
 						}
 					};
 				}}
@@ -454,21 +475,21 @@
 						bind:value={formTipoId}
 						options={tipos.map((t) => ({ value: t.id, label: t.nombre }))}
 						required
-						error={formError && !formTipoId ? formError : ''}
+						error={fieldErrors['tipo_id']}
 					/>
 					<FormField
 						label="Modelo"
 						name="modelo"
 						bind:value={formModelo}
 						required
-						error={formError && !formModelo ? formError : ''}
+						error={fieldErrors['modelo']}
 					/>
 					<FormField
 						label="Marca"
 						name="marca"
 						bind:value={formMarca}
 						required
-						error={formError && !formMarca ? formError : ''}
+						error={fieldErrors['marca']}
 					/>
 					<FormField label="N° Serie" name="numero_serie" bind:value={formNumeroSerie} />
 					<FormField
@@ -482,6 +503,7 @@
 							{ value: 'dado_de_baja', label: 'Dado de Baja' },
 							{ value: 'prestado', label: 'Prestado' }
 						]}
+						error={fieldErrors['estado']}
 					/>
 					<FormField label="Ubicación" name="ubicacion" bind:value={formUbicacion} />
 					<FormField
@@ -504,7 +526,7 @@
 
 				<FormField label="Notas" name="notas" type="textarea" bind:value={formNotas} />
 
-				{#if formError && formModelo && formMarca && formTipoId}
+				{#if formError}
 					<p class="text-xs text-red-500">{formError}</p>
 				{/if}
 
@@ -569,11 +591,13 @@
 	</Dialog.Root>
 
 	<!-- Floating action button -->
-	<button
-		onclick={openCreate}
-		class="fab fixed right-6 bottom-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary-hover hover:shadow-xl focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
-		aria-label="Nuevo Equipo"
-	>
-		<PlusIcon class="h-6 w-6" />
-	</button>
+	{#if !isConsultor}
+		<button
+			onclick={openCreate}
+			class="fab fixed right-6 bottom-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary-hover hover:shadow-xl focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
+			aria-label="Nuevo Equipo"
+		>
+			<PlusIcon class="h-6 w-6" />
+		</button>
+	{/if}
 </div>

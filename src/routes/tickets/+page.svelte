@@ -7,6 +7,7 @@
 	import DataTable from '$lib/ui/DataTable.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
 	import FormField from '$lib/ui/FormField.svelte';
+	import { mapFieldErrors } from '$lib/ui/formErrors';
 	import Badge from '$lib/ui/Badge.svelte';
 	import ActionIconButton from '$lib/ui/ActionIconButton.svelte';
 	import { addToast } from '$lib/stores/toast.svelte';
@@ -15,6 +16,7 @@
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import XIcon from '@lucide/svelte/icons/x';
 	import SendIcon from '@lucide/svelte/icons/send';
+	import UploadIcon from '@lucide/svelte/icons/upload';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 
@@ -50,7 +52,28 @@
 	let showDelete = $state(false);
 	let deletingTicket = $state<TicketRow | null>(null);
 	let formError = $state('');
+	let fieldErrors = $state<Record<string, string>>({});
 	let formComentario = $state('');
+
+	// Read-only role: consultors can view but not create/edit records
+	let isConsultor = $derived($page.data.user?.rol === 'consultor');
+
+	// Server error messages routed to the matching form field
+	const fieldErrorMessages: Record<string, string[]> = {
+		titulo: ['El título del ticket es obligatorio'],
+		prioridad: ['Prioridad no válida'],
+		estado: ['Estado no válido'],
+		equipo_id: [
+			'Equipo no encontrado',
+			'No se puede crear un ticket para un equipo dado de baja',
+			'No se puede asignar un equipo dado de baja'
+		],
+		tecnico_asignado: [
+			'Técnico no encontrado',
+			'El usuario asignado no es técnico ni administrador'
+		],
+		fecha_limite: ['Formato de fecha límite no válido (usa YYYY-MM-DD)']
+	};
 
 	// Form fields for create/edit
 	let formTitulo = $state('');
@@ -129,6 +152,7 @@
 		formTecnicoAsignado = '';
 		formFechaLimite = '';
 		formError = '';
+		fieldErrors = {};
 		showModal = true;
 	}
 
@@ -142,6 +166,7 @@
 		formTecnicoAsignado = t.tecnico_asignado ?? '';
 		formFechaLimite = t.fecha_limite ?? '';
 		formError = '';
+		fieldErrors = {};
 		showModal = true;
 	}
 
@@ -153,6 +178,7 @@
 	function closeModal() {
 		showModal = false;
 		formError = '';
+		fieldErrors = {};
 	}
 
 	async function reload() {
@@ -356,10 +382,12 @@
 			}}
 		/>
 
-		<Button onclick={openCreate}>
-			<PlusIcon class="h-4 w-4" />
-			Nuevo Ticket
-		</Button>
+		{#if !isConsultor}
+			<Button onclick={openCreate}>
+				<PlusIcon class="h-4 w-4" />
+				Nuevo Ticket
+			</Button>
+		{/if}
 	</div>
 
 	<!-- DataTable -->
@@ -376,20 +404,22 @@
 		{cell}
 	>
 		{#snippet children(item)}
-			<div class="flex items-center gap-1">
-				<ActionIconButton
-					icon={PencilIcon}
-					variant="edit"
-					onclick={() => openEdit(item)}
-					label="Editar"
-				/>
-				<ActionIconButton
-					icon={Trash2Icon}
-					variant="delete"
-					onclick={() => openDelete(item)}
-					label="Eliminar"
-				/>
-			</div>
+			{#if !isConsultor}
+				<div class="flex items-center gap-1">
+					<ActionIconButton
+						icon={PencilIcon}
+						variant="edit"
+						onclick={() => openEdit(item)}
+						label="Editar"
+					/>
+					<ActionIconButton
+						icon={Trash2Icon}
+						variant="delete"
+						onclick={() => openDelete(item)}
+						label="Eliminar"
+					/>
+				</div>
+			{/if}
 		{/snippet}
 	</DataTable>
 
@@ -509,44 +539,47 @@
 					{/each}
 				</div>
 
-				<!-- Add comment form -->
-				<form
-					method="post"
-					action="?/crud"
-					class="flex gap-3"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if (result.type === 'success' && result.data?.success) {
-								formComentario = '';
-								await update();
-								await invalidate($page.url.pathname);
-							} else if (result.type === 'failure') {
-								addToast(
-									(result.data as { error?: string } | null)?.error ?? 'Error al enviar comentario',
-									'error'
-								);
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="_action" value="add_comment" />
-					<input type="hidden" name="ticket_id" value={selectedTicket.id} />
-					<textarea
-						name="contenido"
-						bind:value={formComentario}
-						placeholder="Escribe un comentario..."
-						required
-						class="min-h-[2.5rem] flex-1 resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
-						rows="1"></textarea>
-					<button
-						type="submit"
-						disabled={!formComentario.trim()}
-						class="shrink-0 self-end rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+				{#if !isConsultor}
+					<!-- Add comment form -->
+					<form
+						method="post"
+						action="?/crud"
+						class="flex gap-3"
+						use:enhance={() => {
+							return async ({ result, update }) => {
+								if (result.type === 'success' && result.data?.success) {
+									formComentario = '';
+									await update();
+									await invalidate($page.url.pathname);
+								} else if (result.type === 'failure') {
+									addToast(
+										(result.data as { error?: string } | null)?.error ??
+											'Error al enviar comentario',
+										'error'
+									);
+								}
+							};
+						}}
 					>
-						<SendIcon class="h-4 w-4" />
-						Enviar
-					</button>
-				</form>
+						<input type="hidden" name="_action" value="add_comment" />
+						<input type="hidden" name="ticket_id" value={selectedTicket.id} />
+						<textarea
+							name="contenido"
+							bind:value={formComentario}
+							placeholder="Escribe un comentario..."
+							required
+							class="min-h-[2.5rem] flex-1 resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+							rows="1"></textarea>
+						<button
+							type="submit"
+							disabled={!formComentario.trim()}
+							class="shrink-0 self-end rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							<SendIcon class="h-4 w-4" />
+							Enviar
+						</button>
+					</form>
+				{/if}
 			</div>
 
 			<!-- Attachments -->
@@ -587,42 +620,45 @@
 					{/if}
 				</div>
 
-				<!-- Upload form -->
-				<form
-					method="post"
-					action="?/upload_attachment"
-					enctype="multipart/form-data"
-					bind:this={uploadForm}
-					class="flex flex-wrap items-center gap-3"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if (result.type === 'success' && result.data?.success) {
-								uploadError = '';
-								uploadForm?.reset();
-								await update();
-								await invalidate($page.url.pathname);
-							} else if (result.type === 'failure') {
-								const d = (result.data as Record<string, unknown>) ?? {};
-								uploadError = (d.error as string) ?? 'Error al subir el archivo';
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="ticket_id" value={selectedTicket.id} />
-					<input
-						type="file"
-						name="file"
-						required
-						accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.txt,.doc,.docx,.xls,.xlsx"
-						class="block max-w-full text-sm text-foreground file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground"
-					/>
-					<button
-						type="submit"
-						class="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-hover"
+				{#if !isConsultor}
+					<!-- Upload form -->
+					<form
+						method="post"
+						action="?/upload_attachment"
+						enctype="multipart/form-data"
+						bind:this={uploadForm}
+						class="flex flex-wrap items-center gap-3"
+						use:enhance={() => {
+							return async ({ result, update }) => {
+								if (result.type === 'success' && result.data?.success) {
+									uploadError = '';
+									uploadForm?.reset();
+									await update();
+									await invalidate($page.url.pathname);
+								} else if (result.type === 'failure') {
+									const d = (result.data as Record<string, unknown>) ?? {};
+									uploadError = (d.error as string) ?? 'Error al subir el archivo';
+								}
+							};
+						}}
 					>
-						Subir
-					</button>
-				</form>
+						<input type="hidden" name="ticket_id" value={selectedTicket.id} />
+						<input
+							type="file"
+							name="file"
+							required
+							accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.txt,.doc,.docx,.xls,.xlsx"
+							class="block max-w-full text-sm text-foreground file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground"
+						/>
+						<button
+							type="submit"
+							class="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-hover"
+						>
+							<UploadIcon class="h-4 w-4" />
+							Subir archivo
+						</button>
+					</form>
+				{/if}
 				{#if uploadError}
 					<p class="mt-2 text-xs text-red-500">{uploadError}</p>
 				{/if}
@@ -655,7 +691,10 @@
 							await invalidate($page.url.pathname);
 						} else if (result.type === 'failure') {
 							const d = (result.data as Record<string, unknown>) ?? {};
-							formError = (d.error as string) ?? 'Error al guardar el ticket';
+							const err = (d.error as string) ?? 'Error al guardar el ticket';
+							const mapped = mapFieldErrors(err, fieldErrorMessages);
+							fieldErrors = mapped.fields;
+							formError = mapped.general;
 						}
 					};
 				}}
@@ -670,7 +709,7 @@
 					name="titulo"
 					bind:value={formTitulo}
 					required
-					error={formError && !formTitulo ? formError : ''}
+					error={fieldErrors['titulo']}
 				/>
 				<FormField
 					label="Descripción"
@@ -691,6 +730,7 @@
 							{ value: 'alta', label: 'Alta' },
 							{ value: 'critica', label: 'Crítica' }
 						]}
+						error={fieldErrors['prioridad']}
 					/>
 					<FormField
 						label="Equipo"
@@ -701,6 +741,7 @@
 							{ value: '', label: 'Sin equipo' },
 							...equipos.map((e) => ({ value: e.id, label: `${e.marca} ${e.modelo}` }))
 						]}
+						error={fieldErrors['equipo_id']}
 					/>
 				</div>
 
@@ -709,6 +750,7 @@
 					name="fecha_limite"
 					type="date"
 					bind:value={formFechaLimite}
+					error={fieldErrors['fecha_limite']}
 				/>
 				<p class="-mt-2 text-xs text-muted-foreground">
 					Si se deja vacía, se calcula automáticamente según la prioridad (SLA).
@@ -727,6 +769,7 @@
 								{ value: 'resuelto', label: 'Resuelto' },
 								{ value: 'cerrado', label: 'Cerrado' }
 							]}
+							error={fieldErrors['estado']}
 						/>
 						<FormField
 							label="Técnico Asignado"
@@ -737,11 +780,12 @@
 								{ value: '', label: 'Sin técnico' },
 								...tecnicos.map((t) => ({ value: t.id, label: `${t.nombre} ${t.apellido}` }))
 							]}
+							error={fieldErrors['tecnico_asignado']}
 						/>
 					</div>
 				{/if}
 
-				{#if formError && formTitulo}
+				{#if formError}
 					<p class="text-xs text-red-500">{formError}</p>
 				{/if}
 
@@ -807,11 +851,13 @@
 	</Dialog.Root>
 
 	<!-- Floating action button -->
-	<Button
-		onclick={openCreate}
-		class="fab fixed right-6 bottom-6 z-30 h-14 w-14 rounded-full shadow-lg"
-		aria-label="Nuevo Ticket"
-	>
-		<PlusIcon class="h-6 w-6" />
-	</Button>
+	{#if !isConsultor}
+		<Button
+			onclick={openCreate}
+			class="fab fixed right-6 bottom-6 z-30 h-14 w-14 rounded-full shadow-lg"
+			aria-label="Nuevo Ticket"
+		>
+			<PlusIcon class="h-6 w-6" />
+		</Button>
+	{/if}
 </div>

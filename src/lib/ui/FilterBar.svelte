@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { onDestroy } from 'svelte';
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import XIcon from '@lucide/svelte/icons/x';
 	import gsap from 'gsap';
@@ -47,6 +48,17 @@
 		return chips;
 	});
 
+	// Debounce search navigation so the URL only updates ~300ms after the user
+	// stops typing (filters are applied via goto on every keystroke otherwise).
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function handleSearchInput(value: string) {
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => onsearch?.(value), 300);
+	}
+
+	onDestroy(() => clearTimeout(searchTimer));
+
 	// Stagger chip entrance when they change
 	let chipContainerEl: HTMLElement | undefined = $state();
 	$effect(() => {
@@ -71,8 +83,9 @@
 		<input
 			type="text"
 			placeholder="Buscar..."
+			aria-label="Buscar"
 			value={search}
-			oninput={(e) => onsearch?.((e.target as HTMLInputElement).value)}
+			oninput={(e) => handleSearchInput((e.target as HTMLInputElement).value)}
 			class="block w-full rounded-xl border border-border bg-card py-2 pr-4 pl-9 text-sm text-foreground transition-all duration-200 placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
 		/>
 	</div>

@@ -7,6 +7,7 @@
 	import DataTable from '$lib/ui/DataTable.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
 	import FormField from '$lib/ui/FormField.svelte';
+	import { mapFieldErrors } from '$lib/ui/formErrors';
 	import ConfirmDialog from '$lib/ui/ConfirmDialog.svelte';
 	import Badge from '$lib/ui/Badge.svelte';
 	import ActionIconButton from '$lib/ui/ActionIconButton.svelte';
@@ -15,6 +16,8 @@
 	import { addToast } from '$lib/stores/toast.svelte';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
 
 	let { data } = $props();
 
@@ -40,6 +43,30 @@
 	let showDelete = $state(false);
 	let deletingUser = $state<UsuarioRow | null>(null);
 	let formError = $state('');
+	let fieldErrors = $state<Record<string, string>>({});
+	let showPassword = $state(false);
+
+	// Server error messages routed to the matching form field
+	const fieldErrorMessages: Record<string, string[]> = {
+		username: [
+			'El nombre de usuario es obligatorio',
+			'Ya existe un usuario con ese nombre de usuario'
+		],
+		email: [
+			'El email es obligatorio',
+			'El formato del email no es válido',
+			'Ya existe un usuario con ese email',
+			'Ya existe otro usuario con ese email'
+		],
+		nombre: ['El nombre es obligatorio'],
+		apellido: ['El apellido es obligatorio'],
+		password: [
+			'La contraseña es obligatoria',
+			'debe tener al menos 6 caracteres',
+			'no puede tener más de 128 caracteres'
+		],
+		rol: ['Rol no válido', 'No podés desactivar o cambiar el rol del último administrador']
+	};
 
 	// Form fields
 	let formUsername = $state('');
@@ -86,7 +113,9 @@
 		formPassword = '';
 		formRol = 'tecnico';
 		formActivo = true;
+		showPassword = false;
 		formError = '';
+		fieldErrors = {};
 		showModal = true;
 	}
 
@@ -99,7 +128,9 @@
 		formPassword = '';
 		formRol = u.rol ?? 'tecnico';
 		formActivo = u.activo ?? true;
+		showPassword = false;
 		formError = '';
+		fieldErrors = {};
 		showModal = true;
 	}
 
@@ -111,6 +142,7 @@
 	function closeModal() {
 		showModal = false;
 		formError = '';
+		fieldErrors = {};
 	}
 
 	async function reload() {
@@ -281,7 +313,10 @@
 							await invalidate($page.url.pathname);
 						} else if (result.type === 'failure') {
 							const d = (result.data as Record<string, unknown>) ?? {};
-							formError = (d.error as string) ?? 'Error al guardar el usuario';
+							const err = (d.error as string) ?? 'Error al guardar el usuario';
+							const mapped = mapFieldErrors(err, fieldErrorMessages);
+							fieldErrors = mapped.fields;
+							formError = mapped.general;
 						}
 					};
 				}}
@@ -325,7 +360,7 @@
 					<FormField
 						label="Contraseña"
 						name="password"
-						type="text"
+						type="password"
 						bind:value={formPassword}
 						required
 					/>

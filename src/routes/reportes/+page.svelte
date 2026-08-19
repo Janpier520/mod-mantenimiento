@@ -352,7 +352,7 @@
 		<!-- Equipos por Estado -->
 		<div class="rounded-xl border bg-card p-5">
 			<h3 class="mb-3 text-sm font-semibold text-foreground">Equipos por Estado</h3>
-			<div class="relative h-64">
+			<div class="relative h-64" role="img" aria-label="Equipos por estado">
 				<canvas bind:this={estadoCanvas}></canvas>
 			</div>
 		</div>
@@ -360,7 +360,7 @@
 		<!-- Tickets por Mes -->
 		<div class="rounded-xl border bg-card p-5">
 			<h3 class="mb-3 text-sm font-semibold text-foreground">Tickets por Mes</h3>
-			<div class="relative h-64">
+			<div class="relative h-64" role="img" aria-label="Tickets creados por mes">
 				<canvas bind:this={monthCanvas}></canvas>
 			</div>
 		</div>
@@ -368,7 +368,7 @@
 		<!-- Tickets por Prioridad -->
 		<div class="rounded-xl border bg-card p-5">
 			<h3 class="mb-3 text-sm font-semibold text-foreground">Tickets por Prioridad</h3>
-			<div class="relative h-64">
+			<div class="relative h-64" role="img" aria-label="Tickets por prioridad">
 				<canvas bind:this={priorityCanvas}></canvas>
 			</div>
 		</div>
@@ -376,7 +376,7 @@
 		<!-- Equipos por Tipo -->
 		<div class="rounded-xl border bg-card p-5">
 			<h3 class="mb-3 text-sm font-semibold text-foreground">Equipos por Tipo</h3>
-			<div class="relative h-64">
+			<div class="relative h-64" role="img" aria-label="Equipos por tipo">
 				<canvas bind:this={tipoCanvas}></canvas>
 			</div>
 		</div>
