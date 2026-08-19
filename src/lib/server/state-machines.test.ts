@@ -6,7 +6,8 @@ import {
 	getValidTransitions,
 	canTransition,
 	VALID_EQUIPMENT_STATES,
-	VALID_TICKET_STATES
+	VALID_TICKET_STATES,
+	VALID_PM_RESULTS
 } from './state-machines';
 
 // TC-3: State machine coverage — both machines, valid/invalid transitions,
@@ -220,6 +221,16 @@ describe('VALID state constants', () => {
 			'resuelto',
 			'cerrado',
 			'cancelado'
+		]);
+	});
+
+	it('exposes all PM results including cancelada', () => {
+		expect(VALID_PM_RESULTS).toEqual([
+			'pendiente',
+			'completado',
+			'fallido',
+			'omitido',
+			'cancelada'
 		]);
 	});
 });

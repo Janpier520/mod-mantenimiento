@@ -12,7 +12,9 @@ import {
 	updateTask,
 	deleteTask,
 	scheduleExecution,
-	completeExecution
+	completeExecution,
+	cancelarEjecucion,
+	reprogramarEjecucion
 } from './mantenimiento';
 import type { Actor } from './types';
 
@@ -92,7 +94,9 @@ describe('mantenimiento service', () => {
 			await completeExecution(
 				{ id: 'x', resultado: 'completado', observaciones: '' },
 				consultorActor()
-			)
+			),
+			await cancelarEjecucion({ id: 'x' }, consultorActor()),
+			await reprogramarEjecucion({ id: 'x', fecha_programada: '2026-08-01' }, consultorActor())
 		];
 
 		for (const res of guardResults) {
@@ -504,5 +508,90 @@ describe('mantenimiento service', () => {
 			.from(pm_executions)
 			.where(eq(pm_executions.plan_id, planId));
 		expect(cnt.cnt).toBe(2);
+	});
+
+	it('cancels a pending execution leaving other fields untouched', async () => {
+		const planId = await insertPlan('Plan cancel');
+		const taskId = await insertTask(planId);
+		const execId = await insertExecution(planId, taskId, 'pendiente');
+
+		const res = await cancelarEjecucion({ id: execId }, adminActor());
+		expect(res).toEqual({ ok: true, data: { id: execId } });
+
+		const row = await db.query.pm_executions.findFirst({ where: eq(pm_executions.id, execId) });
+		expect(row?.resultado).toBe('cancelada');
+		expect(row?.fecha_programada).toBe('2026-08-01');
+		expect(row?.fecha_ejecucion).toBeNull();
+		expect(row?.observaciones).toBe('');
+	});
+
+	it('rejects canceling a missing or already-processed execution', async () => {
+		expect(await cancelarEjecucion({ id: '' }, adminActor())).toEqual({
+			ok: false,
+			error: 'ID de ejecución no proporcionado',
+			status: 400
+		});
+		expect(await cancelarEjecucion({ id: 'no-existe' }, adminActor())).toEqual({
+			ok: false,
+			error: 'Ejecución no encontrada',
+			status: 404
+		});
+
+		const planId = await insertPlan('Plan cancel processed');
+		const taskId = await insertTask(planId);
+		const doneId = await insertExecution(planId, taskId, 'completado');
+
+		expect(await cancelarEjecucion({ id: doneId }, adminActor())).toEqual({
+			ok: false,
+			error: 'Solo se puede cancelar una ejecución pendiente',
+			status: 400
+		});
+	});
+
+	it('reschedules a pending execution to a new future date', async () => {
+		const planId = await insertPlan('Plan reprogram');
+		const taskId = await insertTask(planId);
+		const execId = await insertExecution(planId, taskId, 'pendiente');
+
+		const res = await reprogramarEjecucion(
+			{ id: execId, fecha_programada: '2030-01-15' },
+			adminActor()
+		);
+		expect(res).toEqual({ ok: true, data: { id: execId } });
+
+		const row = await db.query.pm_executions.findFirst({ where: eq(pm_executions.id, execId) });
+		expect(row?.fecha_programada).toBe('2030-01-15');
+		expect(row?.resultado).toBe('pendiente');
+	});
+
+	it('rejects rescheduling missing, processed, past or malformed dates', async () => {
+		const planId = await insertPlan('Plan reprogram rejected');
+		const taskId = await insertTask(planId);
+		const pendingId = await insertExecution(planId, taskId, 'pendiente');
+		const doneId = await insertExecution(planId, taskId, 'completado');
+
+		expect(
+			await reprogramarEjecucion({ id: 'no-existe', fecha_programada: '2030-01-15' }, adminActor())
+		).toEqual({ ok: false, error: 'Ejecución no encontrada', status: 404 });
+
+		expect(
+			await reprogramarEjecucion({ id: doneId, fecha_programada: '2030-01-15' }, adminActor())
+		).toEqual({
+			ok: false,
+			error: 'Solo se puede reprogramar una ejecución pendiente',
+			status: 400
+		});
+
+		expect(
+			await reprogramarEjecucion({ id: pendingId, fecha_programada: '2020-01-01' }, adminActor())
+		).toEqual({ ok: false, error: 'La fecha no puede ser anterior a hoy', status: 400 });
+
+		expect(
+			await reprogramarEjecucion({ id: pendingId, fecha_programada: '15/01/2030' }, adminActor())
+		).toEqual({ ok: false, error: 'Formato de fecha no válido (usa YYYY-MM-DD)', status: 400 });
+
+		expect(
+			await reprogramarEjecucion({ id: pendingId, fecha_programada: '' }, adminActor())
+		).toEqual({ ok: false, error: 'Selecciona una fecha programada', status: 400 });
 	});
 });

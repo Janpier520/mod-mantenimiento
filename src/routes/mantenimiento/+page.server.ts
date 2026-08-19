@@ -2,6 +2,9 @@ import { db } from '$lib/server/db';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { requireAuth } from '$lib/server/auth';
+import { eq, and, lt, count } from 'drizzle-orm';
+import { todayISO } from '$lib/server/dates';
+import { pm_executions } from '$lib/server/db/schema';
 import {
 	createPlan,
 	updatePlan,
@@ -10,12 +13,14 @@ import {
 	updateTask,
 	deleteTask,
 	scheduleExecution,
-	completeExecution
+	completeExecution,
+	cancelarEjecucion,
+	reprogramarEjecucion
 } from '$lib/server/services/mantenimiento';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
-		return { plans: [], equipment: [], equipmentTypes: [], technicians: [] };
+		return { plans: [], equipment: [], equipmentTypes: [], technicians: [], overdueCount: 0 };
 	}
 
 	const plans = await db.query.preventive_maintenance_plans.findMany({
@@ -31,6 +36,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 		},
 		orderBy: (plans, { asc }) => [asc(plans.nombre)]
 	});
+
+	const [overdueResult] = await db
+		.select({ cnt: count() })
+		.from(pm_executions)
+		.where(
+			and(eq(pm_executions.resultado, 'pendiente'), lt(pm_executions.fecha_programada, todayISO()))
+		);
 
 	const equipmentList = await db.query.equipment.findMany({
 		orderBy: (eq, { asc }) => [asc(eq.modelo)]
@@ -50,7 +62,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		plans,
 		equipment: equipmentList,
 		equipmentTypes: equipmentTypesList,
-		technicians
+		technicians,
+		overdueCount: overdueResult?.cnt ?? 0
 	};
 };
 
@@ -172,5 +185,31 @@ export const actions: Actions = {
 		if (!res.ok)
 			return fail(res.status ?? 400, { error: res.error, _action: 'complete_execution' });
 		return { success: true, _action: 'complete_execution' };
+	},
+
+	cancel_execution: async ({ request, locals }) => {
+		requireAuth(locals);
+		const form = await request.formData();
+		const res = await cancelarEjecucion(
+			{ id: (form.get('id') as string) ?? '' },
+			{ id: locals.user.id, rol: locals.user.rol }
+		);
+		if (!res.ok) return fail(res.status ?? 400, { error: res.error, _action: 'cancel_execution' });
+		return { success: true, _action: 'cancel_execution' };
+	},
+
+	reprogram_execution: async ({ request, locals }) => {
+		requireAuth(locals);
+		const form = await request.formData();
+		const res = await reprogramarEjecucion(
+			{
+				id: (form.get('id') as string) ?? '',
+				fecha_programada: (form.get('fecha_programada') as string) ?? ''
+			},
+			{ id: locals.user.id, rol: locals.user.rol }
+		);
+		if (!res.ok)
+			return fail(res.status ?? 400, { error: res.error, _action: 'reprogram_execution' });
+		return { success: true, _action: 'reprogram_execution' };
 	}
 };

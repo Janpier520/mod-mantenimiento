@@ -282,7 +282,9 @@ export const pm_executions = sqliteTable(
 			.references(() => users.id),
 		fecha_programada: text('fecha_programada').notNull(),
 		fecha_ejecucion: text('fecha_ejecucion'),
-		resultado: text('resultado', { enum: ['pendiente', 'completado', 'fallido', 'omitido'] })
+		resultado: text('resultado', {
+			enum: ['pendiente', 'completado', 'fallido', 'omitido', 'cancelada']
+		})
 			.notNull()
 			.default('pendiente'),
 		observaciones: text('observaciones').notNull().default(''),

@@ -32,7 +32,13 @@ export const VALID_TICKET_STATES = [
 ] as const;
 export const VALID_TICKET_PRIORITIES = ['baja', 'media', 'alta', 'critica'] as const;
 export const VALID_USER_ROLES = ['admin', 'tecnico', 'consultor'] as const;
-export const VALID_PM_RESULTS = ['pendiente', 'completado', 'fallido', 'omitido'] as const;
+export const VALID_PM_RESULTS = [
+	'pendiente',
+	'completado',
+	'fallido',
+	'omitido',
+	'cancelada'
+] as const;
 
 // ─── SLA (fecha límite) por prioridad de ticket ───────────────────────────────
 

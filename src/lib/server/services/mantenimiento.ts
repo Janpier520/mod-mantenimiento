@@ -8,7 +8,7 @@ import {
 	users
 } from '$lib/server/db/schema';
 import { eq, count, and, sql } from 'drizzle-orm';
-import { addDaysToDate } from '$lib/server/dates';
+import { addDaysToDate, todayISO } from '$lib/server/dates';
 import type { ServiceResult, Actor } from './types';
 
 const CONSULTOR_ERROR: ServiceResult<never> = {
@@ -38,11 +38,20 @@ export interface CompleteExecutionInput {
 	resultado: string;
 	observaciones: string;
 }
+export interface CancelExecutionInput {
+	id: string;
+}
+export interface RescheduleExecutionInput {
+	id: string;
+	fecha_programada: string;
+}
 
 export type PlanResult = ServiceResult<{ id: string }>;
 export type TaskResult = ServiceResult<{ id: string; orden: number }>;
 export type ScheduleResult = ServiceResult<{ scheduled: number }>;
 export type CompleteResult = ServiceResult<{ id: string }>;
+export type CancelResult = ServiceResult<{ id: string }>;
+export type RescheduleResult = ServiceResult<{ id: string }>;
 
 export async function createPlan(input: PlanInput, actor: Actor): Promise<PlanResult> {
 	if (actor.rol === 'consultor') return CONSULTOR_ERROR;
@@ -325,6 +334,56 @@ export async function completeExecution(
 	if (resultado === 'completado' || resultado === 'fallido' || resultado === 'omitido') {
 		await autoScheduleNextExecution(execution);
 	}
+
+	return { ok: true, data: { id } };
+}
+
+export async function cancelarEjecucion(
+	input: CancelExecutionInput,
+	actor: Actor
+): Promise<CancelResult> {
+	if (actor.rol === 'consultor') return CONSULTOR_ERROR;
+
+	const { id } = input;
+	if (!id) return { ok: false, error: 'ID de ejecución no proporcionado', status: 400 };
+
+	const execution = await db.query.pm_executions.findFirst({ where: eq(pm_executions.id, id) });
+	if (!execution) return { ok: false, error: 'Ejecución no encontrada', status: 404 };
+
+	if (execution.resultado !== 'pendiente') {
+		return { ok: false, error: 'Solo se puede cancelar una ejecución pendiente', status: 400 };
+	}
+
+	await db.update(pm_executions).set({ resultado: 'cancelada' }).where(eq(pm_executions.id, id));
+
+	return { ok: true, data: { id } };
+}
+
+export async function reprogramarEjecucion(
+	input: RescheduleExecutionInput,
+	actor: Actor
+): Promise<RescheduleResult> {
+	if (actor.rol === 'consultor') return CONSULTOR_ERROR;
+
+	const { id, fecha_programada } = input;
+	if (!id) return { ok: false, error: 'ID de ejecución no proporcionado', status: 400 };
+	if (!fecha_programada)
+		return { ok: false, error: 'Selecciona una fecha programada', status: 400 };
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha_programada)) {
+		return { ok: false, error: 'Formato de fecha no válido (usa YYYY-MM-DD)', status: 400 };
+	}
+	if (fecha_programada < todayISO()) {
+		return { ok: false, error: 'La fecha no puede ser anterior a hoy', status: 400 };
+	}
+
+	const execution = await db.query.pm_executions.findFirst({ where: eq(pm_executions.id, id) });
+	if (!execution) return { ok: false, error: 'Ejecución no encontrada', status: 404 };
+
+	if (execution.resultado !== 'pendiente') {
+		return { ok: false, error: 'Solo se puede reprogramar una ejecución pendiente', status: 400 };
+	}
+
+	await db.update(pm_executions).set({ fecha_programada }).where(eq(pm_executions.id, id));
 
 	return { ok: true, data: { id } };
 }

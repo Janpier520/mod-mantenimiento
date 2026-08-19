@@ -12,6 +12,7 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Calendar from '@lucide/svelte/icons/calendar';
+	import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 
 	let { data } = $props();
@@ -24,6 +25,10 @@
 	let equipmentTypesList = $state(data.equipmentTypes);
 	// svelte-ignore state_referenced_locally
 	let technicians = $state(data.technicians);
+	// svelte-ignore state_referenced_locally
+	let overdueCount = $state(data.overdueCount);
+
+	let isConsultor = $derived($page.data.user?.rol === 'consultor');
 
 	type PlanRow = (typeof data.plans)[number];
 	type TaskRow = PlanRow['tareas'][number];
@@ -76,19 +81,32 @@
 	let formExecObservaciones = $state('');
 	let formExecError = $state('');
 
+	// Cancel execution confirmation
+	let showCancelExec = $state(false);
+	let cancelingExec = $state<ExecRow | null>(null);
+
+	// Inline date reschedule
+	let editingExecDateId = $state<string | null>(null);
+	let editingExecDateValue = $state('');
+	let editingExecDateError = $state('');
+
+	const todayStr = new Date().toISOString().slice(0, 10);
+
 	const resultBadgeVariant: Record<string, 'default' | 'success' | 'warning' | 'danger' | 'info'> =
 		{
 			pendiente: 'warning',
 			completado: 'success',
 			fallido: 'danger',
-			omitido: 'default'
+			omitido: 'default',
+			cancelada: 'default'
 		};
 
 	const resultLabels: Record<string, string> = {
 		pendiente: 'Pendiente',
 		completado: 'Completado',
 		fallido: 'Fallido',
-		omitido: 'Omitido'
+		omitido: 'Omitido',
+		cancelada: 'Cancelada'
 	};
 
 	function toggleExpand(planId: string) {
@@ -200,6 +218,82 @@
 		formExecError = '';
 	}
 
+	function openCancelExec(exec: ExecRow) {
+		cancelingExec = exec;
+		showCancelExec = true;
+	}
+
+	function closeCancelExec() {
+		showCancelExec = false;
+		cancelingExec = null;
+	}
+
+	async function confirmCancelExec() {
+		if (!cancelingExec) return;
+		const formData = new URLSearchParams({ id: cancelingExec.id });
+
+		const res = await fetch($page.url.pathname + '?/cancel_execution', {
+			method: 'POST',
+			body: formData
+		});
+
+		showCancelExec = false;
+
+		if (res.ok) {
+			addToast('Ejecución cancelada correctamente');
+			await invalidate($page.url.pathname);
+		} else {
+			const body = await res.json().catch(() => ({}));
+			const msg = typeof body.error === 'string' ? body.error : 'Error al cancelar la ejecución';
+			addToast(msg, 'error');
+		}
+		cancelingExec = null;
+	}
+
+	function openEditDate(exec: ExecRow) {
+		editingExecDateId = exec.id;
+		editingExecDateValue = exec.fecha_programada;
+		editingExecDateError = '';
+	}
+
+	function cancelEditDate() {
+		editingExecDateId = null;
+		editingExecDateValue = '';
+		editingExecDateError = '';
+	}
+
+	async function saveExecDate(exec: ExecRow) {
+		if (!editingExecDateValue) {
+			editingExecDateError = 'Selecciona una fecha';
+			return;
+		}
+		const formData = new URLSearchParams({
+			id: exec.id,
+			fecha_programada: editingExecDateValue
+		});
+
+		const res = await fetch($page.url.pathname + '?/reprogram_execution', {
+			method: 'POST',
+			body: formData
+		});
+
+		if (res.ok) {
+			editingExecDateId = null;
+			editingExecDateValue = '';
+			editingExecDateError = '';
+			addToast('Fecha reprogramada correctamente');
+			await invalidate($page.url.pathname);
+		} else {
+			const body = await res.json().catch(() => ({}));
+			const msg = typeof body.error === 'string' ? body.error : 'Error al reprogramar';
+			editingExecDateError = msg;
+		}
+	}
+
+	function isOverdue(exec: ExecRow): boolean {
+		return exec.resultado === 'pendiente' && exec.fecha_programada < todayStr;
+	}
+
 	function getLastExecution(plan: PlanRow): ExecRow | null {
 		if (!plan.ejecuciones || plan.ejecuciones.length === 0) return null;
 		return plan.ejecuciones[0];
@@ -227,6 +321,7 @@
 		equipmentList = data.equipment;
 		equipmentTypesList = data.equipmentTypes;
 		technicians = data.technicians;
+		overdueCount = data.overdueCount;
 	});
 
 	$effect(() => {
@@ -249,14 +344,28 @@
 				Gestiona planes, tareas y ejecuciones de mantenimiento
 			</p>
 		</div>
-		<button
-			onclick={openCreatePlan}
-			class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-		>
-			<Plus class="h-4 w-4" />
-			Nuevo Plan
-		</button>
+		{#if !isConsultor}
+			<button
+				onclick={openCreatePlan}
+				class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
+			>
+				<Plus class="h-4 w-4" />
+				Nuevo Plan
+			</button>
+		{/if}
 	</div>
+
+	<!-- Overdue banner -->
+	{#if overdueCount > 0}
+		<div
+			class="flex items-center gap-3 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
+		>
+			<AlertTriangle class="h-5 w-5 shrink-0" />
+			<span class="font-medium">
+				{overdueCount} ejecuciones vencidas por programar
+			</span>
+		</div>
+	{/if}
 
 	<!-- Plans list -->
 	{#if plans.length === 0}
@@ -291,24 +400,26 @@
 							</p>
 						</div>
 						<div class="ml-4 flex shrink-0 items-center gap-2">
-							<ActionIconButton
-								icon={Pencil}
-								variant="edit"
-								onclick={(e: MouseEvent) => {
-									e.stopPropagation();
-									openEditPlan(plan);
-								}}
-								label="Editar plan"
-							/>
-							<ActionIconButton
-								icon={Trash2}
-								variant="delete"
-								onclick={(e: MouseEvent) => {
-									e.stopPropagation();
-									openDeletePlan(plan);
-								}}
-								label="Eliminar plan"
-							/>
+							{#if !isConsultor}
+								<ActionIconButton
+									icon={Pencil}
+									variant="edit"
+									onclick={(e: MouseEvent) => {
+										e.stopPropagation();
+										openEditPlan(plan);
+									}}
+									label="Editar plan"
+								/>
+								<ActionIconButton
+									icon={Trash2}
+									variant="delete"
+									onclick={(e: MouseEvent) => {
+										e.stopPropagation();
+										openDeletePlan(plan);
+									}}
+									label="Eliminar plan"
+								/>
+							{/if}
 							<svg
 								class="h-5 w-5 text-muted-foreground transition-transform {expandedPlanId ===
 								plan.id
@@ -381,18 +492,20 @@
 														{:else}—{/if}
 													</td>
 													<td data-label="Acción" class="px-4 py-2.5 text-right">
-														<ActionIconButton
-															icon={Pencil}
-															variant="edit"
-															onclick={() => openEditTask(task)}
-															label="Editar tarea"
-														/>
-														<ActionIconButton
-															icon={Trash2}
-															variant="delete"
-															onclick={() => openDeleteTask(task)}
-															label="Eliminar tarea"
-														/>
+														{#if !isConsultor}
+															<ActionIconButton
+																icon={Pencil}
+																variant="edit"
+																onclick={() => openEditTask(task)}
+																label="Editar tarea"
+															/>
+															<ActionIconButton
+																icon={Trash2}
+																variant="delete"
+																onclick={() => openDeleteTask(task)}
+																label="Eliminar tarea"
+															/>
+														{/if}
 													</td>
 												</tr>
 											{/each}
@@ -403,21 +516,23 @@
 
 							<!-- Actions row -->
 							<div class="flex flex-wrap items-center gap-3">
-								<button
-									onclick={() => openAddTask(plan.id)}
-									class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
-								>
-									<Plus class="h-3.5 w-3.5" />
-									Agregar Tarea
-								</button>
+								{#if !isConsultor}
+									<button
+										onclick={() => openAddTask(plan.id)}
+										class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+									>
+										<Plus class="h-3.5 w-3.5" />
+										Agregar Tarea
+									</button>
 
-								<button
-									onclick={() => openSchedule(plan)}
-									class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-hover"
-								>
-									<Calendar class="h-3.5 w-3.5" />
-									Programar Ejecución
-								</button>
+									<button
+										onclick={() => openSchedule(plan)}
+										class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-hover"
+									>
+										<Calendar class="h-3.5 w-3.5" />
+										Programar Ejecución
+									</button>
+								{/if}
 
 								<div class="flex-1 text-right text-xs text-muted-foreground">
 									{#if getLastExecution(plan)}
@@ -438,7 +553,9 @@
 									</h4>
 									<div class="max-h-48 space-y-1.5 overflow-y-auto">
 										{#each plan.ejecuciones.slice(0, 5) as exec (exec.id)}
-											<div class="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm">
+											<div
+												class="flex flex-wrap items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm"
+											>
 												<Badge
 													text={resultLabels[exec.resultado] ?? exec.resultado}
 													variant={resultBadgeVariant[exec.resultado] ?? 'default'}
@@ -446,18 +563,62 @@
 												<span class="text-muted-foreground"
 													>{formatDate(exec.fecha_programada)}</span
 												>
+												{#if isOverdue(exec)}
+													<Badge text="Vencida" variant="danger" />
+												{/if}
 												{#if exec.fecha_ejecucion}
 													<span class="text-muted-foreground"
 														>&rarr; {formatDate(exec.fecha_ejecucion)}</span
 													>
 												{/if}
-												{#if exec.resultado === 'pendiente'}
-													<button
-														onclick={() => openCompleteExec(exec)}
-														class="ml-auto text-xs font-medium text-primary hover:underline"
-													>
-														Completar
-													</button>
+												{#if exec.resultado === 'pendiente' && !isConsultor}
+													{#if editingExecDateId === exec.id}
+														<span class="ml-auto flex flex-wrap items-center gap-2">
+															<input
+																type="date"
+																bind:value={editingExecDateValue}
+																min={todayStr}
+																class="rounded-lg border border-border bg-card px-2 py-1 text-xs text-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+															/>
+															<button
+																onclick={() => saveExecDate(exec)}
+																class="text-xs font-medium text-primary hover:underline"
+															>
+																Guardar
+															</button>
+															<button
+																onclick={cancelEditDate}
+																class="text-xs font-medium text-muted-foreground hover:underline"
+															>
+																Cancelar
+															</button>
+														</span>
+														{#if editingExecDateError}
+															<span class="w-full text-xs text-red-500">{editingExecDateError}</span
+															>
+														{/if}
+													{:else}
+														<span class="ml-auto flex items-center gap-3">
+															<button
+																onclick={() => openEditDate(exec)}
+																class="text-xs font-medium text-muted-foreground hover:underline"
+															>
+																Editar fecha
+															</button>
+															<button
+																onclick={() => openCompleteExec(exec)}
+																class="text-xs font-medium text-primary hover:underline"
+															>
+																Completar
+															</button>
+															<button
+																onclick={() => openCancelExec(exec)}
+																class="text-xs font-medium text-red-500 hover:underline"
+															>
+																Cancelar
+															</button>
+														</span>
+													{/if}
 												{/if}
 											</div>
 										{/each}
@@ -914,5 +1075,18 @@
 			showDeleteTask = false;
 			deletingTask = null;
 		}}
+	/>
+
+	<!-- Confirm cancel execution -->
+	<ConfirmDialog
+		bind:open={showCancelExec}
+		title="Cancelar Ejecución"
+		message={cancelingExec
+			? `¿Estás seguro de cancelar la ejecución pendiente del ${formatDate(cancelingExec.fecha_programada)}?`
+			: ''}
+		confirmLabel="Cancelar ejecución"
+		variant="danger"
+		onconfirm={confirmCancelExec}
+		oncancel={closeCancelExec}
 	/>
 </div>
