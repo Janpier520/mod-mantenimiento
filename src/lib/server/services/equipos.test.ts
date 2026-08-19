@@ -174,7 +174,12 @@ describe('equipos service', () => {
 
 	it('writes no history row on a same-state update', async () => {
 		const res = await updateEquipo(
-			{ ...baseInput(), id: ids.eqPrestadoId, estado: 'prestado' },
+			{
+				...baseInput(),
+				id: ids.eqPrestadoId,
+				estado: 'prestado',
+				numero_serie: 'SN-SVC-PRESTADO-001'
+			},
 			adminActor()
 		);
 		expect(res).toEqual({ ok: true, data: { id: ids.eqPrestadoId } });
@@ -183,5 +188,49 @@ describe('equipos service', () => {
 			where: eq(equipment_status_history.equipo_id, ids.eqPrestadoId)
 		});
 		expect(history).toHaveLength(0);
+	});
+
+	it('rejects creating an equipment whose serial is already in use', async () => {
+		const first = await createEquipo({ ...baseInput(), numero_serie: 'SN-DUP-001' });
+		expect(first.ok).toBe(true);
+
+		const dup = await createEquipo({
+			...baseInput(),
+			modelo: 'Otro modelo',
+			numero_serie: 'SN-DUP-001'
+		});
+		expect(dup).toEqual({
+			ok: false,
+			error: 'El número de serie ya está registrado',
+			status: 400
+		});
+	});
+
+	it('rejects updating an equipment to a serial used by another equipment', async () => {
+		const a = await createEquipo({ ...baseInput(), numero_serie: 'SN-DUP-A' });
+		const b = await createEquipo({ ...baseInput(), modelo: 'Modelo B', numero_serie: 'SN-DUP-B' });
+		expect(a.ok && b.ok).toBe(true);
+		const bId = b.ok ? b.data.id : '';
+
+		const res = await updateEquipo(
+			{ ...baseInput(), id: bId, modelo: 'Modelo B', numero_serie: 'SN-DUP-A' },
+			adminActor()
+		);
+		expect(res).toEqual({
+			ok: false,
+			error: 'El número de serie ya está registrado',
+			status: 400
+		});
+
+		const row = await db.query.equipment.findFirst({ where: eq(equipment.id, bId) });
+		expect(row?.numero_serie).toBe('SN-DUP-B');
+	});
+
+	it('allows updating an equipment while keeping its own serial', async () => {
+		const res = await updateEquipo(
+			{ ...baseInput(), id: ids.eqBajaId, numero_serie: 'SN-TEST-004', estado: 'dado_de_baja' },
+			adminActor()
+		);
+		expect(res).toEqual({ ok: true, data: { id: ids.eqBajaId } });
 	});
 });

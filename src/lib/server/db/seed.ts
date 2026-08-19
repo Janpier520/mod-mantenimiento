@@ -49,7 +49,8 @@ async function seedUser(
 	password: string,
 	nombre: string,
 	apellido: string,
-	rol: 'admin' | 'tecnico' | 'consultor'
+	rol: 'admin' | 'tecnico' | 'consultor',
+	security?: { question1: string; answer1: string; question2: string; answer2: string }
 ) {
 	const existing = await db.query.users.findFirst({
 		where: (users, { eq }) => eq(users.username, username)
@@ -63,7 +64,11 @@ async function seedUser(
 			nombre,
 			apellido,
 			rol,
-			activo: true
+			activo: true,
+			security_question_1: security?.question1 ?? '',
+			security_answer_hash_1: security?.answer1 ? await hashPassword(security.answer1) : '',
+			security_question_2: security?.question2 ?? '',
+			security_answer_hash_2: security?.answer2 ? await hashPassword(security.answer2) : ''
 		});
 		console.log(`  ✅ User "${username}" created (${username} / ${password})`);
 	} else {
@@ -164,14 +169,25 @@ export async function seed() {
 		console.log('📦 Creating demo data...');
 
 		// ── Additional users ──
-		await seedUser('tecnico1', 'carlos@equiplab.com', 'tecnico123', 'Carlos', 'Méndez', 'tecnico');
+		await seedUser('tecnico1', 'carlos@equiplab.com', 'tecnico123', 'Carlos', 'Méndez', 'tecnico', {
+			question1: '¿Cuál es tu color favorito?',
+			answer1: 'tecnico',
+			question2: '¿En qué ciudad naciste?',
+			answer2: 'tecnico'
+		});
 		await seedUser(
 			'consultor1',
 			'laura@equiplab.com',
 			'consultor123',
 			'Laura',
 			'Rivas',
-			'consultor'
+			'consultor',
+			{
+				question1: '¿Cuál es tu comida favorita?',
+				answer1: 'consultor',
+				question2: '¿Cuál es tu apellido materno?',
+				answer2: 'consultor'
+			}
 		);
 
 		// ── Resolve IDs ──

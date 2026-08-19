@@ -1,5 +1,13 @@
 import { db } from '$lib/server/db';
-import { users, tickets, pm_executions } from '$lib/server/db/schema';
+import {
+	users,
+	tickets,
+	pm_executions,
+	ticket_comments,
+	ticket_attachments,
+	equipment_status_history,
+	activity_log
+} from '$lib/server/db/schema';
 import { hashPassword } from '$lib/server/auth';
 import {
 	validateEmail,
@@ -19,6 +27,10 @@ export interface CreateUserInput {
 	password: string;
 	rol: string;
 	activo: boolean;
+	security_question_1: string;
+	security_answer_1: string;
+	security_question_2: string;
+	security_answer_2: string;
 }
 export interface UpdateUserInput {
 	id: string;
@@ -28,6 +40,10 @@ export interface UpdateUserInput {
 	password: string;
 	rol: string;
 	activo: boolean;
+	security_question_1?: string;
+	security_answer_1?: string;
+	security_question_2?: string;
+	security_answer_2?: string;
 }
 export interface DeleteUserInput {
 	id: string;
@@ -36,7 +52,19 @@ export interface DeleteUserInput {
 export type UserResult = ServiceResult<{ id: string }>;
 
 export async function createUser(input: CreateUserInput): Promise<UserResult> {
-	const { username, email, nombre, apellido, password, rol, activo } = input;
+	const {
+		username,
+		email,
+		nombre,
+		apellido,
+		password,
+		rol,
+		activo,
+		security_question_1,
+		security_answer_1,
+		security_question_2,
+		security_answer_2
+	} = input;
 
 	const errors: string[] = [];
 	if (!username.trim()) errors.push('El nombre de usuario es obligatorio');
@@ -49,6 +77,14 @@ export async function createUser(input: CreateUserInput): Promise<UserResult> {
 	if (emailError) errors.push(emailError);
 	const rolValid = ['admin', 'tecnico', 'consultor'].includes(rol);
 	if (!rolValid) errors.push('Rol no válido');
+	const q1 = security_question_1.trim();
+	const a1 = security_answer_1.trim();
+	const q2 = security_question_2.trim();
+	const a2 = security_answer_2.trim();
+	if (!q1) errors.push('La pregunta de seguridad 1 es obligatoria');
+	if (!a1) errors.push('La respuesta de seguridad 1 es obligatoria');
+	if (!q2) errors.push('La pregunta de seguridad 2 es obligatoria');
+	if (!a2) errors.push('La respuesta de seguridad 2 es obligatoria');
 	if (errors.length > 0) {
 		return { ok: false, error: errors.join('. '), status: 400 };
 	}
@@ -69,7 +105,11 @@ export async function createUser(input: CreateUserInput): Promise<UserResult> {
 			apellido: apellido.trim(),
 			password_hash: await hashPassword(password),
 			rol: rol as 'admin' | 'tecnico' | 'consultor',
-			activo
+			activo,
+			security_question_1: q1,
+			security_answer_hash_1: await hashPassword(a1),
+			security_question_2: q2,
+			security_answer_hash_2: await hashPassword(a2)
 		})
 		.returning({ id: users.id });
 
@@ -77,7 +117,19 @@ export async function createUser(input: CreateUserInput): Promise<UserResult> {
 }
 
 export async function updateUser(input: UpdateUserInput): Promise<UserResult> {
-	const { id, nombre, apellido, email, password, rol, activo } = input;
+	const {
+		id,
+		nombre,
+		apellido,
+		email,
+		password,
+		rol,
+		activo,
+		security_question_1,
+		security_answer_1,
+		security_question_2,
+		security_answer_2
+	} = input;
 
 	if (!id) return { ok: false, error: 'ID de usuario no proporcionado', status: 400 };
 
@@ -96,6 +148,12 @@ export async function updateUser(input: UpdateUserInput): Promise<UserResult> {
 		const pwError = validatePasswordStrength(password);
 		if (pwError) errors.push(pwError);
 	}
+	const secAnswer1 = (security_answer_1 ?? '').trim();
+	const secAnswer2 = (security_answer_2 ?? '').trim();
+	if (secAnswer1 && !(security_question_1 ?? '').trim())
+		errors.push('Debes seleccionar la pregunta de seguridad 1');
+	if (secAnswer2 && !(security_question_2 ?? '').trim())
+		errors.push('Debes seleccionar la pregunta de seguridad 2');
 	if (errors.length > 0) {
 		return { ok: false, error: errors.join('. '), status: 400 };
 	}
@@ -128,6 +186,16 @@ export async function updateUser(input: UpdateUserInput): Promise<UserResult> {
 
 	if (password) {
 		updateData.password_hash = await hashPassword(password);
+	}
+
+	// Empty answer keeps the current security question/answer unchanged
+	if (secAnswer1) {
+		updateData.security_question_1 = (security_question_1 ?? '').trim();
+		updateData.security_answer_hash_1 = await hashPassword(secAnswer1);
+	}
+	if (secAnswer2) {
+		updateData.security_question_2 = (security_question_2 ?? '').trim();
+		updateData.security_answer_hash_2 = await hashPassword(secAnswer2);
 	}
 
 	await db.update(users).set(updateData).where(eq(users.id, id));
@@ -175,6 +243,30 @@ export async function deleteUser(input: DeleteUserInput, actor: Actor): Promise<
 		return {
 			ok: false,
 			error: `No se puede eliminar: el usuario tiene ${pmRefs.count} ejecución(es) de mantenimiento asociada(s)`,
+			status: 400
+		};
+	}
+
+	// PRAGMA foreign_keys=ON would raise an unhandled FK error on delete unless
+	// every referencing table is checked first.
+	const otherRefs = await Promise.all([
+		db.select({ count: count() }).from(ticket_comments).where(eq(ticket_comments.usuario_id, id)),
+		db
+			.select({ count: count() })
+			.from(ticket_attachments)
+			.where(eq(ticket_attachments.uploaded_by, id)),
+		db
+			.select({ count: count() })
+			.from(equipment_status_history)
+			.where(eq(equipment_status_history.cambiado_por, id)),
+		db.select({ count: count() }).from(activity_log).where(eq(activity_log.usuario_id, id))
+	]);
+	const totalRefs = otherRefs.reduce((sum, [r]) => sum + r.count, 0);
+
+	if (totalRefs > 0) {
+		return {
+			ok: false,
+			error: 'No se puede eliminar: el usuario tiene actividad registrada en el sistema',
 			status: 400
 		};
 	}

@@ -99,7 +99,11 @@ export const actions: Actions = {
 				apellido: (form.get('apellido') as string) ?? '',
 				password: (form.get('password') as string) ?? '',
 				rol: (form.get('rol') as string) ?? 'tecnico',
-				activo: form.get('activo') === 'on'
+				activo: form.get('activo') === 'on',
+				security_question_1: (form.get('security_question_1') as string) ?? '',
+				security_answer_1: (form.get('security_answer_1') as string) ?? '',
+				security_question_2: (form.get('security_question_2') as string) ?? '',
+				security_answer_2: (form.get('security_answer_2') as string) ?? ''
 			});
 			if (!res.ok) return fail(res.status ?? 400, { error: res.error, _action });
 			return { success: true, _action };
@@ -113,7 +117,11 @@ export const actions: Actions = {
 				email: (form.get('email') as string) ?? '',
 				password: (form.get('password') as string) ?? '',
 				rol: (form.get('rol') as string) ?? 'tecnico',
-				activo: form.get('activo') === 'on'
+				activo: form.get('activo') === 'on',
+				security_question_1: (form.get('security_question_1') as string) ?? '',
+				security_answer_1: (form.get('security_answer_1') as string) ?? '',
+				security_question_2: (form.get('security_question_2') as string) ?? '',
+				security_answer_2: (form.get('security_answer_2') as string) ?? ''
 			});
 			if (!res.ok) return fail(res.status ?? 400, { error: res.error, _action });
 			return { success: true, _action };

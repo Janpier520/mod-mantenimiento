@@ -16,8 +16,6 @@
 	import { addToast } from '$lib/stores/toast.svelte';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Eye from '@lucide/svelte/icons/eye';
-	import EyeOff from '@lucide/svelte/icons/eye-off';
 
 	let { data } = $props();
 
@@ -44,7 +42,17 @@
 	let deletingUser = $state<UsuarioRow | null>(null);
 	let formError = $state('');
 	let fieldErrors = $state<Record<string, string>>({});
-	let showPassword = $state(false);
+
+	const SECURITY_QUESTIONS = [
+		{ value: '¿Cuál es tu color favorito?', label: '¿Cuál es tu color favorito?' },
+		{
+			value: '¿Cuál es el nombre de tu primera mascota?',
+			label: '¿Cuál es el nombre de tu primera mascota?'
+		},
+		{ value: '¿En qué ciudad naciste?', label: '¿En qué ciudad naciste?' },
+		{ value: '¿Cuál es tu comida favorita?', label: '¿Cuál es tu comida favorita?' },
+		{ value: '¿Cuál es tu apellido materno?', label: '¿Cuál es tu apellido materno?' }
+	];
 
 	// Server error messages routed to the matching form field
 	const fieldErrorMessages: Record<string, string[]> = {
@@ -65,7 +73,17 @@
 			'debe tener al menos 6 caracteres',
 			'no puede tener más de 128 caracteres'
 		],
-		rol: ['Rol no válido', 'No podés desactivar o cambiar el rol del último administrador']
+		rol: ['Rol no válido', 'No podés desactivar o cambiar el rol del último administrador'],
+		security_question_1: [
+			'La pregunta de seguridad 1 es obligatoria',
+			'Debes seleccionar la pregunta de seguridad 1'
+		],
+		security_answer_1: ['La respuesta de seguridad 1 es obligatoria'],
+		security_question_2: [
+			'La pregunta de seguridad 2 es obligatoria',
+			'Debes seleccionar la pregunta de seguridad 2'
+		],
+		security_answer_2: ['La respuesta de seguridad 2 es obligatoria']
 	};
 
 	// Form fields
@@ -76,6 +94,10 @@
 	let formPassword = $state('');
 	let formRol = $state('tecnico');
 	let formActivo = $state(true);
+	let formQuestion1 = $state('');
+	let formAnswer1 = $state('');
+	let formQuestion2 = $state('');
+	let formAnswer2 = $state('');
 
 	let isEditing = $derived(editingUser !== null);
 	let modalTitle = $derived(isEditing ? 'Editar Usuario' : 'Nuevo Usuario');
@@ -113,7 +135,10 @@
 		formPassword = '';
 		formRol = 'tecnico';
 		formActivo = true;
-		showPassword = false;
+		formQuestion1 = '';
+		formAnswer1 = '';
+		formQuestion2 = '';
+		formAnswer2 = '';
 		formError = '';
 		fieldErrors = {};
 		showModal = true;
@@ -128,7 +153,10 @@
 		formPassword = '';
 		formRol = u.rol ?? 'tecnico';
 		formActivo = u.activo ?? true;
-		showPassword = false;
+		formQuestion1 = '';
+		formAnswer1 = '';
+		formQuestion2 = '';
+		formAnswer2 = '';
 		formError = '';
 		fieldErrors = {};
 		showModal = true;
@@ -333,12 +361,32 @@
 						bind:value={formUsername}
 						required
 						disabled={isEditing}
+						error={fieldErrors['username']}
 					/>
-					<FormField label="Email" name="email" type="email" bind:value={formEmail} required />
+					<FormField
+						label="Email"
+						name="email"
+						type="email"
+						bind:value={formEmail}
+						required
+						error={fieldErrors['email']}
+					/>
 				</div>
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<FormField label="Nombre" name="nombre" bind:value={formNombre} required />
-					<FormField label="Apellido" name="apellido" bind:value={formApellido} required />
+					<FormField
+						label="Nombre"
+						name="nombre"
+						bind:value={formNombre}
+						required
+						error={fieldErrors['nombre']}
+					/>
+					<FormField
+						label="Apellido"
+						name="apellido"
+						bind:value={formApellido}
+						required
+						error={fieldErrors['apellido']}
+					/>
 				</div>
 
 				{#if isEditing}
@@ -354,7 +402,11 @@
 							name="password"
 							bind:value={formPassword}
 							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+							class:border-destructive={!!fieldErrors['password']}
 						/>
+						{#if fieldErrors['password']}
+							<p class="text-xs text-destructive">{fieldErrors['password']}</p>
+						{/if}
 					</div>
 				{:else}
 					<FormField
@@ -363,8 +415,102 @@
 						type="password"
 						bind:value={formPassword}
 						required
+						error={fieldErrors['password']}
 					/>
 				{/if}
+
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<div class="space-y-1.5">
+						<label
+							for="field-security_question_1"
+							class="block text-sm font-medium text-foreground"
+						>
+							Pregunta de Seguridad 1
+							{#if !isEditing}<span class="ml-0.5 text-red-500">*</span>{/if}
+						</label>
+						<select
+							id="field-security_question_1"
+							name="security_question_1"
+							bind:value={formQuestion1}
+							required={!isEditing}
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+						>
+							<option value="" disabled>Seleccionar pregunta</option>
+							{#each SECURITY_QUESTIONS as q (q.value)}
+								<option value={q.value}>{q.label}</option>
+							{/each}
+						</select>
+						{#if fieldErrors['security_question_1']}
+							<p class="text-xs text-destructive">{fieldErrors['security_question_1']}</p>
+						{/if}
+					</div>
+					<div class="space-y-1.5">
+						<label for="field-security_answer_1" class="block text-sm font-medium text-foreground">
+							Respuesta de Seguridad 1
+							{#if !isEditing}<span class="ml-0.5 text-red-500">*</span>{/if}
+							{#if isEditing}
+								<span class="text-xs text-muted-foreground">(vacía = mantener actual)</span>
+							{/if}
+						</label>
+						<input
+							id="field-security_answer_1"
+							type="password"
+							name="security_answer_1"
+							bind:value={formAnswer1}
+							required={!isEditing}
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+						/>
+						{#if fieldErrors['security_answer_1']}
+							<p class="text-xs text-destructive">{fieldErrors['security_answer_1']}</p>
+						{/if}
+					</div>
+				</div>
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<div class="space-y-1.5">
+						<label
+							for="field-security_question_2"
+							class="block text-sm font-medium text-foreground"
+						>
+							Pregunta de Seguridad 2
+							{#if !isEditing}<span class="ml-0.5 text-red-500">*</span>{/if}
+						</label>
+						<select
+							id="field-security_question_2"
+							name="security_question_2"
+							bind:value={formQuestion2}
+							required={!isEditing}
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+						>
+							<option value="" disabled>Seleccionar pregunta</option>
+							{#each SECURITY_QUESTIONS as q (q.value)}
+								<option value={q.value}>{q.label}</option>
+							{/each}
+						</select>
+						{#if fieldErrors['security_question_2']}
+							<p class="text-xs text-destructive">{fieldErrors['security_question_2']}</p>
+						{/if}
+					</div>
+					<div class="space-y-1.5">
+						<label for="field-security_answer_2" class="block text-sm font-medium text-foreground">
+							Respuesta de Seguridad 2
+							{#if !isEditing}<span class="ml-0.5 text-red-500">*</span>{/if}
+							{#if isEditing}
+								<span class="text-xs text-muted-foreground">(vacía = mantener actual)</span>
+							{/if}
+						</label>
+						<input
+							id="field-security_answer_2"
+							type="password"
+							name="security_answer_2"
+							bind:value={formAnswer2}
+							required={!isEditing}
+							class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+						/>
+						{#if fieldErrors['security_answer_2']}
+							<p class="text-xs text-destructive">{fieldErrors['security_answer_2']}</p>
+						{/if}
+					</div>
+				</div>
 
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<div class="space-y-1.5">
@@ -382,6 +528,9 @@
 							<option value="tecnico">Técnico</option>
 							<option value="consultor">Consultor</option>
 						</select>
+						{#if fieldErrors['rol']}
+							<p class="text-xs text-destructive">{fieldErrors['rol']}</p>
+						{/if}
 					</div>
 					<div class="flex items-end pb-2.5">
 						<label class="flex items-center gap-2 text-sm text-popover-foreground/80">

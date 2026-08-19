@@ -77,7 +77,11 @@ const createFields = {
 	apellido: 'Usuario',
 	password: 'secret123',
 	rol: 'tecnico',
-	activo: 'on'
+	activo: 'on',
+	security_question_1: '¿Cuál es tu color favorito?',
+	security_answer_1: 'azul',
+	security_question_2: '¿En qué ciudad naciste?',
+	security_answer_2: 'Rosario'
 };
 
 describe('usuarios crud (TC-9)', () => {

@@ -5,7 +5,7 @@ import {
 	tickets,
 	preventive_maintenance_plans
 } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 import {
 	isValidTransition,
 	canTransition,
@@ -43,9 +43,25 @@ function validateEquipoInputs(input: EquipoInput): string | null {
 	return null;
 }
 
+async function isSerialInUse(numeroSerie: string, excludeId?: string): Promise<boolean> {
+	const conditions = [eq(equipment.numero_serie, numeroSerie)];
+	if (excludeId) conditions.push(ne(equipment.id, excludeId));
+	const [row] = await db
+		.select({ id: equipment.id })
+		.from(equipment)
+		.where(and(...conditions))
+		.limit(1);
+	return !!row;
+}
+
 export async function createEquipo(input: EquipoInput): Promise<EquipoResult> {
 	const fieldError = validateEquipoInputs(input);
 	if (fieldError) return { ok: false, error: fieldError, status: 400 };
+
+	const serial = input.numero_serie.trim();
+	if (serial && (await isSerialInUse(serial))) {
+		return { ok: false, error: 'El número de serie ya está registrado', status: 400 };
+	}
 
 	const [row] = await db
 		.insert(equipment)
@@ -53,7 +69,7 @@ export async function createEquipo(input: EquipoInput): Promise<EquipoResult> {
 			tipo_id: input.tipo_id,
 			modelo: input.modelo.trim(),
 			marca: input.marca.trim(),
-			numero_serie: input.numero_serie.trim(),
+			numero_serie: serial || null,
 			estado: input.estado,
 			ubicacion: input.ubicacion.trim(),
 			fecha_adquisicion: input.fecha_adquisicion || null,
@@ -91,6 +107,11 @@ export async function updateEquipo(input: UpdateEquipoInput, actor: Actor): Prom
 		}
 	}
 
+	const serial = input.numero_serie.trim();
+	if (serial && (await isSerialInUse(serial, id))) {
+		return { ok: false, error: 'El número de serie ya está registrado', status: 400 };
+	}
+
 	if (existing.estado !== estado) {
 		await db.insert(equipment_status_history).values({
 			equipo_id: id,
@@ -106,7 +127,7 @@ export async function updateEquipo(input: UpdateEquipoInput, actor: Actor): Prom
 			tipo_id: input.tipo_id,
 			modelo: input.modelo.trim(),
 			marca: input.marca.trim(),
-			numero_serie: input.numero_serie.trim(),
+			numero_serie: serial || null,
 			estado,
 			ubicacion: input.ubicacion.trim(),
 			fecha_adquisicion: input.fecha_adquisicion || null,

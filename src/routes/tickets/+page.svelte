@@ -596,7 +596,7 @@
 						{#each selectedTicket.adjuntos ?? [] as adj (adj.id)}
 							<div class="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm">
 								<a
-									href={`/tickets/attachments/${adj.id}`}
+									href={resolve('/tickets/attachments/[id]', { id: adj.id })}
 									target="_blank"
 									rel="noopener"
 									class="min-w-0 truncate font-medium text-primary hover:underline"

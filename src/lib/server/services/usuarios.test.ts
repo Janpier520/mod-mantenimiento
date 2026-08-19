@@ -5,6 +5,7 @@ import { initTestDb, type SeedIds } from '$lib/server/db/test-helpers';
 import {
 	users,
 	tickets,
+	ticket_comments,
 	preventive_maintenance_plans,
 	pm_tasks,
 	pm_executions
@@ -27,7 +28,11 @@ function createInput() {
 		apellido: 'User',
 		password: 'secret123',
 		rol: 'tecnico',
-		activo: true
+		activo: true,
+		security_question_1: '¿Cuál es tu color favorito?',
+		security_answer_1: 'azul',
+		security_question_2: '¿En qué ciudad naciste?',
+		security_answer_2: 'Rosario'
 	};
 }
 
@@ -61,7 +66,11 @@ describe('usuarios service', () => {
 			apellido: '',
 			password: 'abc',
 			rol: 'tecnico',
-			activo: true
+			activo: true,
+			security_question_1: '',
+			security_answer_1: '',
+			security_question_2: '',
+			security_answer_2: ''
 		});
 		expect(res.ok).toBe(false);
 		if (res.ok) return;
@@ -71,6 +80,10 @@ describe('usuarios service', () => {
 		expect(res.error).toContain('El nombre es obligatorio');
 		expect(res.error).toContain('El apellido es obligatorio');
 		expect(res.error).toContain('La contraseña debe tener al menos 6 caracteres');
+		expect(res.error).toContain('La pregunta de seguridad 1 es obligatoria');
+		expect(res.error).toContain('La respuesta de seguridad 1 es obligatoria');
+		expect(res.error).toContain('La pregunta de seguridad 2 es obligatoria');
+		expect(res.error).toContain('La respuesta de seguridad 2 es obligatoria');
 	});
 
 	it('rejects a duplicate username and a duplicate email with exact errors', async () => {
@@ -253,5 +266,144 @@ describe('usuarios service', () => {
 		const after = await db.query.users.findFirst({ where: eq(users.id, ids.tecnicoId) });
 		expect(after?.password_hash).not.toBe(before?.password_hash);
 		expect(await bcrypt.compare('nueva-clave-456', after!.password_hash)).toBe(true);
+	});
+
+	it('stores security questions and hashed answers on create', async () => {
+		const res = await createUser({
+			...createInput(),
+			username: 'seguridad_user',
+			email: 'seguridad@equiplab.test',
+			security_question_1: '¿Cuál es tu color favorito?',
+			security_answer_1: 'azul',
+			security_question_2: '¿En qué ciudad naciste?',
+			security_answer_2: 'Rosario'
+		});
+		expect(res.ok).toBe(true);
+		const createdId = res.ok ? res.data.id : '';
+		const row = await db.query.users.findFirst({ where: eq(users.id, createdId) });
+		expect(row?.security_question_1).toBe('¿Cuál es tu color favorito?');
+		expect(await bcrypt.compare('azul', row!.security_answer_hash_1)).toBe(true);
+		expect(row?.security_question_2).toBe('¿En qué ciudad naciste?');
+		expect(await bcrypt.compare('Rosario', row!.security_answer_hash_2)).toBe(true);
+	});
+
+	it('rejects create when security questions or answers are missing', async () => {
+		const res = await createUser({
+			...createInput(),
+			username: 'sin_seguridad',
+			email: 'sinseguridad@equiplab.test',
+			security_question_1: '',
+			security_answer_1: '',
+			security_question_2: '',
+			security_answer_2: ''
+		});
+		expect(res.ok).toBe(false);
+		if (res.ok) return;
+		expect(res.status).toBe(400);
+		expect(res.error).toContain('La pregunta de seguridad 1 es obligatoria');
+		expect(res.error).toContain('La respuesta de seguridad 1 es obligatoria');
+		expect(res.error).toContain('La pregunta de seguridad 2 es obligatoria');
+		expect(res.error).toContain('La respuesta de seguridad 2 es obligatoria');
+	});
+
+	it('updates security answers when provided and keeps the other pair', async () => {
+		const created = await createUser({
+			...createInput(),
+			username: 'edit_seguridad',
+			email: 'editseguridad@equiplab.test',
+			security_question_1: '¿Cuál es tu color favorito?',
+			security_answer_1: 'verde',
+			security_question_2: '¿Cuál es tu comida favorita?',
+			security_answer_2: 'pizza'
+		});
+		expect(created.ok).toBe(true);
+		const createdId = created.ok ? created.data.id : '';
+
+		const res = await updateUser({
+			id: createdId,
+			nombre: 'Servicio',
+			apellido: 'User',
+			email: 'editseguridad@equiplab.test',
+			password: '',
+			rol: 'tecnico',
+			activo: true,
+			security_question_1: '¿Cuál es tu color favorito?',
+			security_answer_1: 'rojo',
+			security_question_2: '',
+			security_answer_2: ''
+		});
+		expect(res.ok).toBe(true);
+
+		const row = await db.query.users.findFirst({ where: eq(users.id, createdId) });
+		expect(await bcrypt.compare('rojo', row!.security_answer_hash_1)).toBe(true);
+		expect(await bcrypt.compare('pizza', row!.security_answer_hash_2)).toBe(true);
+	});
+
+	it('keeps security answers unchanged when update leaves them empty', async () => {
+		const created = await createUser({
+			...createInput(),
+			username: 'keep_seguridad',
+			email: 'keepseguridad@equiplab.test',
+			security_question_1: '¿Cuál es tu comida favorita?',
+			security_answer_1: 'asado',
+			security_question_2: '¿Cuál es tu apellido materno?',
+			security_answer_2: 'González'
+		});
+		expect(created.ok).toBe(true);
+		const createdId = created.ok ? created.data.id : '';
+
+		const res = await updateUser({
+			id: createdId,
+			nombre: 'Servicio',
+			apellido: 'User',
+			email: 'keepseguridad@equiplab.test',
+			password: '',
+			rol: 'tecnico',
+			activo: true
+		});
+		expect(res.ok).toBe(true);
+
+		const row = await db.query.users.findFirst({ where: eq(users.id, createdId) });
+		expect(row?.security_question_1).toBe('¿Cuál es tu comida favorita?');
+		expect(await bcrypt.compare('asado', row!.security_answer_hash_1)).toBe(true);
+		expect(row?.security_question_2).toBe('¿Cuál es tu apellido materno?');
+		expect(await bcrypt.compare('González', row!.security_answer_hash_2)).toBe(true);
+	});
+
+	it('blocks deleting a user referenced by a ticket comment', async () => {
+		const [temp] = await db
+			.insert(users)
+			.values({
+				username: 'commenter-svc',
+				email: 'commenter-svc@equiplab.test',
+				password_hash: 'hash',
+				nombre: 'Comentador',
+				apellido: 'User',
+				rol: 'tecnico'
+			})
+			.returning({ id: users.id });
+
+		const [ticket] = await db
+			.insert(tickets)
+			.values({
+				numero_ticket: 'TKT-SVC-COMMENT-001',
+				titulo: 'Ticket con comentario',
+				usuario_reporta: ids.adminId
+			})
+			.returning({ id: tickets.id });
+
+		await db.insert(ticket_comments).values({
+			ticket_id: ticket.id,
+			usuario_id: temp.id,
+			contenido: 'Comentario de referencia'
+		});
+
+		const res = await deleteUser({ id: temp.id }, adminActor());
+		expect(res.ok).toBe(false);
+		if (res.ok) return;
+		expect(res.status).toBe(400);
+		expect(res.error).toBe(
+			'No se puede eliminar: el usuario tiene actividad registrada en el sistema'
+		);
 	});
 });

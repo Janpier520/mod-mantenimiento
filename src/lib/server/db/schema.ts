@@ -76,7 +76,7 @@ export const equipment = sqliteTable(
 		tipo_id: text('tipo_id')
 			.notNull()
 			.references(() => equipment_types.id),
-		numero_serie: text('numero_serie').notNull().default(''),
+		numero_serie: text('numero_serie').unique(),
 		modelo: text('modelo').notNull().default(''),
 		marca: text('marca').notNull().default(''),
 		estado: text('estado', {

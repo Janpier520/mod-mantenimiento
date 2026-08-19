@@ -446,4 +446,63 @@ describe('mantenimiento service', () => {
 			.where(eq(pm_executions.plan_id, planId));
 		expect(cnt.cnt).toBe(2);
 	});
+
+	it('auto-creates the next pendiente execution when the result is fallido', async () => {
+		const planId = await insertPlan('Plan fallido auto');
+		const taskId = await insertTask(planId);
+		const execId = await insertExecution(planId, taskId, 'pendiente', '2026-08-01');
+
+		const res = await completeExecution(
+			{ id: execId, resultado: 'fallido', observaciones: 'sin repuesto' },
+			adminActor()
+		);
+		expect(res).toEqual({ ok: true, data: { id: execId } });
+
+		const execs = await db.query.pm_executions.findMany({
+			where: eq(pm_executions.plan_id, planId)
+		});
+		expect(execs).toHaveLength(2);
+		const next = execs.find((e) => e.resultado === 'pendiente');
+		expect(next?.tarea_id).toBe(taskId);
+		expect(next?.fecha_programada).toBe(addDaysToDate('2026-08-01', 30));
+		expect(next?.ejecutado_por).toBe(ids.tecnicoId);
+	});
+
+	it('auto-creates the next pendiente execution when the result is omitido', async () => {
+		const planId = await insertPlan('Plan omitido auto');
+		const taskId = await insertTask(planId);
+		const execId = await insertExecution(planId, taskId, 'pendiente', '2026-08-01');
+
+		const res = await completeExecution(
+			{ id: execId, resultado: 'omitido', observaciones: 'sin acceso al equipo' },
+			adminActor()
+		);
+		expect(res).toEqual({ ok: true, data: { id: execId } });
+
+		const execs = await db.query.pm_executions.findMany({
+			where: eq(pm_executions.plan_id, planId)
+		});
+		expect(execs).toHaveLength(2);
+		const next = execs.find((e) => e.resultado === 'pendiente');
+		expect(next?.fecha_programada).toBe(addDaysToDate('2026-08-01', 30));
+	});
+
+	it('does not duplicate the next execution on fallido when a pendiente already exists', async () => {
+		const planId = await insertPlan('Plan fallido no dup');
+		const taskId = await insertTask(planId);
+		const execId = await insertExecution(planId, taskId, 'pendiente', '2026-08-01');
+		await insertExecution(planId, taskId, 'pendiente', addDaysToDate('2026-08-01', 30));
+
+		const res = await completeExecution(
+			{ id: execId, resultado: 'fallido', observaciones: '' },
+			adminActor()
+		);
+		expect(res).toEqual({ ok: true, data: { id: execId } });
+
+		const [cnt] = await db
+			.select({ cnt: count() })
+			.from(pm_executions)
+			.where(eq(pm_executions.plan_id, planId));
+		expect(cnt.cnt).toBe(2);
+	});
 });

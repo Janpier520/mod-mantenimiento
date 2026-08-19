@@ -322,7 +322,7 @@ export async function completeExecution(
 		})
 		.where(eq(pm_executions.id, id));
 
-	if (resultado === 'completado') {
+	if (resultado === 'completado' || resultado === 'fallido' || resultado === 'omitido') {
 		await autoScheduleNextExecution(execution);
 	}
 
