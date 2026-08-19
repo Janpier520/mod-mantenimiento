@@ -1,8 +1,10 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { db } from '$lib/server/db';
 import { initTestDb, type SeedIds } from '$lib/server/db/test-helpers';
-import { tickets, ticket_comments } from '$lib/server/db/schema';
-import { eq, count } from 'drizzle-orm';
+import { tickets, ticket_comments, ticket_attachments, activity_log } from '$lib/server/db/schema';
+import { eq, and, count } from 'drizzle-orm';
+import { unlink } from 'node:fs/promises';
+import { join } from 'node:path';
 import { todayISO, addDaysToDate } from '$lib/server/dates';
 import { SLA_DAYS_BY_PRIORITY } from '$lib/server/state-machines';
 import {
@@ -13,6 +15,12 @@ import {
 	addComment
 } from './tickets';
 import type { Actor } from './types';
+
+// Mock unlink so deleteTicket's disk cleanup never touches the real filesystem.
+vi.mock('node:fs/promises', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('node:fs/promises')>();
+	return { ...actual, unlink: vi.fn() };
+});
 
 // NOTE: no it.concurrent in this file — sequential ticket numbering depends on
 // the shared in-memory DB state (mirrors the route crud.test.ts note).
@@ -29,7 +37,7 @@ function tecnicoActor(): Actor {
 async function seedTicket(
 	numero: string,
 	usuarioReporta: string,
-	estado: 'abierto' | 'en_proceso' | 'resuelto' | 'cerrado' = 'abierto'
+	estado: 'abierto' | 'en_proceso' | 'resuelto' | 'cerrado' | 'cancelado' = 'abierto'
 ): Promise<string> {
 	const [row] = await db
 		.insert(tickets)
@@ -308,5 +316,183 @@ describe('tickets service', () => {
 			error: 'Formato de fecha límite no válido (usa YYYY-MM-DD)',
 			status: 400
 		});
+	});
+
+	it('allows abierto → cancelado for admin and consultor', async () => {
+		const ticketId = await seedTicket('TKT-CANC-01', ids.tecnicoId, 'abierto');
+		const upd = await updateTicket(
+			{
+				id: ticketId,
+				titulo: 'Canc 1',
+				descripcion: '',
+				prioridad: 'media',
+				estado: 'cancelado',
+				tecnico_asignado: '',
+				equipo_id: ''
+			},
+			adminActor()
+		);
+		expect(upd).toEqual({ ok: true, data: { id: ticketId } });
+		const row = await db.query.tickets.findFirst({ where: eq(tickets.id, ticketId) });
+		expect(row?.estado).toBe('cancelado');
+	});
+
+	it('blocks tecnico from cancelling a ticket (403)', async () => {
+		const ticketId = await seedTicket('TKT-CANC-02', ids.tecnicoId, 'abierto');
+		const denied = await updateTicket(
+			{
+				id: ticketId,
+				titulo: 'Canc 2',
+				descripcion: '',
+				prioridad: 'media',
+				estado: 'cancelado',
+				tecnico_asignado: '',
+				equipo_id: ''
+			},
+			tecnicoActor()
+		);
+		expect(denied.ok).toBe(false);
+		if (denied.ok) return;
+		expect(denied.status).toBe(403);
+		expect(denied.error).toContain('El rol');
+	});
+
+	it('cancelado is terminal — any update out of it returns 400', async () => {
+		const ticketId = await seedTicket('TKT-CANC-03', ids.tecnicoId, 'cancelado');
+		const res = await updateTicket(
+			{
+				id: ticketId,
+				titulo: 'Canc 3',
+				descripcion: '',
+				prioridad: 'media',
+				estado: 'abierto',
+				tecnico_asignado: '',
+				equipo_id: ''
+			},
+			adminActor()
+		);
+		expect(res).toEqual({
+			ok: false,
+			error: 'Transición de estado no permitida: cancelado → abierto',
+			status: 400
+		});
+	});
+
+	it('allows a tecnico to reopen resuelto → en_proceso', async () => {
+		const ticketId = await seedTicket('TKT-REOPEN-01', ids.tecnicoId, 'resuelto');
+		const upd = await updateTicket(
+			{
+				id: ticketId,
+				titulo: 'Reopen 1',
+				descripcion: '',
+				prioridad: 'media',
+				estado: 'en_proceso',
+				tecnico_asignado: '',
+				equipo_id: ''
+			},
+			tecnicoActor()
+		);
+		expect(upd).toEqual({ ok: true, data: { id: ticketId } });
+		const row = await db.query.tickets.findFirst({ where: eq(tickets.id, ticketId) });
+		expect(row?.estado).toBe('en_proceso');
+	});
+
+	it('createTicket logs a crear activity row', async () => {
+		const res = await createTicket(
+			{ titulo: 'Log crear', descripcion: '', prioridad: 'media', equipo_id: '' },
+			tecnicoActor()
+		);
+		expect(res.ok).toBe(true);
+		const createdId = res.ok ? res.data.id : '';
+		const rows = await db.query.activity_log.findMany({
+			where: and(eq(activity_log.entidad_tipo, 'ticket'), eq(activity_log.entidad_id, createdId))
+		});
+		expect(rows).toHaveLength(1);
+		expect(rows[0].accion).toBe('crear');
+		expect(rows[0].usuario_id).toBe(ids.tecnicoId);
+	});
+
+	it('updateTicket logs a transicion activity row with the state detail', async () => {
+		const ticketId = await seedTicket('TKT-LOG-TRANS', ids.tecnicoId, 'abierto');
+		const upd = await updateTicket(
+			{
+				id: ticketId,
+				titulo: 'Log trans',
+				descripcion: '',
+				prioridad: 'media',
+				estado: 'en_proceso',
+				tecnico_asignado: '',
+				equipo_id: ''
+			},
+			tecnicoActor()
+		);
+		expect(upd.ok).toBe(true);
+		const rows = await db.query.activity_log.findMany({
+			where: and(eq(activity_log.entidad_tipo, 'ticket'), eq(activity_log.entidad_id, ticketId))
+		});
+		expect(
+			rows.some((r) => r.accion === 'transicion' && r.metadata?.detail === 'abierto → en_proceso')
+		).toBe(true);
+	});
+
+	it('updateTicket does not log a transicion row when estado is unchanged', async () => {
+		const ticketId = await seedTicket('TKT-LOG-NOCHANGE', ids.tecnicoId, 'abierto');
+		const upd = await updateTicket(
+			{
+				id: ticketId,
+				titulo: 'No change',
+				descripcion: '',
+				prioridad: 'media',
+				estado: 'abierto',
+				tecnico_asignado: '',
+				equipo_id: ''
+			},
+			tecnicoActor()
+		);
+		expect(upd.ok).toBe(true);
+		const rows = await db.query.activity_log.findMany({
+			where: and(eq(activity_log.entidad_tipo, 'ticket'), eq(activity_log.entidad_id, ticketId))
+		});
+		expect(rows.some((r) => r.accion === 'transicion')).toBe(false);
+	});
+
+	it('addComment logs a comentario activity row', async () => {
+		const ticketId = await seedTicket('TKT-LOG-COMMENT', ids.tecnicoId, 'abierto');
+		await addComment({ ticket_id: ticketId, contenido: 'Avance' }, tecnicoActor());
+		const rows = await db.query.activity_log.findMany({
+			where: and(eq(activity_log.entidad_tipo, 'ticket'), eq(activity_log.entidad_id, ticketId))
+		});
+		expect(rows.some((r) => r.accion === 'comentario')).toBe(true);
+	});
+
+	it('deleteTicket logs an eliminar activity row', async () => {
+		const ticketId = await seedTicket('TKT-LOG-DEL', ids.tecnicoId, 'abierto');
+		const res = await deleteTicket({ id: ticketId }, tecnicoActor());
+		expect(res).toEqual({ ok: true, data: { id: ticketId } });
+		const rows = await db.query.activity_log.findMany({
+			where: and(eq(activity_log.entidad_tipo, 'ticket'), eq(activity_log.entidad_id, ticketId))
+		});
+		expect(rows.some((r) => r.accion === 'eliminar')).toBe(true);
+	});
+
+	it('deleteTicket removes attachment files from disk', async () => {
+		const ticketId = await seedTicket('TKT-LOG-ATT-DEL', ids.tecnicoId, 'abierto');
+		await db.insert(ticket_attachments).values({
+			ticket_id: ticketId,
+			filename: 'doc.pdf',
+			filepath: 'uploads/doc-delete-test.pdf',
+			mime_type: 'application/pdf',
+			uploaded_by: ids.tecnicoId
+		});
+		vi.mocked(unlink).mockClear();
+
+		const res = await deleteTicket({ id: ticketId }, tecnicoActor());
+		expect(res).toEqual({ ok: true, data: { id: ticketId } });
+		expect(unlink).toHaveBeenCalledWith(join(process.cwd(), 'uploads/doc-delete-test.pdf'));
+
+		const remaining = await db.query.ticket_attachments.findMany({
+			where: eq(ticket_attachments.ticket_id, ticketId)
+		});
+		expect(remaining).toHaveLength(0);
 	});
 });

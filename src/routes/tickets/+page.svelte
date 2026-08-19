@@ -11,6 +11,7 @@
 	import Badge from '$lib/ui/Badge.svelte';
 	import ActionIconButton from '$lib/ui/ActionIconButton.svelte';
 	import { addToast } from '$lib/stores/toast.svelte';
+	import { getValidTransitions } from '$lib/server/state-machines';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import PencilIcon from '@lucide/svelte/icons/pencil';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
@@ -91,19 +92,31 @@
 	let isEditing = $derived(editingTicket !== null);
 	let modalTitle = $derived(isEditing ? 'Editar Ticket' : 'Nuevo Ticket');
 
+	let formEstadoOptions = $derived.by(() => {
+		if (!isEditing || !editingTicket) return [];
+		const states = [editingTicket.estado, ...getValidTransitions(editingTicket.estado, 'ticket')];
+		return [...new Set(states)].map((s) => ({ value: s, label: estadoLabels[s] ?? s }));
+	});
+
+	let selectedActivity = $derived(
+		selectedId ? (data.activity ?? []).filter((a) => a.entidad_id === selectedId) : []
+	);
+
 	const estadoBadgeVariant: Record<string, 'default' | 'success' | 'warning' | 'danger' | 'info'> =
 		{
 			abierto: 'info',
 			en_proceso: 'warning',
 			resuelto: 'success',
-			cerrado: 'default'
+			cerrado: 'default',
+			cancelado: 'danger'
 		};
 
 	const estadoLabels: Record<string, string> = {
 		abierto: 'Abierto',
 		en_proceso: 'En Proceso',
 		resuelto: 'Resuelto',
-		cerrado: 'Cerrado'
+		cerrado: 'Cerrado',
+		cancelado: 'Cancelado'
 	};
 
 	const prioridadBadgeVariant: Record<
@@ -237,6 +250,19 @@
 		});
 	}
 
+	const activityActionLabels: Record<string, (detail?: string) => string> = {
+		crear: () => 'Ticket creado',
+		transicion: (detail) => `Cambio de estado: ${detail ?? ''}`,
+		comentario: () => 'Comentario agregado',
+		adjunto: () => 'Archivo adjunto',
+		adjunto_eliminado: () => 'Adjunto eliminado',
+		eliminar: () => 'Ticket eliminado'
+	};
+
+	function getActivityLabel(action: string, detail?: string): string {
+		return activityActionLabels[action]?.(detail) ?? action;
+	}
+
 	function getEquipoLabel(e: (typeof data.equipos)[number] | null | undefined): string {
 		if (!e) return '—';
 		return `${e.marca} ${e.modelo}`;
@@ -253,7 +279,7 @@
 
 	function isVencido(t: TicketRow): boolean {
 		if (!t.fecha_limite) return false;
-		if (t.estado === 'cerrado' || t.estado === 'resuelto') return false;
+		if (t.estado === 'cerrado' || t.estado === 'resuelto' || t.estado === 'cancelado') return false;
 		return t.fecha_limite < new Date().toISOString().slice(0, 10);
 	}
 
@@ -339,7 +365,8 @@
 						{ value: 'abierto', label: 'Abierto' },
 						{ value: 'en_proceso', label: 'En Proceso' },
 						{ value: 'resuelto', label: 'Resuelto' },
-						{ value: 'cerrado', label: 'Cerrado' }
+						{ value: 'cerrado', label: 'Cerrado' },
+						{ value: 'cancelado', label: 'Cancelado' }
 					]
 				},
 				{
@@ -663,6 +690,38 @@
 					<p class="mt-2 text-xs text-red-500">{uploadError}</p>
 				{/if}
 			</div>
+
+			<!-- Activity history -->
+			<div class="mt-6">
+				<hr class="mb-4 border-border" />
+				<h3 class="mb-3 text-sm font-semibold text-foreground">
+					Historial de Actividad ({selectedActivity.length})
+				</h3>
+
+				<div class="mb-4 max-h-64 space-y-3 overflow-y-auto">
+					{#if selectedActivity.length === 0}
+						<p class="text-sm text-muted-foreground">Sin actividad registrada.</p>
+					{:else}
+						{#each selectedActivity as entry (entry.id)}
+							<div class="rounded-lg bg-muted p-3">
+								<div class="flex items-center gap-2 text-xs text-muted-foreground">
+									<span class="font-medium text-foreground">
+										{entry.usuario?.nombre ?? ''}
+										{entry.usuario?.apellido ?? ''}
+									</span>
+									<span>&middot;</span>
+									<span>
+										{new Date(entry.created_at).toLocaleString('es-AR')}
+									</span>
+								</div>
+								<p class="mt-1 text-sm text-foreground">
+									{getActivityLabel(entry.accion, entry.metadata?.detail as string | undefined)}
+								</p>
+							</div>
+						{/each}
+					{/if}
+				</div>
+			</div>
 		</div>
 	{/if}
 
@@ -763,12 +822,7 @@
 							name="estado"
 							type="select"
 							bind:value={formEstado}
-							options={[
-								{ value: 'abierto', label: 'Abierto' },
-								{ value: 'en_proceso', label: 'En Proceso' },
-								{ value: 'resuelto', label: 'Resuelto' },
-								{ value: 'cerrado', label: 'Cerrado' }
-							]}
+							options={formEstadoOptions}
 							error={fieldErrors['estado']}
 						/>
 						<FormField

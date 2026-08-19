@@ -8,10 +8,11 @@ export const EQUIPMENT_TRANSITIONS: Record<string, string[]> = {
 };
 
 export const TICKET_TRANSITIONS: Record<string, string[]> = {
-	abierto: ['en_proceso', 'cerrado'],
-	en_proceso: ['resuelto', 'cerrado'],
-	resuelto: ['cerrado'],
-	cerrado: ['abierto']
+	abierto: ['en_proceso', 'cerrado', 'cancelado'],
+	en_proceso: ['resuelto', 'cerrado', 'cancelado'],
+	resuelto: ['cerrado', 'en_proceso', 'abierto'],
+	cerrado: ['abierto'],
+	cancelado: []
 };
 
 // ─── Valid value constants ────────────────────────────────────────────────────
@@ -22,7 +23,13 @@ export const VALID_EQUIPMENT_STATES = [
 	'prestado',
 	'dado_de_baja'
 ] as const;
-export const VALID_TICKET_STATES = ['abierto', 'en_proceso', 'resuelto', 'cerrado'] as const;
+export const VALID_TICKET_STATES = [
+	'abierto',
+	'en_proceso',
+	'resuelto',
+	'cerrado',
+	'cancelado'
+] as const;
 export const VALID_TICKET_PRIORITIES = ['baja', 'media', 'alta', 'critica'] as const;
 export const VALID_USER_ROLES = ['admin', 'tecnico', 'consultor'] as const;
 export const VALID_PM_RESULTS = ['pendiente', 'completado', 'fallido', 'omitido'] as const;
@@ -64,7 +71,8 @@ export const TICKET_TRANSITION_ROLES: Record<string, string[]> = {
 	abierto: ['admin', 'consultor'],
 	en_proceso: ['admin', 'tecnico'],
 	resuelto: ['admin', 'tecnico'],
-	cerrado: ['admin', 'consultor']
+	cerrado: ['admin', 'consultor'],
+	cancelado: ['admin', 'consultor']
 };
 
 export function canTransition(

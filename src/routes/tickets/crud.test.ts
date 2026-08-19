@@ -3,8 +3,8 @@ import type { RequestEvent } from './$types';
 import { actions } from './+page.server';
 import { db } from '$lib/server/db';
 import { initTestDb, type SeedIds } from '$lib/server/db/test-helpers';
-import { tickets, ticket_comments, ticket_attachments } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { tickets, ticket_comments, ticket_attachments, activity_log } from '$lib/server/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 // Mock only the disk-write step so upload tests never touch the filesystem.
 vi.mock('$lib/server/services/attachments', async (importOriginal) => {
@@ -126,7 +126,7 @@ const createFields = {
 async function seedTicket(
 	numero: string,
 	usuarioReporta: string,
-	estado: 'abierto' | 'en_proceso' | 'resuelto' | 'cerrado' = 'abierto'
+	estado: 'abierto' | 'en_proceso' | 'resuelto' | 'cerrado' | 'cancelado' = 'abierto'
 ): Promise<string> {
 	const [row] = await db
 		.insert(tickets)
@@ -235,6 +235,72 @@ describe('tickets crud (TC-10)', () => {
 		});
 		expect(res.status).toBe(403);
 		expect(res.data?.error).toContain('El rol');
+	});
+
+	it('allows abierto → cancelado for admin', async () => {
+		const ticketId = await seedTicket('TKT-CANCEL-A', ids.tecnicoId, 'abierto');
+		const res = await invokeCrud(adminLocals(), {
+			_action: 'update',
+			id: ticketId,
+			titulo: 'Cancelable',
+			descripcion: '',
+			prioridad: 'media',
+			estado: 'cancelado',
+			tecnico_asignado: '',
+			equipo_id: ''
+		});
+		expect(res).toMatchObject({ success: true, _action: 'update' });
+		const row = await db.query.tickets.findFirst({ where: eq(tickets.id, ticketId) });
+		expect(row?.estado).toBe('cancelado');
+	});
+
+	it('fails abierto → cancelado with 403 for a tecnico', async () => {
+		const ticketId = await seedTicket('TKT-CANCEL-B', ids.tecnicoId, 'abierto');
+		const res = await invokeCrud(tecnicoLocals(), {
+			_action: 'update',
+			id: ticketId,
+			titulo: 'No cancelable',
+			descripcion: '',
+			prioridad: 'media',
+			estado: 'cancelado',
+			tecnico_asignado: '',
+			equipo_id: ''
+		});
+		expect(res.status).toBe(403);
+		expect(res.data?.error).toContain('El rol');
+	});
+
+	it('fails update with 400 out of a cancelado ticket (terminal state)', async () => {
+		const ticketId = await seedTicket('TKT-CANCEL-C', ids.tecnicoId, 'cancelado');
+		const res = await invokeCrud(adminLocals(), {
+			_action: 'update',
+			id: ticketId,
+			titulo: 'Terminal',
+			descripcion: '',
+			prioridad: 'media',
+			estado: 'abierto',
+			tecnico_asignado: '',
+			equipo_id: ''
+		});
+		expect(res.status).toBe(400);
+		expect(res.data?.error).toContain('Transición de estado no permitida: cancelado → abierto');
+	});
+
+	it('allows a tecnico to reopen resuelto → en_proceso', async () => {
+		const ticketId = await seedTicket('TKT-REOPEN-A', ids.tecnicoId, 'resuelto');
+		const res = await invokeCrud(tecnicoLocals(), {
+			_action: 'update',
+			id: ticketId,
+			titulo: 'Reopen',
+			descripcion: '',
+			prioridad: 'media',
+			estado: 'en_proceso',
+			tecnico_asignado: '',
+			equipo_id: ''
+		});
+		expect(res).toMatchObject({ success: true, _action: 'update' });
+		const row = await db.query.tickets.findFirst({ where: eq(tickets.id, ticketId) });
+		expect(row?.estado).toBe('en_proceso');
 	});
 
 	it('delete is blocked for a non-creator non-admin (consultor-created ticket)', async () => {
@@ -412,5 +478,39 @@ describe('tickets crud (TC-10)', () => {
 			where: eq(ticket_attachments.ticket_id, ticketId)
 		});
 		expect(remaining).toHaveLength(0);
+	});
+
+	it('upload_attachment logs an adjunto activity row', async () => {
+		const ticketId = await seedTicket('TKT-ATT-LOG1', ids.tecnicoId);
+		const res = await invokeUpload(
+			tecnicoLocals(),
+			buildUploadFormData(ticketId, new File(['x'], 'log.txt', { type: 'text/plain' }))
+		);
+		expect(res).toMatchObject({ success: true });
+		const rows = await db.query.activity_log.findMany({
+			where: and(eq(activity_log.entidad_tipo, 'ticket'), eq(activity_log.entidad_id, ticketId))
+		});
+		expect(rows.some((r) => r.accion === 'adjunto')).toBe(true);
+	});
+
+	it('delete_attachment logs an adjunto_eliminado activity row', async () => {
+		const ticketId = await seedTicket('TKT-ATT-LOG2', ids.tecnicoId);
+		const upload = await invokeUpload(
+			tecnicoLocals(),
+			buildUploadFormData(ticketId, new File(['x'], 'del.txt', { type: 'text/plain' }))
+		);
+		expect(upload).toMatchObject({ success: true });
+		const rows = await db.query.ticket_attachments.findMany({
+			where: eq(ticket_attachments.ticket_id, ticketId)
+		});
+		expect(rows).toHaveLength(1);
+
+		const res = await invokeDeleteAttachment(tecnicoLocals(), rows[0].id);
+		expect(res).toMatchObject({ success: true, _action: 'delete_attachment' });
+
+		const activity = await db.query.activity_log.findMany({
+			where: and(eq(activity_log.entidad_tipo, 'ticket'), eq(activity_log.entidad_id, ticketId))
+		});
+		expect(activity.some((r) => r.accion === 'adjunto_eliminado')).toBe(true);
 	});
 });

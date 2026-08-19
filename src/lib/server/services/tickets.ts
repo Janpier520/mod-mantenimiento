@@ -1,6 +1,15 @@
 import { db } from '$lib/server/db';
-import { tickets, users, equipment, ticket_comments } from '$lib/server/db/schema';
+import {
+	tickets,
+	users,
+	equipment,
+	ticket_comments,
+	ticket_attachments
+} from '$lib/server/db/schema';
 import { eq, like, count } from 'drizzle-orm';
+import { unlink } from 'node:fs/promises';
+import { join } from 'node:path';
+import { logActivity } from './activity';
 import {
 	isValidTransition,
 	canTransition,
@@ -102,6 +111,13 @@ export async function createTicket(
 		})
 		.returning({ id: tickets.id, numero_ticket: tickets.numero_ticket });
 
+	await logActivity({
+		actor_id: actor.id,
+		action: 'crear',
+		entity_type: 'ticket',
+		entity_id: row.id
+	});
+
 	return { ok: true, data: { id: row.id, numero_ticket: row.numero_ticket } };
 }
 
@@ -188,6 +204,16 @@ export async function updateTicket(
 		})
 		.where(eq(tickets.id, id));
 
+	if (existing.estado !== estado) {
+		await logActivity({
+			actor_id: actor.id,
+			action: 'transicion',
+			entity_type: 'ticket',
+			entity_id: id,
+			detail: `${existing.estado} → ${estado}`
+		});
+	}
+
 	return { ok: true, data: { id } };
 }
 
@@ -206,7 +232,29 @@ export async function deleteTicket(
 		return { ok: false, error: 'No tenés permiso para eliminar este ticket', status: 403 };
 	}
 
+	const attachments = await db.query.ticket_attachments.findMany({
+		where: eq(ticket_attachments.ticket_id, id)
+	});
+
 	await db.delete(tickets).where(eq(tickets.id, id));
+
+	// Best-effort cleanup: remove files from disk so deleting a ticket does not
+	// leak attachments (FK cascade removes the rows, not the files).
+	for (const att of attachments) {
+		try {
+			await unlink(join(process.cwd(), att.filepath));
+		} catch {
+			// ignore missing files — cleanup must not break the deletion
+		}
+	}
+
+	await logActivity({
+		actor_id: actor.id,
+		action: 'eliminar',
+		entity_type: 'ticket',
+		entity_id: id
+	});
+
 	return { ok: true, data: { id } };
 }
 
@@ -230,6 +278,13 @@ export async function addComment(input: AddCommentInput, actor: Actor): Promise<
 			contenido: contenido.trim()
 		})
 		.returning({ id: ticket_comments.id });
+
+	await logActivity({
+		actor_id: actor.id,
+		action: 'comentario',
+		entity_type: 'ticket',
+		entity_id: ticket_id
+	});
 
 	return { ok: true, data: { commentId: row.id } };
 }

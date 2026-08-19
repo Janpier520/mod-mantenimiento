@@ -137,7 +137,7 @@ export const tickets = sqliteTable(
 		titulo: text('titulo').notNull(),
 		descripcion: text('descripcion').notNull().default(''),
 		estado: text('estado', {
-			enum: ['abierto', 'en_proceso', 'resuelto', 'cerrado']
+			enum: ['abierto', 'en_proceso', 'resuelto', 'cerrado', 'cancelado']
 		})
 			.notNull()
 			.default('abierto'),

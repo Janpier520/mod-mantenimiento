@@ -25,14 +25,18 @@ describe('EQUIPMENT_TRANSITIONS', () => {
 });
 
 describe('TICKET_TRANSITIONS', () => {
-	it('maps all four ticket states', () => {
+	it('maps all five ticket states', () => {
 		expect(Object.keys(TICKET_TRANSITIONS).sort()).toEqual(
-			['abierto', 'cerrado', 'en_proceso', 'resuelto'].sort()
+			['abierto', 'cancelado', 'cerrado', 'en_proceso', 'resuelto'].sort()
 		);
 	});
 
 	it('supports reopening cerrado → abierto', () => {
 		expect(TICKET_TRANSITIONS.cerrado).toContain('abierto');
+	});
+
+	it('cancelado is a sink with no outgoing transitions', () => {
+		expect(TICKET_TRANSITIONS.cancelado).toEqual([]);
 	});
 });
 
@@ -81,6 +85,22 @@ describe('isValidTransition (ticket)', () => {
 		expect(isValidTransition('resuelto', 'cerrado', 'ticket')).toBe(true);
 	});
 
+	it('allows abierto → cancelado and en_proceso → cancelado', () => {
+		expect(isValidTransition('abierto', 'cancelado', 'ticket')).toBe(true);
+		expect(isValidTransition('en_proceso', 'cancelado', 'ticket')).toBe(true);
+	});
+
+	it('allows reopening resuelto → en_proceso and resuelto → abierto', () => {
+		expect(isValidTransition('resuelto', 'en_proceso', 'ticket')).toBe(true);
+		expect(isValidTransition('resuelto', 'abierto', 'ticket')).toBe(true);
+	});
+
+	it('rejects any transition out of the cancelado sink', () => {
+		expect(isValidTransition('cancelado', 'abierto', 'ticket')).toBe(false);
+		expect(isValidTransition('cancelado', 'en_proceso', 'ticket')).toBe(false);
+		expect(isValidTransition('cancelado', 'cerrado', 'ticket')).toBe(false);
+	});
+
 	it('allows reopening cerrado → abierto', () => {
 		expect(isValidTransition('cerrado', 'abierto', 'ticket')).toBe(true);
 	});
@@ -112,8 +132,12 @@ describe('getValidTransitions', () => {
 		expect(getValidTransitions('inexistente', 'ticket')).toEqual([]);
 	});
 
-	it('returns only cerrado for resuelto tickets', () => {
-		expect(getValidTransitions('resuelto', 'ticket')).toEqual(['cerrado']);
+	it('returns cerrado, en_proceso and abierto for resuelto tickets', () => {
+		expect(getValidTransitions('resuelto', 'ticket')).toEqual(['cerrado', 'en_proceso', 'abierto']);
+	});
+
+	it('returns no transitions for cancelado tickets (terminal)', () => {
+		expect(getValidTransitions('cancelado', 'ticket')).toEqual([]);
 	});
 
 	it('returns abierto for cerrado tickets (reopen)', () => {
@@ -167,6 +191,19 @@ describe('canTransition (ticket)', () => {
 		const res = canTransition('cerrado', 'abierto', 'tecnico', 'ticket');
 		expect(res.allowed).toBe(false);
 	});
+
+	it('allows tecnico to reopen resuelto → en_proceso', () => {
+		const res = canTransition('resuelto', 'en_proceso', 'tecnico', 'ticket');
+		expect(res.allowed).toBe(true);
+	});
+
+	it('allows admin and consultor to cancelado, blocks tecnico', () => {
+		expect(canTransition('abierto', 'cancelado', 'admin', 'ticket').allowed).toBe(true);
+		expect(canTransition('en_proceso', 'cancelado', 'consultor', 'ticket').allowed).toBe(true);
+		const res = canTransition('abierto', 'cancelado', 'tecnico', 'ticket');
+		expect(res.allowed).toBe(false);
+		expect(res.error).toContain('El rol');
+	});
 });
 
 describe('VALID state constants', () => {
@@ -177,6 +214,12 @@ describe('VALID state constants', () => {
 			'prestado',
 			'dado_de_baja'
 		]);
-		expect(VALID_TICKET_STATES).toEqual(['abierto', 'en_proceso', 'resuelto', 'cerrado']);
+		expect(VALID_TICKET_STATES).toEqual([
+			'abierto',
+			'en_proceso',
+			'resuelto',
+			'cerrado',
+			'cancelado'
+		]);
 	});
 });

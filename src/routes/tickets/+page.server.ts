@@ -1,12 +1,13 @@
 import { db } from '$lib/server/db';
-import { tickets, users, ticket_attachments } from '$lib/server/db/schema';
-import { eq, like, or, and, count } from 'drizzle-orm';
+import { tickets, users, ticket_attachments, activity_log } from '$lib/server/db/schema';
+import { eq, like, or, and, inArray, count } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { escapeLike } from '$lib/server/validators';
 import { requireAuth } from '$lib/server/auth';
 import type { TicketState, TicketPriority } from '$lib/server/state-machines';
 import { createTicket, updateTicket, deleteTicket, addComment } from '$lib/server/services/tickets';
+import { logActivity } from '$lib/server/services/activity';
 import {
 	validateAttachmentUpload,
 	saveAttachmentFile,
@@ -27,7 +28,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			totalPages: 1,
 			search: '',
 			filterEstado: '',
-			filterPrioridad: ''
+			filterPrioridad: '',
+			activity: []
 		};
 	}
 
@@ -101,6 +103,23 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		orderBy: (equipment, { asc }) => [asc(equipment.modelo)]
 	});
 
+	const activity =
+		items.length > 0
+			? await db.query.activity_log.findMany({
+					where: and(
+						eq(activity_log.entidad_tipo, 'ticket'),
+						inArray(
+							activity_log.entidad_id,
+							items.map((t) => t.id)
+						)
+					),
+					with: {
+						usuario: { columns: { id: true, nombre: true, apellido: true } }
+					},
+					orderBy: (activity_log, { desc }) => [desc(activity_log.created_at)]
+				})
+			: [];
+
 	return {
 		tickets: items,
 		tecnicos,
@@ -110,7 +129,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		totalPages,
 		search,
 		filterEstado,
-		filterPrioridad
+		filterPrioridad,
+		activity
 	};
 };
 
@@ -221,6 +241,13 @@ export const actions: Actions = {
 			uploaded_by: locals.user.id
 		});
 
+		await logActivity({
+			actor_id: locals.user.id,
+			action: 'adjunto',
+			entity_type: 'ticket',
+			entity_id: ticket_id
+		});
+
 		return { success: true, _action: 'upload_attachment' };
 	},
 
@@ -255,6 +282,13 @@ export const actions: Actions = {
 
 		await db.delete(ticket_attachments).where(eq(ticket_attachments.id, id));
 		await deleteAttachmentFile(attachment.filepath);
+
+		await logActivity({
+			actor_id: locals.user.id,
+			action: 'adjunto_eliminado',
+			entity_type: 'ticket',
+			entity_id: attachment.ticket_id
+		});
 
 		return { success: true, _action: 'delete_attachment' };
 	}
