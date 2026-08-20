@@ -86,7 +86,7 @@ Los 17 scripts de `package.json`:
 
 **Estrategia de DB en tests**: cada archivo de test usa SQLite en memoria (`DATABASE_URL=file::memory:`, seteado en `src/lib/server/db/test-setup.ts` antes de que cargue el grafo de imports). El helper `src/lib/server/db/test-helpers.ts` expone `initTestDb()` (idempotente por archivo), que hace push programático del esquema con `drizzle-kit/api` y siembra un dataset mínimo con `seedTestData()` (usuarios, tipos, proveedores y equipos en todos los estados).
 
-**Estado a 2026-08-07**: 177 tests (12 archivos) pasando, cobertura de statements 82.3% (665/808).
+**Estado a 2026-08-19**: 233 tests (13 archivos) pasando, cobertura de statements 82.7%.
 
 ## CI
 
@@ -102,7 +102,7 @@ Además sube el reporte de cobertura como artifact. ESLint es un gate obligatori
 
 ## Arquitectura
 
-- **Sin capa de API REST/tRPC**: cada ruta expone server load functions (`+page.server.ts`) y form actions con `use:enhance`. Los adaptadores de ruta son delgados: validan la entrada y delegan la lógica en la capa de servicios `src/lib/server/services/` (`equipos.ts`, `tickets.ts`, `mantenimiento.ts`, `usuarios.ts`).
+- **Sin capa de API REST/tRPC**: cada ruta expone server load functions (`+page.server.ts`) y form actions con `use:enhance`. Los adaptadores de ruta son delgados: validan la entrada y delegan la lógica en la capa de servicios `src/lib/server/services/` (`equipos.ts`, `tickets.ts`, `mantenimiento.ts`, `usuarios.ts`, `attachments.ts`, `activity.ts`).
 - **Auth en `src/hooks.server.ts`**: validación de sesión (cookie httponly, sliding window) + role guard por prefijo de ruta vía `ROLE_ROUTES`.
 - **Schema en un solo archivo**: `src/lib/server/db/schema.ts` con relaciones declarativas; init de la DB en `src/lib/server/db/index.ts` (PRAGMA WAL + busy_timeout).
 - **Layout único**: sidebar fija con navegación filtrada por rol y topbar con logout + toggle de dark mode (clase `.dark` persistida en localStorage).
@@ -137,7 +137,7 @@ Además sube el reporte de cobertura como artifact. ESLint es un gate obligatori
 │   └── lib/
 │       ├── server/
 │       │   ├── db/              # schema.ts, index.ts, seed.ts, test-helpers.ts
-│       │   ├── services/        # capa de servicios (equipos, tickets, mantenimiento, usuarios)
+│       │   ├── services/        # capa de servicios (equipos, tickets, mantenimiento, usuarios, attachments, activity)
 │       │   └── auth.ts          # hash de passwords + sesiones
 │       └── test/mocks/$app      # mocks de $app para vitest
 ├── scripts/
@@ -161,13 +161,22 @@ El proyecto sigue SDD (Spec-Driven Development) con artefactos en `openspec/`:
 
 Flujo de artefactos: `proposal → spec → design → tasks → apply → verify → archive`. Estrategia de PR: stacked-to-main vía feature branches.
 
+## Funcionalidades clave
+
+- **Tickets con SLA**: `fecha_limite` auto-calculada por prioridad (crítica=1d, alta=3d, media=7d, baja=14d), badge "Vencido" en listas y detalle, historial de actividad por ticket (`activity_log`).
+- **Adjuntos en tickets**: upload con filtro MIME y límite de 5 MB (`uploads/` gitignored), descarga con `Content-Disposition`, borrado por propietario/admin (los archivos se eliminan del disco al borrar el ticket).
+- **Mantenimiento preventivo**: planes con frecuencia en días, tareas secuenciadas, programación de ejecuciones, completar con resultado (completado/fallido/omitido) y auto-programación de la siguiente ejecución; cancelar y reprogramar ejecuciones pendientes; alerta de ejecuciones vencidas en la página del módulo.
+- **Historial de actividad**: `activity_log` registra crear/transiciones/comentarios/adjuntos/eliminaciones en tickets y cambios de estado de equipos (`equipment_status_history`).
+- **Control por roles**: `consultor` es solo lectura en toda la app (acciones ocultas en UI y 403 en servidor); `tecnico` ejecuta mantenimiento y trabaja tickets; `admin` administra usuarios, proveedores, tipos y configuración.
+- **Seguridad**: hashes bcrypt (passwords y respuestas de seguridad), rate limit de login por usuario, renovación deslizante de sesión, cookies httpOnly+SameSite, foreign keys activas, número de serie de equipos único.
+
 ## Credenciales y datos demo
 
 El seed (`npm run db:seed` / `db:reset`) crea el usuario administrador y datos demo:
 
 - **Admin**: `admin` / `admin123` (con preguntas de seguridad por defecto).
-- **Usuarios demo**: `tecnico1` / `tecnico123` (rol `tecnico`), `consultor1` / `consultor123` (rol `consultor`).
-- **Catálogos**: 10 tipos de equipo (PC, Notebook, Impresora, Monitor, Router, Switch, Servidor, UPS, Escáner, Teléfono), 2 proveedores (Deltron SA, Bytec SA) y 5 claves de configuración.
+- **Usuarios demo**: `tecnico1` / `tecnico123` (rol `tecnico`), `consultor1` / `consultor123` (rol `consultor`). Los usuarios demo tienen preguntas de seguridad sembradas para poder probar el flujo de recuperación de contraseña.
+- **Catálogos**: 10 tipos de equipo (PC, Notebook, Impresora, Monitor, Router, Switch, Servidor, UPS, Escáner, Teléfono), 2 proveedores (Deltron SA, Bytec SA) y 4 claves de configuración.
 - **Datos de demostración**: 6 equipos, 4 tickets con comentarios, planes de mantenimiento preventivo, tareas y ejecuciones (se crean solo si la tabla de equipos está vacía).
 
 > ⚠️ Las credenciales por defecto son para desarrollo. Cambiar la contraseña del admin antes de exponer el sistema.

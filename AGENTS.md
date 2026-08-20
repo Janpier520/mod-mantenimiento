@@ -40,7 +40,7 @@ npm run db:seed       # npx tsx src/lib/server/db/seed.ts
 ## Arquitectura
 
 - **Sin API layer**: todo es server load functions (`+page.server.ts`) + form actions con `use:enhance`. No hay endpoints REST ni tRPC.
-- **Capa de servicio**: `src/lib/server/services/` concentra la lógica de dominio (tickets, equipos, usuarios, mantenimiento); las rutas son adapters finos que delegan en servicios. Cada servicio tiene su test (`services/<x>.test.ts`).
+- **Capa de servicio**: `src/lib/server/services/` concentra la lógica de dominio (tickets, equipos, usuarios, mantenimiento, attachments, activity); las rutas son adapters finos que delegan en servicios. Cada servicio tiene su test (`services/<x>.test.ts`).
 - **Auth en hooks.server.ts**: session validation + role guard (`admin`/`tecnico`/`consultor`) por prefijo de ruta.
 - **Dark mode**: clase `.dark` en `<html>`, persistida en localStorage (`overhaul-theme`).
 - **Layout único**: sidebar fija con nav filtrada por rol, topbar con logout + dark mode toggle.
@@ -81,7 +81,7 @@ npm run db:seed       # npx tsx src/lib/server/db/seed.ts
 ## Testing
 
 - Vitest con patrón `src/**/*.test.ts` (config en vitest.config.ts).
-- **177 tests en 12 archivos** (estado 2026-08-07): auth, servicios, state machines, validators y CRUD de rutas.
+- **233 tests en 13 archivos** (estado 2026-08-19): auth, servicios, state machines, validators y CRUD de rutas.
 - DB en tests: in-memory SQLite via `test-helpers.ts` (`initTestDb()` idempotente, push con `drizzle-kit/api`).
 - Coverage: `test:coverage` con umbral **≥70% statements** (actual ~82%).
 - **No hay strict TDD** — no hay expectativas de test-first.
