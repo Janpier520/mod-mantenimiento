@@ -11,7 +11,7 @@
 	import Badge from '$lib/ui/Badge.svelte';
 	import ActionIconButton from '$lib/ui/ActionIconButton.svelte';
 	import { addToast } from '$lib/stores/toast.svelte';
-	import { getValidTransitions } from '$lib/server/state-machines';
+	import { getValidTransitions } from '$lib/domain/state-machines';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import PencilIcon from '@lucide/svelte/icons/pencil';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
