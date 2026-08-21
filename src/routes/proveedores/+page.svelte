@@ -216,7 +216,6 @@
 								isEditing ? 'Proveedor actualizado correctamente' : 'Proveedor creado correctamente'
 							);
 							await update();
-							await invalidate($page.url.pathname);
 						} else if (result.type === 'failure') {
 							const d = (result.data as Record<string, unknown>) ?? {};
 							const err = (d.error as string) ?? 'Error al guardar el proveedor';

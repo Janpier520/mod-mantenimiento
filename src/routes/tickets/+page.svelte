@@ -577,7 +577,6 @@
 								if (result.type === 'success' && result.data?.success) {
 									formComentario = '';
 									await update();
-									await invalidate($page.url.pathname);
 								} else if (result.type === 'failure') {
 									addToast(
 										(result.data as { error?: string } | null)?.error ??
@@ -661,7 +660,6 @@
 									uploadError = '';
 									uploadForm?.reset();
 									await update();
-									await invalidate($page.url.pathname);
 								} else if (result.type === 'failure') {
 									const d = (result.data as Record<string, unknown>) ?? {};
 									uploadError = (d.error as string) ?? 'Error al subir el archivo';
@@ -747,7 +745,6 @@
 								isEditing ? 'Ticket actualizado correctamente' : 'Ticket creado correctamente'
 							);
 							await update();
-							await invalidate($page.url.pathname);
 						} else if (result.type === 'failure') {
 							const d = (result.data as Record<string, unknown>) ?? {};
 							const err = (d.error as string) ?? 'Error al guardar el ticket';

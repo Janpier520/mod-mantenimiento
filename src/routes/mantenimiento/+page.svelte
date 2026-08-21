@@ -656,7 +656,6 @@
 								isEditingPlan ? 'Plan actualizado correctamente' : 'Plan creado correctamente'
 							);
 							await update();
-							await invalidate($page.url.pathname);
 						} else if (result.type === 'failure') {
 							const d = (result.data as Record<string, unknown>) ?? {};
 							formPlanError = (d.error as string) ?? 'Error al guardar el plan';
@@ -778,7 +777,6 @@
 								isEditingTask ? 'Tarea actualizada correctamente' : 'Tarea agregada correctamente'
 							);
 							await update();
-							await invalidate($page.url.pathname);
 						} else if (result.type === 'failure') {
 							const d = (result.data as Record<string, unknown>) ?? {};
 							formTaskError = (d.error as string) ?? 'Error al guardar la tarea';
@@ -851,7 +849,6 @@
 							closeScheduleModal();
 							addToast('Ejecución programada correctamente');
 							await update();
-							await invalidate($page.url.pathname);
 						} else if (result.type === 'failure') {
 							const d = (result.data as Record<string, unknown>) ?? {};
 							formScheduleError = (d.error as string) ?? 'Error al programar';
@@ -952,7 +949,6 @@
 							closeExecModal();
 							addToast('Ejecución actualizada correctamente');
 							await update();
-							await invalidate($page.url.pathname);
 						} else if (result.type === 'failure') {
 							const d = (result.data as Record<string, unknown>) ?? {};
 							formExecError = (d.error as string) ?? 'Error al actualizar';
