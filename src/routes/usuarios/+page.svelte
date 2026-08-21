@@ -580,10 +580,12 @@
 			const body = (await res.json()) as Record<string, unknown>;
 			// ponytail: action responses are wrapped in the ActionResult envelope
 			const d = (body.data ?? {}) as Record<string, unknown>;
+			const targetId = deletingUser?.id;
 			showDelete = false;
 			deletingUser = null;
 
 			if (d.success) {
+				if (targetId) usuarios = usuarios.filter((u) => u.id !== targetId);
 				addToast('Usuario eliminado correctamente');
 				await invalidateAll();
 			} else {

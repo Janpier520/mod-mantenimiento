@@ -1013,6 +1013,7 @@
 		variant="danger"
 		onconfirm={async () => {
 			if (!deletingPlan) return;
+			const targetPlanId = deletingPlan.id;
 			const formData = new URLSearchParams({ id: deletingPlan.id });
 
 			const res = await fetch($page.url.pathname + '?/delete_plan', {
@@ -1023,7 +1024,9 @@
 			showDeletePlan = false;
 
 			if (res.ok) {
-				if (expandedPlanId === deletingPlan.id) expandedPlanId = null;
+				if (expandedPlanId === targetPlanId) expandedPlanId = null;
+				// optimistic: drop the plan from the list immediately
+				plans = plans.filter((p) => p.id !== targetPlanId);
 				addToast('Plan eliminado correctamente');
 				await invalidateAll();
 			} else {

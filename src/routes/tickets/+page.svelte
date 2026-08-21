@@ -886,12 +886,14 @@
 						const body = (await res.json()) as Record<string, unknown>;
 						// ponytail: action responses are wrapped in the ActionResult envelope
 						const d = (body.data ?? {}) as Record<string, unknown>;
-						const wasSelected = selectedTicket?.id === deletingTicket.id;
+						const wasSelected = selectedTicket?.id === deletingTicket?.id;
+						const targetId = deletingTicket?.id;
 						showDelete = false;
 						deletingTicket = null;
 
 						if (d.success) {
 							if (wasSelected) selectedId = null;
+							if (targetId) tickets = tickets.filter((t) => t.id !== targetId);
 							addToast('Ticket eliminado correctamente');
 							await invalidateAll();
 						} else {

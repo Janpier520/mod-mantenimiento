@@ -300,10 +300,12 @@
 			const body = (await res.json()) as Record<string, unknown>;
 			// ponytail: action responses are wrapped in the ActionResult envelope
 			const d = (body.data ?? {}) as Record<string, unknown>;
+			const targetId = deletingProveedor?.id;
 			showDelete = false;
 			deletingProveedor = null;
 
 			if (d.success) {
+				if (targetId) proveedores = proveedores.filter((p) => p.id !== targetId);
 				addToast('Proveedor eliminado correctamente');
 				await invalidateAll();
 			} else {

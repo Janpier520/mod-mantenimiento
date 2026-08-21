@@ -564,9 +564,10 @@
 					variant="destructive"
 					onclick={async () => {
 						if (!deletingEquipo) return;
+						const targetId = deletingEquipo.id;
 						const formData = new FormData();
 						formData.set('_action', 'delete');
-						formData.set('id', deletingEquipo.id);
+						formData.set('id', targetId);
 
 						const res = await fetch(`${$page.url.pathname}?/crud`, {
 							method: 'POST',
@@ -581,6 +582,9 @@
 						deletingEquipo = null;
 
 						if (d.success) {
+							// optimistic: remove from the list immediately so it
+							// disappears without waiting for the load to re-run
+							equipmentList = equipmentList.filter((e) => e.id !== targetId);
 							addToast('Equipo eliminado correctamente');
 							await invalidateAll();
 						} else {
