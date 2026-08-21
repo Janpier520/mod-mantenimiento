@@ -2,6 +2,7 @@
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
 	import { goto, invalidateAll } from '$app/navigation';
+	import { unwrapActionData } from '$lib/utils';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
@@ -575,9 +576,7 @@
 						});
 
 						const body = (await res.json()) as Record<string, unknown>;
-						// ponytail: fetch POST to an action returns the ActionResult
-						// envelope; the payload lives in body.data, not at top level
-						const d = (body.data ?? {}) as Record<string, unknown>;
+						const d = unwrapActionData(body);
 						showDelete = false;
 						deletingEquipo = null;
 

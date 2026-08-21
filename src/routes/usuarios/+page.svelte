@@ -2,6 +2,7 @@
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
 	import { goto, invalidateAll } from '$app/navigation';
+	import { unwrapActionData } from '$lib/utils';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
@@ -578,8 +579,7 @@
 			});
 
 			const body = (await res.json()) as Record<string, unknown>;
-			// ponytail: action responses are wrapped in the ActionResult envelope
-			const d = (body.data ?? {}) as Record<string, unknown>;
+			const d = unwrapActionData(body);
 			const targetId = deletingUser?.id;
 			showDelete = false;
 			deletingUser = null;

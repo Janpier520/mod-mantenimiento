@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
+	import { unwrapActionData } from '$lib/utils';
 	import { page } from '$app/stores';
 	import Badge from '$lib/ui/Badge.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -244,7 +245,7 @@
 			await invalidateAll();
 		} else {
 			const body = await res.json().catch(() => ({}));
-			const d = ((body as Record<string, unknown>).data ?? {}) as Record<string, unknown>;
+			const d = unwrapActionData(body as { data?: unknown });
 			const msg = typeof d.error === 'string' ? d.error : 'Error al cancelar la ejecución';
 			addToast(msg, 'error');
 		}
@@ -286,7 +287,7 @@
 			await invalidateAll();
 		} else {
 			const body = await res.json().catch(() => ({}));
-			const d = ((body as Record<string, unknown>).data ?? {}) as Record<string, unknown>;
+			const d = unwrapActionData(body as { data?: unknown });
 			const msg = typeof d.error === 'string' ? d.error : 'Error al reprogramar';
 			editingExecDateError = msg;
 		}
@@ -1031,7 +1032,7 @@
 				await invalidateAll();
 			} else {
 				const body = await res.json().catch(() => ({}));
-				const d = ((body as Record<string, unknown>).data ?? {}) as Record<string, unknown>;
+				const d = unwrapActionData(body as { data?: unknown });
 				const msg = typeof d.error === 'string' ? d.error : 'Error al eliminar el plan';
 				addToast(msg, 'error');
 			}
@@ -1068,7 +1069,7 @@
 				await invalidateAll();
 			} else {
 				const body = await res.json().catch(() => ({}));
-				const d = ((body as Record<string, unknown>).data ?? {}) as Record<string, unknown>;
+				const d = unwrapActionData(body as { data?: unknown });
 				const msg = typeof d.error === 'string' ? d.error : 'Error al eliminar la tarea';
 				addToast(msg, 'error');
 			}

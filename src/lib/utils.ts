@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from 'clsx';
+import { parse } from 'devalue';
 import { twMerge } from 'tailwind-merge';
 import type { UserRole } from './types';
 
@@ -52,6 +53,26 @@ export function hasAccess(role: UserRole | undefined, allowedRoles?: UserRole[])
 	if (!allowedRoles || allowedRoles.length === 0) return true;
 	if (!role) return false;
 	return allowedRoles.includes(role);
+}
+
+/**
+ * Unwrap the payload of a form-action response made via plain fetch().
+ *
+ * SvelteKit wraps action results as `{ type, status, data }` AND devalue-encodes
+ * `data` for non-enhance requests, so `data` arrives as a string like
+ * '[{"success":1,"_action":2},true,"create"]'. Only use:enhance requests get
+ * the decoded object. This helper decodes it (or falls back to an empty
+ * object) so handlers can read flags like `.success` / `.error` directly.
+ */
+export function unwrapActionData<T = Record<string, unknown>>(payload: { data?: unknown }): T {
+	if (typeof payload?.data === 'string') {
+		try {
+			return parse(payload.data) as T;
+		} catch {
+			return {} as T;
+		}
+	}
+	return (payload?.data ?? {}) as T;
 }
 
 /**
