@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidate } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
 	import FormField from '$lib/ui/FormField.svelte';
@@ -197,7 +197,7 @@
 
 			if (d.success) {
 				addToast('Tipo eliminado correctamente');
-				await invalidate($page.url.pathname);
+				await invalidateAll();
 			} else {
 				addToast((d.error as string) ?? 'Error al eliminar el tipo', 'error');
 			}

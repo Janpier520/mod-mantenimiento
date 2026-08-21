@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidate } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { invalidateAll } from '$app/navigation';
 	import { addToast } from '$lib/stores/toast.svelte';
 	import EmptyState from '$lib/ui/EmptyState.svelte';
 
@@ -40,7 +39,7 @@
 						return async ({ result }) => {
 							if (result.type === 'success' && result.data?.success) {
 								addToast('Sesión cerrada');
-								await invalidate($page.url.pathname);
+								await invalidateAll();
 							} else if (result.type === 'failure') {
 								addToast(String(result.data?.error || 'No se pudo cerrar la sesión'), 'error');
 							}

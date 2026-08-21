@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
-	import { goto, invalidate } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
@@ -305,7 +305,7 @@
 
 			if (d.success) {
 				addToast('Proveedor eliminado correctamente');
-				await invalidate($page.url.pathname);
+				await invalidateAll();
 			} else {
 				addToast((d.error as string) ?? 'Error al eliminar el proveedor', 'error');
 			}

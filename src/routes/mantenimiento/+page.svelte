@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidate } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
 	import Badge from '$lib/ui/Badge.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -241,7 +241,7 @@
 
 		if (res.ok) {
 			addToast('Ejecución cancelada correctamente');
-			await invalidate($page.url.pathname);
+			await invalidateAll();
 		} else {
 			const body = await res.json().catch(() => ({}));
 			const d = ((body as Record<string, unknown>).data ?? {}) as Record<string, unknown>;
@@ -283,7 +283,7 @@
 			editingExecDateValue = '';
 			editingExecDateError = '';
 			addToast('Fecha reprogramada correctamente');
-			await invalidate($page.url.pathname);
+			await invalidateAll();
 		} else {
 			const body = await res.json().catch(() => ({}));
 			const d = ((body as Record<string, unknown>).data ?? {}) as Record<string, unknown>;
@@ -1025,7 +1025,7 @@
 			if (res.ok) {
 				if (expandedPlanId === deletingPlan.id) expandedPlanId = null;
 				addToast('Plan eliminado correctamente');
-				await invalidate($page.url.pathname);
+				await invalidateAll();
 			} else {
 				const body = await res.json().catch(() => ({}));
 				const d = ((body as Record<string, unknown>).data ?? {}) as Record<string, unknown>;
@@ -1062,7 +1062,7 @@
 
 			if (res.ok) {
 				addToast('Tarea eliminada correctamente');
-				await invalidate($page.url.pathname);
+				await invalidateAll();
 			} else {
 				const body = await res.json().catch(() => ({}));
 				const d = ((body as Record<string, unknown>).data ?? {}) as Record<string, unknown>;

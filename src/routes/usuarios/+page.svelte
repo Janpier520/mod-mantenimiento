@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
-	import { goto, invalidate } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
@@ -338,7 +338,7 @@
 								isEditing ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente'
 							);
 							await update();
-							await invalidate($page.url.pathname);
+							await invalidateAll();
 						} else if (result.type === 'failure') {
 							const d = (result.data as Record<string, unknown>) ?? {};
 							const err = (d.error as string) ?? 'Error al guardar el usuario';
@@ -585,7 +585,7 @@
 
 			if (d.success) {
 				addToast('Usuario eliminado correctamente');
-				await invalidate($page.url.pathname);
+				await invalidateAll();
 			} else {
 				addToast((d.error as string) ?? 'Error al eliminar el usuario', 'error');
 			}

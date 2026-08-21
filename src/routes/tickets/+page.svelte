@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
-	import { goto, invalidate } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import DataTable from '$lib/ui/DataTable.svelte';
@@ -295,7 +295,7 @@
 		const d = (body.data ?? {}) as Record<string, unknown>;
 		if (d.success) {
 			addToast('Archivo eliminado correctamente');
-			await invalidate($page.url.pathname);
+			await invalidateAll();
 		} else {
 			addToast((d.error as string) ?? 'Error al eliminar el archivo', 'error');
 		}
@@ -893,7 +893,7 @@
 						if (d.success) {
 							if (wasSelected) selectedId = null;
 							addToast('Ticket eliminado correctamente');
-							await invalidate($page.url.pathname);
+							await invalidateAll();
 						} else {
 							addToast((d.error as string) ?? 'Error al eliminar el ticket', 'error');
 						}
