@@ -38,7 +38,7 @@ function adminLocals(): App.Locals {
 		username: 'admin',
 		nombre: 'Admin',
 		apellido: 'Sistema',
-		email: 'admin@equiplab.test',
+		email: 'admin@overhaul.test',
 		rol: 'admin'
 	});
 }
@@ -49,7 +49,7 @@ function tecnicoLocals(): App.Locals {
 		username: 'tecnico1',
 		nombre: 'Carlos',
 		apellido: 'Méndez',
-		email: 'tecnico@equiplab.test',
+		email: 'tecnico@overhaul.test',
 		rol: 'tecnico'
 	});
 }
@@ -60,7 +60,7 @@ function consultorLocals(): App.Locals {
 		username: 'consultor1',
 		nombre: 'Laura',
 		apellido: 'Rivas',
-		email: 'consultor@equiplab.test',
+		email: 'consultor@overhaul.test',
 		rol: 'consultor'
 	});
 }

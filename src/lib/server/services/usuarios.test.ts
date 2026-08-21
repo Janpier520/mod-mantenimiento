@@ -23,7 +23,7 @@ function adminActor(): Actor {
 function createInput() {
 	return {
 		username: 'svc_user',
-		email: 'svc@equiplab.test',
+		email: 'svc@overhaul.test',
 		nombre: 'Servicio',
 		apellido: 'User',
 		password: 'secret123',
@@ -45,7 +45,7 @@ describe('usuarios service', () => {
 		const res = await createUser({
 			...createInput(),
 			username: '  svc_user  ',
-			email: '  svc@equiplab.test  ',
+			email: '  svc@overhaul.test  ',
 			nombre: '  Servicio  ',
 			apellido: '  User  '
 		});
@@ -54,7 +54,7 @@ describe('usuarios service', () => {
 		expect(createdId).toBeTruthy();
 		const row = await db.query.users.findFirst({ where: eq(users.id, createdId ?? '') });
 		expect(row?.username).toBe('svc_user');
-		expect(row?.email).toBe('svc@equiplab.test');
+		expect(row?.email).toBe('svc@overhaul.test');
 		expect(await bcrypt.compare('secret123', row!.password_hash)).toBe(true);
 	});
 
@@ -90,7 +90,7 @@ describe('usuarios service', () => {
 		const dupUsername = await createUser({
 			...createInput(),
 			username: 'tecnico1',
-			email: 'otro@equiplab.test'
+			email: 'otro@overhaul.test'
 		});
 		expect(dupUsername).toEqual({
 			ok: false,
@@ -101,7 +101,7 @@ describe('usuarios service', () => {
 		const dupEmail = await createUser({
 			...createInput(),
 			username: 'otro_user',
-			email: 'tecnico@equiplab.test'
+			email: 'tecnico@overhaul.test'
 		});
 		expect(dupEmail).toEqual({
 			ok: false,
@@ -115,7 +115,7 @@ describe('usuarios service', () => {
 			id: ids.tecnicoId,
 			nombre: 'Carlos',
 			apellido: 'Méndez',
-			email: 'tecnico@equiplab.test',
+			email: 'tecnico@overhaul.test',
 			password: '',
 			rol: 'tecnico',
 			activo: true
@@ -128,7 +128,7 @@ describe('usuarios service', () => {
 			id: ids.tecnicoId,
 			nombre: 'Carlos',
 			apellido: 'Méndez',
-			email: 'admin@equiplab.test',
+			email: 'admin@overhaul.test',
 			password: '',
 			rol: 'tecnico',
 			activo: true
@@ -141,7 +141,7 @@ describe('usuarios service', () => {
 			id: ids.adminId,
 			nombre: 'Admin',
 			apellido: 'Sistema',
-			email: 'admin@equiplab.test',
+			email: 'admin@overhaul.test',
 			password: '',
 			rol: 'admin',
 			activo: false
@@ -156,7 +156,7 @@ describe('usuarios service', () => {
 			id: ids.adminId,
 			nombre: 'Admin',
 			apellido: 'Sistema',
-			email: 'admin@equiplab.test',
+			email: 'admin@overhaul.test',
 			password: '',
 			rol: 'tecnico',
 			activo: true
@@ -173,7 +173,7 @@ describe('usuarios service', () => {
 			.insert(users)
 			.values({
 				username: 'admin-inactivo-svc',
-				email: 'actor-inactivo-svc@equiplab.test',
+				email: 'actor-inactivo-svc@overhaul.test',
 				password_hash: 'hash',
 				nombre: 'Actor',
 				apellido: 'Inactivo',
@@ -235,7 +235,7 @@ describe('usuarios service', () => {
 			.insert(users)
 			.values({
 				username: 'temp-svc',
-				email: 'temp-svc@equiplab.test',
+				email: 'temp-svc@overhaul.test',
 				password_hash: 'hash',
 				nombre: 'Temp',
 				apellido: 'User',
@@ -256,7 +256,7 @@ describe('usuarios service', () => {
 			id: ids.tecnicoId,
 			nombre: 'Carlos',
 			apellido: 'Méndez',
-			email: 'tecnico@equiplab.test',
+			email: 'tecnico@overhaul.test',
 			password: 'nueva-clave-456',
 			rol: 'tecnico',
 			activo: true
@@ -272,7 +272,7 @@ describe('usuarios service', () => {
 		const res = await createUser({
 			...createInput(),
 			username: 'seguridad_user',
-			email: 'seguridad@equiplab.test',
+			email: 'seguridad@overhaul.test',
 			security_question_1: '¿Cuál es tu color favorito?',
 			security_answer_1: 'azul',
 			security_question_2: '¿En qué ciudad naciste?',
@@ -291,7 +291,7 @@ describe('usuarios service', () => {
 		const res = await createUser({
 			...createInput(),
 			username: 'sin_seguridad',
-			email: 'sinseguridad@equiplab.test',
+			email: 'sinseguridad@overhaul.test',
 			security_question_1: '',
 			security_answer_1: '',
 			security_question_2: '',
@@ -310,7 +310,7 @@ describe('usuarios service', () => {
 		const created = await createUser({
 			...createInput(),
 			username: 'edit_seguridad',
-			email: 'editseguridad@equiplab.test',
+			email: 'editseguridad@overhaul.test',
 			security_question_1: '¿Cuál es tu color favorito?',
 			security_answer_1: 'verde',
 			security_question_2: '¿Cuál es tu comida favorita?',
@@ -323,7 +323,7 @@ describe('usuarios service', () => {
 			id: createdId,
 			nombre: 'Servicio',
 			apellido: 'User',
-			email: 'editseguridad@equiplab.test',
+			email: 'editseguridad@overhaul.test',
 			password: '',
 			rol: 'tecnico',
 			activo: true,
@@ -343,7 +343,7 @@ describe('usuarios service', () => {
 		const created = await createUser({
 			...createInput(),
 			username: 'keep_seguridad',
-			email: 'keepseguridad@equiplab.test',
+			email: 'keepseguridad@overhaul.test',
 			security_question_1: '¿Cuál es tu comida favorita?',
 			security_answer_1: 'asado',
 			security_question_2: '¿Cuál es tu apellido materno?',
@@ -356,7 +356,7 @@ describe('usuarios service', () => {
 			id: createdId,
 			nombre: 'Servicio',
 			apellido: 'User',
-			email: 'keepseguridad@equiplab.test',
+			email: 'keepseguridad@overhaul.test',
 			password: '',
 			rol: 'tecnico',
 			activo: true
@@ -375,7 +375,7 @@ describe('usuarios service', () => {
 			.insert(users)
 			.values({
 				username: 'commenter-svc',
-				email: 'commenter-svc@equiplab.test',
+				email: 'commenter-svc@overhaul.test',
 				password_hash: 'hash',
 				nombre: 'Comentador',
 				apellido: 'User',

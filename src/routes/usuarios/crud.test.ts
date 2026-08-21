@@ -33,7 +33,7 @@ function adminLocals(): App.Locals {
 		username: 'admin',
 		nombre: 'Admin',
 		apellido: 'Sistema',
-		email: 'admin@equiplab.test',
+		email: 'admin@overhaul.test',
 		rol: 'admin'
 	});
 }
@@ -44,7 +44,7 @@ function tecnicoLocals(): App.Locals {
 		username: 'tecnico1',
 		nombre: 'Carlos',
 		apellido: 'Méndez',
-		email: 'tecnico@equiplab.test',
+		email: 'tecnico@overhaul.test',
 		rol: 'tecnico'
 	});
 }
@@ -72,7 +72,7 @@ async function invokeCrud(
 const createFields = {
 	_action: 'create',
 	username: 'nuevo_user',
-	email: 'nuevo@equiplab.test',
+	email: 'nuevo@overhaul.test',
 	nombre: 'Nuevo',
 	apellido: 'Usuario',
 	password: 'secret123',
@@ -119,11 +119,11 @@ describe('usuarios crud (TC-9)', () => {
 		expect(res).toMatchObject({ success: true, _action: 'create' });
 		const row = await db.query.users.findFirst({ where: eq(users.username, 'nuevo_user') });
 		expect(row).not.toBeUndefined();
-		expect(row!.email).toBe('nuevo@equiplab.test');
+		expect(row!.email).toBe('nuevo@overhaul.test');
 	});
 
 	it('rejects a duplicate username', async () => {
-		const res = await invokeCrud(adminLocals(), { ...createFields, email: 'otro@equiplab.test' });
+		const res = await invokeCrud(adminLocals(), { ...createFields, email: 'otro@overhaul.test' });
 		expect(res.status).toBe(400);
 		expect(res.data?.error).toBe('Ya existe un usuario con ese nombre de usuario');
 	});
@@ -140,7 +140,7 @@ describe('usuarios crud (TC-9)', () => {
 			id: ids.tecnicoId,
 			nombre: 'Carlos',
 			apellido: 'Méndez',
-			email: 'admin@equiplab.test',
+			email: 'admin@overhaul.test',
 			password: '',
 			rol: 'tecnico',
 			activo: 'on'
@@ -155,7 +155,7 @@ describe('usuarios crud (TC-9)', () => {
 			id: ids.tecnicoId,
 			nombre: 'Carlos',
 			apellido: 'Méndez',
-			email: 'tecnico@equiplab.test',
+			email: 'tecnico@overhaul.test',
 			password: '',
 			rol: 'tecnico',
 			activo: 'on'
@@ -169,7 +169,7 @@ describe('usuarios crud (TC-9)', () => {
 			id: ids.adminId,
 			nombre: 'Admin',
 			apellido: 'Sistema',
-			email: 'admin@equiplab.test',
+			email: 'admin@overhaul.test',
 			password: '',
 			rol: 'admin'
 			// no activo field → activo = false
@@ -184,7 +184,7 @@ describe('usuarios crud (TC-9)', () => {
 			id: ids.adminId,
 			nombre: 'Admin',
 			apellido: 'Sistema',
-			email: 'admin@equiplab.test',
+			email: 'admin@overhaul.test',
 			password: '',
 			rol: 'tecnico',
 			activo: 'on'
@@ -199,7 +199,7 @@ describe('usuarios crud (TC-9)', () => {
 			.insert(users)
 			.values({
 				username: 'admin-inactivo-actor',
-				email: 'actor-inactivo@equiplab.test',
+				email: 'actor-inactivo@overhaul.test',
 				password_hash: 'hash',
 				nombre: 'Actor',
 				apellido: 'Inactivo',
@@ -213,7 +213,7 @@ describe('usuarios crud (TC-9)', () => {
 			username: 'admin-inactivo-actor',
 			nombre: 'Actor',
 			apellido: 'Inactivo',
-			email: 'actor-inactivo@equiplab.test',
+			email: 'actor-inactivo@overhaul.test',
 			rol: 'admin'
 		});
 
@@ -264,7 +264,7 @@ describe('usuarios crud (TC-9)', () => {
 			.insert(users)
 			.values({
 				username: 'temp-user',
-				email: 'temp@equiplab.test',
+				email: 'temp@overhaul.test',
 				password_hash: 'hash',
 				nombre: 'Temp',
 				apellido: 'User',

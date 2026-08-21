@@ -42,7 +42,7 @@ describe('isLastActiveAdmin (TC-7)', () => {
 
 	it('returns false once a second active admin exists', async () => {
 		const admin = await db.query.users.findFirst({ where: eq(users.username, 'admin') });
-		await seedAdmin('admin-extra-1', 'extra1@equiplab.test', true);
+		await seedAdmin('admin-extra-1', 'extra1@overhaul.test', true);
 		expect(await isLastActiveAdmin(admin!.id)).toBe(false);
 	});
 
@@ -52,7 +52,7 @@ describe('isLastActiveAdmin (TC-7)', () => {
 	});
 
 	it('returns false for an inactive admin', async () => {
-		const inactiveId = await seedAdmin('admin-inactivo', 'inactive@equiplab.test', false);
+		const inactiveId = await seedAdmin('admin-inactivo', 'inactive@overhaul.test', false);
 		expect(await isLastActiveAdmin(inactiveId)).toBe(false);
 	});
 
@@ -78,9 +78,9 @@ describe('duplicate checks with exclusion (TC-7)', () => {
 
 	it('isEmailTaken detects the owner and respects excludeUserId', async () => {
 		const admin = await db.query.users.findFirst({ where: eq(users.username, 'admin') });
-		expect(await isEmailTaken('admin@equiplab.test')).toBe(true);
-		expect(await isEmailTaken('admin@equiplab.test', admin!.id)).toBe(false);
-		expect(await isEmailTaken('nobody@equiplab.test')).toBe(false);
+		expect(await isEmailTaken('admin@overhaul.test')).toBe(true);
+		expect(await isEmailTaken('admin@overhaul.test', admin!.id)).toBe(false);
+		expect(await isEmailTaken('nobody@overhaul.test')).toBe(false);
 	});
 
 	it('isEquipmentTypeNameTaken detects the seeded type and respects excludeId', async () => {

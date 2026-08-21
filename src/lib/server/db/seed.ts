@@ -88,7 +88,7 @@ export async function seed() {
 	if (!existingAdmin) {
 		await db.insert(users).values({
 			username: 'admin',
-			email: 'admin@equiplab.com',
+			email: 'admin@overhaul.com',
 			password_hash: adminPasswordHash,
 			nombre: 'Admin',
 			apellido: 'Sistema',
@@ -130,7 +130,7 @@ export async function seed() {
 	const DEFAULT_CONFIG = [
 		{
 			key: 'email_contacto',
-			value: 'soporte@equiplab.com',
+			value: 'soporte@overhaul.com',
 			descripcion: 'Email de contacto',
 			tipo: 'email' as const
 		},
@@ -169,7 +169,7 @@ export async function seed() {
 		console.log('📦 Creating demo data...');
 
 		// ── Additional users ──
-		await seedUser('tecnico1', 'carlos@equiplab.com', 'tecnico123', 'Carlos', 'Méndez', 'tecnico', {
+		await seedUser('tecnico1', 'carlos@overhaul.com', 'tecnico123', 'Carlos', 'Méndez', 'tecnico', {
 			question1: '¿Cuál es tu color favorito?',
 			answer1: 'tecnico',
 			question2: '¿En qué ciudad naciste?',
@@ -177,7 +177,7 @@ export async function seed() {
 		});
 		await seedUser(
 			'consultor1',
-			'laura@equiplab.com',
+			'laura@overhaul.com',
 			'consultor123',
 			'Laura',
 			'Rivas',

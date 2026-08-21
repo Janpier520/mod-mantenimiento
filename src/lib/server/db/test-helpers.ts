@@ -75,7 +75,7 @@ export async function seedTestData(): Promise<SeedIds> {
 		.values([
 			{
 				username: 'admin',
-				email: 'admin@equiplab.test',
+				email: 'admin@overhaul.test',
 				password_hash: passwordHash,
 				nombre: 'Admin',
 				apellido: 'Sistema',
@@ -84,7 +84,7 @@ export async function seedTestData(): Promise<SeedIds> {
 			},
 			{
 				username: 'tecnico1',
-				email: 'tecnico@equiplab.test',
+				email: 'tecnico@overhaul.test',
 				password_hash: passwordHash,
 				nombre: 'Carlos',
 				apellido: 'Méndez',
@@ -93,7 +93,7 @@ export async function seedTestData(): Promise<SeedIds> {
 			},
 			{
 				username: 'consultor1',
-				email: 'consultor@equiplab.test',
+				email: 'consultor@overhaul.test',
 				password_hash: passwordHash,
 				nombre: 'Laura',
 				apellido: 'Rivas',
