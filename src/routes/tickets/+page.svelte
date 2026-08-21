@@ -291,11 +291,13 @@
 			body: formData
 		});
 		const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-		if (body.success) {
+		// ponytail: action responses are wrapped in the ActionResult envelope
+		const d = (body.data ?? {}) as Record<string, unknown>;
+		if (d.success) {
 			addToast('Archivo eliminado correctamente');
 			await invalidate($page.url.pathname);
 		} else {
-			addToast((body.error as string) ?? 'Error al eliminar el archivo', 'error');
+			addToast((d.error as string) ?? 'Error al eliminar el archivo', 'error');
 		}
 	}
 </script>
@@ -882,16 +884,18 @@
 						});
 
 						const body = (await res.json()) as Record<string, unknown>;
+						// ponytail: action responses are wrapped in the ActionResult envelope
+						const d = (body.data ?? {}) as Record<string, unknown>;
 						const wasSelected = selectedTicket?.id === deletingTicket.id;
 						showDelete = false;
 						deletingTicket = null;
 
-						if (body.success) {
+						if (d.success) {
 							if (wasSelected) selectedId = null;
 							addToast('Ticket eliminado correctamente');
 							await invalidate($page.url.pathname);
 						} else {
-							addToast((body.error as string) ?? 'Error al eliminar el ticket', 'error');
+							addToast((d.error as string) ?? 'Error al eliminar el ticket', 'error');
 						}
 					}}
 				>

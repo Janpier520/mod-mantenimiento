@@ -298,14 +298,16 @@
 			});
 
 			const body = (await res.json()) as Record<string, unknown>;
+			// ponytail: action responses are wrapped in the ActionResult envelope
+			const d = (body.data ?? {}) as Record<string, unknown>;
 			showDelete = false;
 			deletingProveedor = null;
 
-			if (body.success) {
+			if (d.success) {
 				addToast('Proveedor eliminado correctamente');
 				await invalidate($page.url.pathname);
 			} else {
-				addToast((body.error as string) ?? 'Error al eliminar el proveedor', 'error');
+				addToast((d.error as string) ?? 'Error al eliminar el proveedor', 'error');
 			}
 		}}
 		oncancel={() => {

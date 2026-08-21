@@ -450,8 +450,9 @@
 							addToast(
 								isEditing ? 'Equipo actualizado correctamente' : 'Equipo creado correctamente'
 							);
+							// ponytail: update() already invalidates all load data; a second
+							// invalidate() here re-rendered twice and re-fired the toast
 							await update();
-							await invalidate($page.url.pathname);
 						} else if (result.type === 'failure') {
 							const d = (result.data as Record<string, unknown>) ?? {};
 							const err = (d.error as string) ?? 'Error al guardar el equipo';
@@ -573,14 +574,17 @@
 						});
 
 						const body = (await res.json()) as Record<string, unknown>;
+						// ponytail: fetch POST to an action returns the ActionResult
+						// envelope; the payload lives in body.data, not at top level
+						const d = (body.data ?? {}) as Record<string, unknown>;
 						showDelete = false;
 						deletingEquipo = null;
 
-						if (body.success) {
+						if (d.success) {
 							addToast('Equipo eliminado correctamente');
 							await invalidate($page.url.pathname);
 						} else {
-							addToast((body.error as string) ?? 'Error al eliminar el equipo', 'error');
+							addToast((d.error as string) ?? 'Error al eliminar el equipo', 'error');
 						}
 					}}
 				>

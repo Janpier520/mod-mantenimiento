@@ -244,7 +244,8 @@
 			await invalidate($page.url.pathname);
 		} else {
 			const body = await res.json().catch(() => ({}));
-			const msg = typeof body.error === 'string' ? body.error : 'Error al cancelar la ejecución';
+			const d = ((body as Record<string, unknown>).data ?? {}) as Record<string, unknown>;
+			const msg = typeof d.error === 'string' ? d.error : 'Error al cancelar la ejecución';
 			addToast(msg, 'error');
 		}
 		cancelingExec = null;
@@ -285,7 +286,8 @@
 			await invalidate($page.url.pathname);
 		} else {
 			const body = await res.json().catch(() => ({}));
-			const msg = typeof body.error === 'string' ? body.error : 'Error al reprogramar';
+			const d = ((body as Record<string, unknown>).data ?? {}) as Record<string, unknown>;
+			const msg = typeof d.error === 'string' ? d.error : 'Error al reprogramar';
 			editingExecDateError = msg;
 		}
 	}
@@ -1026,7 +1028,8 @@
 				await invalidate($page.url.pathname);
 			} else {
 				const body = await res.json().catch(() => ({}));
-				const msg = typeof body.error === 'string' ? body.error : 'Error al eliminar el plan';
+				const d = ((body as Record<string, unknown>).data ?? {}) as Record<string, unknown>;
+				const msg = typeof d.error === 'string' ? d.error : 'Error al eliminar el plan';
 				addToast(msg, 'error');
 			}
 			deletingPlan = null;
@@ -1062,7 +1065,8 @@
 				await invalidate($page.url.pathname);
 			} else {
 				const body = await res.json().catch(() => ({}));
-				const msg = typeof body.error === 'string' ? body.error : 'Error al eliminar la tarea';
+				const d = ((body as Record<string, unknown>).data ?? {}) as Record<string, unknown>;
+				const msg = typeof d.error === 'string' ? d.error : 'Error al eliminar la tarea';
 				addToast(msg, 'error');
 			}
 			deletingTask = null;
