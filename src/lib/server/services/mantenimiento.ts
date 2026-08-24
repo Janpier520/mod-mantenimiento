@@ -5,7 +5,10 @@ import {
 	pm_executions,
 	equipment,
 	equipment_types,
-	users
+	users,
+	pm_execution_parts,
+	inventory_items,
+	inventory_movements
 } from '$lib/server/db/schema';
 import { eq, count, and, sql } from 'drizzle-orm';
 import { addDaysToDate, todayISO } from '$lib/server/dates';
@@ -33,10 +36,18 @@ export interface ScheduleExecutionInput {
 	ejecutado_por: string;
 	fecha_programada: string;
 }
+export interface ExecutionPartInput {
+	inventory_item_id: string;
+	accion: 'instalado' | 'removido' | 'reemplazado';
+	cantidad: number;
+	observaciones: string;
+}
+
 export interface CompleteExecutionInput {
 	id: string;
 	resultado: string;
 	observaciones: string;
+	parts?: ExecutionPartInput[];
 }
 export interface CancelExecutionInput {
 	id: string;
@@ -310,7 +321,7 @@ export async function completeExecution(
 ): Promise<CompleteResult> {
 	if (actor.rol === 'consultor') return CONSULTOR_ERROR;
 
-	const { id, resultado, observaciones } = input;
+	const { id, resultado, observaciones, parts } = input;
 
 	if (!id) return { ok: false, error: 'ID de ejecución no proporcionado', status: 400 };
 
@@ -325,14 +336,81 @@ export async function completeExecution(
 		return { ok: false, error: 'Resultado no válido', status: 400 };
 	}
 
-	await db
-		.update(pm_executions)
-		.set({
-			fecha_ejecucion: new Date().toISOString(),
-			resultado: resultado as 'completado' | 'fallido' | 'omitido',
-			observaciones: observaciones.trim()
-		})
-		.where(eq(pm_executions.id, id));
+	// Validate parts stock before any writes
+	if (parts && parts.length > 0) {
+		for (const part of parts) {
+			if (part.cantidad <= 0) {
+				return { ok: false, error: `Cantidad inválida para el ítem ${part.inventory_item_id}` };
+			}
+			const item = await db.query.inventory_items.findFirst({
+				where: eq(inventory_items.id, part.inventory_item_id)
+			});
+			if (!item) {
+				return { ok: false, error: `Ítem de inventario no encontrado: ${part.inventory_item_id}` };
+			}
+			if (part.accion === 'instalado' || part.accion === 'reemplazado') {
+				if (item.stock_actual < part.cantidad) {
+					return {
+						ok: false,
+						error: `Stock insuficiente para ${item.nombre}: disponible ${item.stock_actual}, solicitado ${part.cantidad}`
+					};
+				}
+			}
+		}
+	}
+
+	// Atomic: update execution + create parts + update stock
+	await db.transaction(async (tx) => {
+		await tx
+			.update(pm_executions)
+			.set({
+				fecha_ejecucion: new Date().toISOString(),
+				resultado: resultado as 'completado' | 'fallido' | 'omitido',
+				observaciones: observaciones.trim()
+			})
+			.where(eq(pm_executions.id, id));
+
+		// Register parts and adjust stock
+		if (parts && parts.length > 0) {
+			for (const part of parts) {
+				await tx.insert(pm_execution_parts).values({
+					pm_execution_id: id,
+					inventory_item_id: part.inventory_item_id,
+					accion: part.accion,
+					cantidad: part.cantidad,
+					observaciones: part.observaciones?.trim() || ''
+				});
+
+				// Update stock
+				const item = await tx.query.inventory_items.findFirst({
+					where: eq(inventory_items.id, part.inventory_item_id)
+				});
+				if (item) {
+					let newStock = item.stock_actual;
+					if (part.accion === 'instalado' || part.accion === 'reemplazado') {
+						newStock -= part.cantidad;
+					} else if (part.accion === 'removido') {
+						newStock += part.cantidad;
+					}
+					await tx
+						.update(inventory_items)
+						.set({ stock_actual: newStock })
+						.where(eq(inventory_items.id, part.inventory_item_id));
+
+					// Create movement record
+					await tx.insert(inventory_movements).values({
+						inventory_item_id: part.inventory_item_id,
+						tipo: part.accion === 'removido' ? 'entrada' : 'salida',
+						cantidad: part.cantidad,
+						motivo: `PM ejecución: ${part.accion}`,
+						usuario_id: actor.id,
+						referencia_tipo: 'pm_execution',
+						referencia_id: id
+					});
+				}
+			}
+		}
+	});
 
 	if (resultado === 'completado' || resultado === 'fallido' || resultado === 'omitido') {
 		await autoScheduleNextExecution(execution);

@@ -294,6 +294,30 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- Stock Bajo — stat card -->
+		{#if data.lowStockCount > 0}
+			<div class="stat-card">
+				<div class="flex items-start justify-between">
+					<div>
+						<p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+							Stock Bajo
+						</p>
+						<p class="stat-value mt-1 text-destructive">
+							{data.lowStockCount}
+						</p>
+						<p class="mt-2 text-xs text-muted-foreground">
+							íten{data.lowStockCount !== 1 ? 's' : ''} por debajo del mínimo
+						</p>
+					</div>
+					<div
+						class="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/15 text-destructive dark:bg-destructive/15 dark:text-destructive"
+					>
+						<AlertTriangle class="h-5 w-5" />
+					</div>
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Chart section -->

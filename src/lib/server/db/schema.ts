@@ -245,6 +245,63 @@ export const preventive_maintenance_plans = sqliteTable(
 	})
 );
 
+// ─── Inventario: Catálogo de Repuestos ────────────────────────────────────────
+export const inventory_items = sqliteTable(
+	'inventory_items',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		nombre: text('nombre').notNull(),
+		descripcion: text('descripcion').default(''),
+		codigo_parte: text('codigo_parte').unique(),
+		categoria: text('categoria').notNull(),
+		tipo_equipo_id: text('tipo_equipo_id').references(() => equipment_types.id),
+		stock_actual: integer('stock_actual').notNull().default(0),
+		stock_minimo: integer('stock_minimo').notNull().default(0),
+		ubicacion: text('ubicacion').default('Almacén Principal'),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updated_at: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+			.$onUpdateFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		categoria_idx: index('idx_inventory_categoria').on(table.categoria),
+		tipo_equipo_idx: index('idx_inventory_tipo_equipo').on(table.tipo_equipo_id),
+		stock_bajo_idx: index('idx_inventory_stock_bajo').on(table.stock_actual, table.stock_minimo)
+	})
+);
+
+// ─── Movimientos de Stock (trazabilidad completa) ─────────────────────────────
+export const inventory_movements = sqliteTable(
+	'inventory_movements',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		inventory_item_id: text('inventory_item_id')
+			.notNull()
+			.references(() => inventory_items.id, { onDelete: 'cascade' }),
+		tipo: text('tipo', { enum: ['entrada', 'salida', 'ajuste'] }).notNull(),
+		cantidad: integer('cantidad').notNull(),
+		motivo: text('motivo').notNull(),
+		usuario_id: text('usuario_id').references(() => users.id),
+		referencia_tipo: text('referencia_tipo'),
+		referencia_id: text('referencia_id'),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		item_idx: index('idx_inv_mov_item').on(table.inventory_item_id),
+		usuario_idx: index('idx_inv_mov_usuario').on(table.usuario_id),
+		ref_idx: index('idx_inv_mov_ref').on(table.referencia_tipo, table.referencia_id)
+	})
+);
+
 // ─── Tareas de PM ────────────────────────────────────────────────────────────
 export const pm_tasks = sqliteTable(
 	'pm_tasks',
@@ -257,10 +314,12 @@ export const pm_tasks = sqliteTable(
 			.references(() => preventive_maintenance_plans.id, { onDelete: 'cascade' }),
 		nombre: text('nombre').notNull(),
 		descripcion: text('descripcion').notNull().default(''),
-		orden: integer('orden').notNull().default(0)
+		orden: integer('orden').notNull().default(0),
+		inventory_item_id: text('inventory_item_id').references(() => inventory_items.id)
 	},
 	(table) => ({
-		plan_id_idx: index('idx_pm_tasks_plan_id').on(table.plan_id)
+		plan_id_idx: index('idx_pm_tasks_plan_id').on(table.plan_id),
+		inventory_item_idx: index('idx_pm_tasks_inventory_item').on(table.inventory_item_id)
 	})
 );
 
@@ -296,6 +355,32 @@ export const pm_executions = sqliteTable(
 		plan_id_idx: index('idx_pm_executions_plan_id').on(table.plan_id),
 		tarea_id_idx: index('idx_pm_executions_tarea_id').on(table.tarea_id),
 		ejecutado_por_idx: index('idx_pm_executions_ejecutado_por').on(table.ejecutado_por)
+	})
+);
+
+// ─── Piezas Usadas en Ejecución PM (evidencia técnica) ────────────────────────
+export const pm_execution_parts = sqliteTable(
+	'pm_execution_parts',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		pm_execution_id: text('pm_execution_id')
+			.notNull()
+			.references(() => pm_executions.id, { onDelete: 'cascade' }),
+		inventory_item_id: text('inventory_item_id')
+			.notNull()
+			.references(() => inventory_items.id),
+		accion: text('accion', { enum: ['instalado', 'removido', 'reemplazado'] }).notNull(),
+		cantidad: integer('cantidad').notNull().default(1),
+		observaciones: text('observaciones').default(''),
+		created_at: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => ({
+		execution_idx: index('idx_pm_parts_execution').on(table.pm_execution_id),
+		item_idx: index('idx_pm_parts_item').on(table.inventory_item_id)
 	})
 );
 
@@ -412,6 +497,15 @@ export type NewPMTask = InferInsertModel<typeof pm_tasks>;
 export type PMExecution = InferSelectModel<typeof pm_executions>;
 export type NewPMExecution = InferInsertModel<typeof pm_executions>;
 
+export type InventoryItem = InferSelectModel<typeof inventory_items>;
+export type NewInventoryItem = InferInsertModel<typeof inventory_items>;
+
+export type InventoryMovement = InferSelectModel<typeof inventory_movements>;
+export type NewInventoryMovement = InferInsertModel<typeof inventory_movements>;
+
+export type PMExecutionPart = InferSelectModel<typeof pm_execution_parts>;
+export type NewPMExecutionPart = InferInsertModel<typeof pm_execution_parts>;
+
 export type ActivityLogEntry = InferSelectModel<typeof activity_log>;
 export type NewActivityLogEntry = InferInsertModel<typeof activity_log>;
 
@@ -526,10 +620,14 @@ export const pmTasksRelations = relations(pm_tasks, ({ one, many }) => ({
 		fields: [pm_tasks.plan_id],
 		references: [preventive_maintenance_plans.id]
 	}),
+	inventory_item: one(inventory_items, {
+		fields: [pm_tasks.inventory_item_id],
+		references: [inventory_items.id]
+	}),
 	ejecuciones: many(pm_executions)
 }));
 
-export const pmExecutionsRelations = relations(pm_executions, ({ one }) => ({
+export const pmExecutionsRelations = relations(pm_executions, ({ one, many }) => ({
 	plan: one(preventive_maintenance_plans, {
 		fields: [pm_executions.plan_id],
 		references: [preventive_maintenance_plans.id]
@@ -541,12 +639,44 @@ export const pmExecutionsRelations = relations(pm_executions, ({ one }) => ({
 	ejecutante: one(users, {
 		fields: [pm_executions.ejecutado_por],
 		references: [users.id]
-	})
+	}),
+	parts: many(pm_execution_parts)
 }));
 
 export const activityLogRelations = relations(activity_log, ({ one }) => ({
 	usuario: one(users, {
 		fields: [activity_log.usuario_id],
 		references: [users.id]
+	})
+}));
+
+export const inventoryItemsRelations = relations(inventory_items, ({ one, many }) => ({
+	tipo_equipo: one(equipment_types, {
+		fields: [inventory_items.tipo_equipo_id],
+		references: [equipment_types.id]
+	}),
+	movimientos: many(inventory_movements),
+	pm_parts: many(pm_execution_parts)
+}));
+
+export const inventoryMovementsRelations = relations(inventory_movements, ({ one }) => ({
+	item: one(inventory_items, {
+		fields: [inventory_movements.inventory_item_id],
+		references: [inventory_items.id]
+	}),
+	usuario: one(users, {
+		fields: [inventory_movements.usuario_id],
+		references: [users.id]
+	})
+}));
+
+export const pmExecutionPartsRelations = relations(pm_execution_parts, ({ one }) => ({
+	execution: one(pm_executions, {
+		fields: [pm_execution_parts.pm_execution_id],
+		references: [pm_executions.id]
+	}),
+	item: one(inventory_items, {
+		fields: [pm_execution_parts.inventory_item_id],
+		references: [inventory_items.id]
 	})
 }));

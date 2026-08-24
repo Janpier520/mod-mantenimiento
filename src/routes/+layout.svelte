@@ -14,6 +14,7 @@
 	import Settings from '@lucide/svelte/icons/settings';
 	import History from '@lucide/svelte/icons/history';
 	import Shapes from '@lucide/svelte/icons/shapes';
+	import Warehouse from '@lucide/svelte/icons/warehouse';
 	import { onNavigate } from '$app/navigation';
 	import Toast from '$lib/ui/Toast.svelte';
 	import CommandPalette from '$lib/ui/CommandPalette.svelte';
@@ -141,6 +142,8 @@
 		'/equipos/tipos': 'Tipos de Equipo',
 		'/tickets': 'Tickets',
 		'/mantenimiento': 'Mantenimiento',
+		'/inventario': 'Inventario',
+		'/inventario/movimientos': 'Movimientos de Inventario',
 		'/proveedores': 'Proveedores',
 		'/reportes': 'Reportes',
 		'/usuarios': 'Usuarios',
@@ -159,6 +162,7 @@
 		equipos: Package,
 		tickets: Ticket,
 		mantenimiento: Wrench,
+		inventario: Warehouse,
 		proveedores: Building2,
 		reportes: BarChart3,
 		usuarios: Users,
@@ -172,6 +176,7 @@
 		{ label: 'Equipos', icon: 'equipos', href: '/equipos' },
 		{ label: 'Tickets', icon: 'tickets', href: '/tickets' },
 		{ label: 'Mantenimiento', icon: 'mantenimiento', href: '/mantenimiento' },
+		{ label: 'Inventario', icon: 'inventario', href: '/inventario' },
 		{
 			label: 'Proveedores',
 			icon: 'proveedores',
@@ -192,7 +197,9 @@
 						label: 'OPERACIONES',
 						items: navItems.filter(
 							(item) =>
-								['dashboard', 'equipos', 'tickets', 'mantenimiento'].includes(item.icon) &&
+								['dashboard', 'equipos', 'tickets', 'mantenimiento', 'inventario'].includes(
+									item.icon
+								) &&
 								(!item.roles || item.roles.includes(user.rol))
 						)
 					},

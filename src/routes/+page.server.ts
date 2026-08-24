@@ -3,7 +3,8 @@ import {
 	equipment,
 	tickets,
 	pm_executions,
-	preventive_maintenance_plans
+	preventive_maintenance_plans,
+	inventory_items
 } from '$lib/server/db/schema';
 import type { Equipment, PMExecution, PMPlan, PMTask, Ticket, User } from '$lib/server/db/schema';
 import { eq, ne, and, asc, desc, gte, lt, count } from 'drizzle-orm';
@@ -92,7 +93,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			ticketsByPeriod: EMPTY_ACTIVITY,
 			maintenanceByPeriod: EMPTY_ACTIVITY,
 			ticketDelta: null,
-			maintenanceDelta: null
+			maintenanceDelta: null,
+			lowStockCount: 0
 		};
 	}
 
@@ -108,6 +110,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.select({ cnt: count() })
 		.from(pm_executions)
 		.where(eq(pm_executions.resultado, 'pendiente'));
+
+	// Low-stock inventory items count
+	const [lowStockResult] = await db
+		.select({ cnt: count() })
+		.from(inventory_items)
+		.where(lt(inventory_items.stock_actual, inventory_items.stock_minimo));
 
 	// Next 5 upcoming pending executions
 	const upcoming = await db.query.pm_executions.findMany({
@@ -171,6 +179,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		ticketsByPeriod,
 		maintenanceByPeriod,
 		ticketDelta,
-		maintenanceDelta
+		maintenanceDelta,
+		lowStockCount: lowStockResult?.cnt ?? 0
 	};
 };

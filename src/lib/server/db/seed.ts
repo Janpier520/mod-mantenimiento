@@ -9,7 +9,8 @@ import {
 	ticket_comments,
 	preventive_maintenance_plans,
 	pm_tasks,
-	pm_executions
+	pm_executions,
+	inventory_items
 } from './schema';
 import { hashPassword } from '../auth';
 
@@ -459,6 +460,170 @@ export async function seed() {
 		console.log('  ✅ 3 ejecuciones de mantenimiento created');
 	} else {
 		console.log('  ⏭️  Demo data already exists — skipping');
+	}
+
+	// ─── Inventario: catálogo de repuestos ──────────────────────────────────────
+	const existingInventory = await db.query.inventory_items.findFirst();
+	if (!existingInventory) {
+		const tipos = await db.query.equipment_types.findMany();
+		const tipoMap = Object.fromEntries(tipos.map((t) => [t.nombre, t.id]));
+
+		await db.insert(inventory_items).values([
+			{
+				nombre: 'RAM DDR4 8GB',
+				descripcion: 'Módulo de memoria DDR4 3200MHz',
+				codigo_parte: 'RAM-DDR4-8G',
+				categoria: 'Memoria',
+				tipo_equipo_id: tipoMap['PC'],
+				stock_actual: 12,
+				stock_minimo: 5,
+				ubicacion: 'Almacén Principal'
+			},
+			{
+				nombre: 'RAM DDR4 16GB',
+				descripcion: 'Módulo de memoria DDR4 3200MHz',
+				codigo_parte: 'RAM-DDR4-16G',
+				categoria: 'Memoria',
+				tipo_equipo_id: tipoMap['PC'],
+				stock_actual: 3,
+				stock_minimo: 5,
+				ubicacion: 'Almacén Principal'
+			},
+			{
+				nombre: 'SSD 240GB',
+				descripcion: 'Disco de estado sólido SATA 240GB',
+				codigo_parte: 'SSD-240G',
+				categoria: 'Almacenamiento',
+				tipo_equipo_id: tipoMap['PC'],
+				stock_actual: 8,
+				stock_minimo: 4,
+				ubicacion: 'Almacén Principal'
+			},
+			{
+				nombre: 'SSD 480GB',
+				descripcion: 'Disco de estado sólido SATA 480GB',
+				codigo_parte: 'SSD-480G',
+				categoria: 'Almacenamiento',
+				tipo_equipo_id: tipoMap['Servidor'],
+				stock_actual: 2,
+				stock_minimo: 3,
+				ubicacion: 'Almacén Principal'
+			},
+			{
+				nombre: 'Monitor 24"',
+				descripcion: 'Monitor LED IPS 24 pulgadas',
+				codigo_parte: 'MON-24',
+				categoria: 'Pantalla',
+				tipo_equipo_id: tipoMap['Monitor'],
+				stock_actual: 6,
+				stock_minimo: 3,
+				ubicacion: 'Almacén Secundario'
+			},
+			{
+				nombre: 'Monitor 27"',
+				descripcion: 'Monitor LED IPS 27 pulgadas',
+				codigo_parte: 'MON-27',
+				categoria: 'Pantalla',
+				tipo_equipo_id: tipoMap['Monitor'],
+				stock_actual: 1,
+				stock_minimo: 2,
+				ubicacion: 'Almacén Secundario'
+			},
+			{
+				nombre: 'Batería UPS 1500VA',
+				descripcion: 'Batería de respuesto para UPS 1500VA',
+				codigo_parte: 'BAT-UPS-1500',
+				categoria: 'Energía',
+				tipo_equipo_id: tipoMap['UPS'],
+				stock_actual: 4,
+				stock_minimo: 3,
+				ubicacion: 'Almacén Principal'
+			},
+			{
+				nombre: 'Cable de alimentación',
+				descripcion: 'Cable IEC C13-C14 1.8m',
+				codigo_parte: 'CABLE-C13',
+				categoria: 'Cables',
+				tipo_equipo_id: null,
+				stock_actual: 25,
+				stock_minimo: 10,
+				ubicacion: 'Almacén Principal'
+			},
+			{
+				nombre: 'Teclado USB',
+				descripcion: 'Teclado USB QWERTY español',
+				codigo_parte: 'TECL-USB',
+				categoria: 'Periféricos',
+				tipo_equipo_id: tipoMap['PC'],
+				stock_actual: 10,
+				stock_minimo: 5,
+				ubicacion: 'Almacén Principal'
+			},
+			{
+				nombre: 'Mouse USB',
+				descripcion: 'Mouse óptico USB',
+				codigo_parte: 'MOUSE-USB',
+				categoria: 'Periféricos',
+				tipo_equipo_id: tipoMap['PC'],
+				stock_actual: 15,
+				stock_minimo: 8,
+				ubicacion: 'Almacén Principal'
+			},
+			{
+				nombre: 'Cooler CPU',
+				descripcion: 'Ventilador de disipador CPU 120mm',
+				codigo_parte: 'FAN-CPU-120',
+				categoria: 'Refrigeración',
+				tipo_equipo_id: tipoMap['PC'],
+				stock_actual: 2,
+				stock_minimo: 5,
+				ubicacion: 'Almacén Principal'
+			},
+			{
+				nombre: 'Pasta térmica',
+				descripcion: 'Pasta térmica de alta conductividad',
+				codigo_parte: 'PASTA-T-5G',
+				categoria: 'Refrigeración',
+				tipo_equipo_id: null,
+				stock_actual: 7,
+				stock_minimo: 3,
+				ubicacion: 'Almacén Principal'
+			},
+			{
+				nombre: 'Fuente 500W',
+				descripcion: 'Fuente de poder ATX 500W 80 Plus',
+				codigo_parte: 'FUENTE-500W',
+				categoria: 'Energía',
+				tipo_equipo_id: tipoMap['PC'],
+				stock_actual: 3,
+				stock_minimo: 3,
+				ubicacion: 'Almacén Principal'
+			},
+			{
+				nombre: 'Placa Madre ATX',
+				descripcion: 'Placa madre ATX LGA1700',
+				codigo_parte: 'MB-ATX-LGA',
+				categoria: 'Componente',
+				tipo_equipo_id: tipoMap['PC'],
+				stock_actual: 2,
+				stock_minimo: 2,
+				ubicacion: 'Almacén Principal'
+			},
+			{
+				nombre: 'Tóner HP 26A',
+				descripcion: 'Cartucho tóner negro HP 26A',
+				codigo_parte: 'TONER-HP26A',
+				categoria: 'Tintas',
+				tipo_equipo_id: tipoMap['Impresora'],
+				stock_actual: 4,
+				stock_minimo: 5,
+				ubicacion: 'Almacén Secundario'
+			}
+		]);
+
+		console.log('  ✅ 15 inventory items created');
+	} else {
+		console.log('  ⏭️  Inventory items already exist — skipping');
 	}
 
 	console.log('✅ Seed complete!');

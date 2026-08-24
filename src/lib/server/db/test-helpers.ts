@@ -4,7 +4,7 @@
 // The env is set by test-setup.ts (vitest setupFiles) BEFORE this module's
 // import graph loads, so `db` from ./index always binds to ':memory:'. Re-assert
 // here as belt-and-braces (spec TC-2).
-process.env.DATABASE_URL = 'file::memory:';
+process.env.DATABASE_URL = 'file::memory:?cache=shared';
 
 import * as schema from './schema';
 import { db } from './index';
