@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import {
 	listInventoryItems,
 	createInventoryItem,

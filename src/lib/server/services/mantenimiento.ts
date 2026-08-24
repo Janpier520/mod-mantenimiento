@@ -30,6 +30,7 @@ export interface PlanInput {
 export interface TaskInput {
 	nombre: string;
 	descripcion: string;
+	inventory_item_id?: string | null;
 }
 export interface ScheduleExecutionInput {
 	plan_id: string;
@@ -200,7 +201,8 @@ export async function addTask(
 			plan_id,
 			nombre: nombre.trim(),
 			descripcion: descripcion.trim(),
-			orden: (maxOrden?.max ?? 0) + 1
+			orden: (maxOrden?.max ?? 0) + 1,
+			inventory_item_id: input.inventory_item_id || null
 		})
 		.returning({ id: pm_tasks.id, orden: pm_tasks.orden });
 
@@ -225,7 +227,11 @@ export async function updateTask(
 
 	await db
 		.update(pm_tasks)
-		.set({ nombre: nombre.trim(), descripcion: descripcion.trim() })
+		.set({
+			nombre: nombre.trim(),
+			descripcion: descripcion.trim(),
+			inventory_item_id: input.inventory_item_id || null
+		})
 		.where(eq(pm_tasks.id, id));
 
 	return { ok: true, data: { id, orden: existingTask.orden } };

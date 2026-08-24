@@ -17,6 +17,7 @@ import {
 	cancelarEjecucion,
 	reprogramarEjecucion
 } from '$lib/server/services/mantenimiento';
+import type { ExecutionPartInput } from '$lib/server/services/mantenimiento';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -31,7 +32,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			equipo: true,
 			tipo_equipo: true,
 			ejecuciones: {
-				orderBy: (execs, { desc }) => [desc(execs.fecha_programada)]
+				orderBy: (execs, { desc }) => [desc(execs.fecha_programada)],
+				with: { parts: true }
 			}
 		},
 		orderBy: (plans, { asc }) => [asc(plans.nombre)]
@@ -58,11 +60,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 		columns: { id: true, nombre: true, apellido: true, email: true, rol: true }
 	});
 
+	const inventoryItemList = await db.query.inventory_items.findMany({
+		orderBy: (ii, { asc }) => [asc(ii.nombre)]
+	});
+
 	return {
 		plans,
 		equipment: equipmentList,
 		equipmentTypes: equipmentTypesList,
 		technicians,
+		inventoryItems: inventoryItemList,
 		overdueCount: overdueResult?.cnt ?? 0
 	};
 };
@@ -121,7 +128,8 @@ export const actions: Actions = {
 			{
 				plan_id: (form.get('plan_id') as string) ?? '',
 				nombre: (form.get('nombre') as string) ?? '',
-				descripcion: (form.get('descripcion') as string) ?? ''
+				descripcion: (form.get('descripcion') as string) ?? '',
+				inventory_item_id: (form.get('inventory_item_id') as string) || null
 			},
 			{ id: locals.user.id, rol: locals.user.rol }
 		);
@@ -136,7 +144,8 @@ export const actions: Actions = {
 			{
 				id: (form.get('id') as string) ?? '',
 				nombre: (form.get('nombre') as string) ?? '',
-				descripcion: (form.get('descripcion') as string) ?? ''
+				descripcion: (form.get('descripcion') as string) ?? '',
+				inventory_item_id: (form.get('inventory_item_id') as string) || null
 			},
 			{ id: locals.user.id, rol: locals.user.rol }
 		);
@@ -174,11 +183,30 @@ export const actions: Actions = {
 	complete_execution: async ({ request, locals }) => {
 		requireAuth(locals);
 		const form = await request.formData();
+
+		const parts: ExecutionPartInput[] = [];
+		let idx = 0;
+		while (form.has(`parts[${idx}].inventory_item_id`)) {
+			const itemId = (form.get(`parts[${idx}].inventory_item_id`) as string) ?? '';
+			if (itemId) {
+				parts.push({
+					inventory_item_id: itemId,
+					accion:
+						(form.get(`parts[${idx}].accion`) as string as ExecutionPartInput['accion']) ??
+						'instalado',
+					cantidad: Number(form.get(`parts[${idx}].cantidad`) ?? 1),
+					observaciones: (form.get(`parts[${idx}].observaciones`) as string) ?? ''
+				});
+			}
+			idx++;
+		}
+
 		const res = await completeExecution(
 			{
 				id: (form.get('id') as string) ?? '',
 				resultado: (form.get('resultado') as string) ?? '',
-				observaciones: (form.get('observaciones') as string) ?? ''
+				observaciones: (form.get('observaciones') as string) ?? '',
+				parts: parts.length > 0 ? parts : undefined
 			},
 			{ id: locals.user.id, rol: locals.user.rol }
 		);

@@ -15,6 +15,7 @@
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import X from '@lucide/svelte/icons/x';
 
 	let { data } = $props();
 
@@ -26,6 +27,8 @@
 	let equipmentTypesList = $state(data.equipmentTypes);
 	// svelte-ignore state_referenced_locally
 	let technicians = $state(data.technicians);
+	// svelte-ignore state_referenced_locally
+	let inventoryItems = $state(data.inventoryItems);
 	// svelte-ignore state_referenced_locally
 	let overdueCount = $state(data.overdueCount);
 
@@ -90,6 +93,26 @@
 	let editingExecDateId = $state<string | null>(null);
 	let editingExecDateValue = $state('');
 	let editingExecDateError = $state('');
+
+	// Parts for complete execution modal
+	let executionParts = $state<
+		{ inventory_item_id: string; accion: string; cantidad: number; observaciones: string }[]
+	>([]);
+
+	function addPartRow() {
+		executionParts.push({
+			inventory_item_id: '',
+			accion: 'instalado',
+			cantidad: 1,
+			observaciones: ''
+		});
+	}
+	function removePartRow(index: number) {
+		executionParts.splice(index, 1);
+	}
+
+	// Task modal inventory item
+	let formTaskInventoryItemId = $state('');
 
 	const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -166,6 +189,7 @@
 		taskPlanId = planId;
 		formTaskNombre = '';
 		formTaskDescripcion = '';
+		formTaskInventoryItemId = '';
 		formTaskError = '';
 		showTaskModal = true;
 	}
@@ -175,6 +199,7 @@
 		taskPlanId = task.plan_id;
 		formTaskNombre = task.nombre ?? '';
 		formTaskDescripcion = task.descripcion ?? '';
+		formTaskInventoryItemId = task.inventory_item_id ?? '';
 		formTaskError = '';
 		showTaskModal = true;
 	}
@@ -210,6 +235,7 @@
 		formExecResultado = 'completado';
 		formExecObservaciones = '';
 		formExecError = '';
+		executionParts = [];
 		showExecModal = true;
 	}
 
@@ -324,6 +350,7 @@
 		equipmentList = data.equipment;
 		equipmentTypesList = data.equipmentTypes;
 		technicians = data.technicians;
+		inventoryItems = data.inventoryItems;
 		overdueCount = data.overdueCount;
 	});
 
@@ -574,6 +601,11 @@
 														>&rarr; {formatDate(exec.fecha_ejecucion)}</span
 													>
 												{/if}
+												{#if exec.parts && exec.parts.length > 0}
+													<span class="text-xs text-muted-foreground">
+														&middot; {exec.parts.length} pieza{exec.parts.length > 1 ? 's' : ''}
+													</span>
+												{/if}
 												{#if exec.resultado === 'pendiente' && !isConsultor}
 													{#if editingExecDateId === exec.id}
 														<span class="ml-auto flex flex-wrap items-center gap-2">
@@ -820,6 +852,23 @@
 						rows="2"></textarea>
 				</div>
 
+				<div class="space-y-1.5">
+					<label for="task-inventory-item" class="block text-sm font-medium text-foreground">
+						Ítem de inventario asociado
+					</label>
+					<select
+						id="task-inventory-item"
+						name="inventory_item_id"
+						bind:value={formTaskInventoryItemId}
+						class="block w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+					>
+						<option value="">Ninguno</option>
+						{#each inventoryItems as item (item.id)}
+							<option value={item.id}>{item.nombre} (stock: {item.stock_actual})</option>
+						{/each}
+					</select>
+				</div>
+
 				{#if formTaskError}
 					<p class="text-xs text-red-500">{formTaskError}</p>
 				{/if}
@@ -994,6 +1043,81 @@
 				{#if formExecError}
 					<p class="text-xs text-red-500">{formExecError}</p>
 				{/if}
+
+				<!-- Piezas utilizadas (opcional) -->
+				<div class="mt-4">
+					<div class="mb-2 flex items-center justify-between">
+						<!-- svelte-ignore a11y_label_has_associated_control -->
+						<label class="text-sm font-medium">Piezas utilizadas</label>
+						<button
+							type="button"
+							onclick={() => addPartRow()}
+							class="text-xs text-primary hover:underline"
+						>
+							+ Agregar pieza
+						</button>
+					</div>
+					<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+					{#each executionParts as part, i (i)}
+						<div class="mb-2 grid grid-cols-4 items-end gap-2">
+							<div>
+								<!-- svelte-ignore a11y_label_has_associated_control -->
+								<label class="text-xs text-muted-foreground">Ítem</label>
+								<select
+									name="parts[{i}].inventory_item_id"
+									class="w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+								>
+									<option value="">Seleccionar...</option>
+									{#each inventoryItems as item (item.id)}
+										<option value={item.id}>{item.nombre} (stock: {item.stock_actual})</option>
+									{/each}
+								</select>
+							</div>
+							<div>
+								<!-- svelte-ignore a11y_label_has_associated_control -->
+								<label class="text-xs text-muted-foreground">Acción</label>
+								<select
+									name="parts[{i}].accion"
+									class="w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+								>
+									<option value="instalado">Instalado</option>
+									<option value="removido">Removido</option>
+									<option value="reemplazado">Reemplazado</option>
+								</select>
+							</div>
+							<div>
+								<!-- svelte-ignore a11y_label_has_associated_control -->
+								<label class="text-xs text-muted-foreground">Cantidad</label>
+								<input
+									type="number"
+									name="parts[{i}].cantidad"
+									value="1"
+									min="1"
+									class="w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+								/>
+							</div>
+							<div class="flex items-end gap-1">
+								<div class="flex-1">
+									<!-- svelte-ignore a11y_label_has_associated_control -->
+									<label class="text-xs text-muted-foreground">Notas</label>
+									<input
+										type="text"
+										name="parts[{i}].observaciones"
+										placeholder="Opcional"
+										class="w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+									/>
+								</div>
+								<button
+									type="button"
+									onclick={() => removePartRow(i)}
+									class="mb-0.5 text-destructive hover:text-destructive/80"
+								>
+									<X class="h-4 w-4" />
+								</button>
+							</div>
+						</div>
+					{/each}
+				</div>
 
 				<Dialog.Footer>
 					<Button variant="outline" onclick={closeExecModal}>Cancelar</Button>
