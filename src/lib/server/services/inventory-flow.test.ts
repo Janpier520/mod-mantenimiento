@@ -10,18 +10,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { initTestDb, type SeedIds } from '$lib/server/db/test-helpers';
 import { db } from '$lib/server/db';
 import {
-	inventory_items,
-	inventory_movements,
-	preventive_maintenance_plans,
-	pm_tasks,
-	pm_executions,
-	pm_execution_parts
-} from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
-import {
 	createInventoryItem,
 	updateInventoryItem,
-	deleteInventoryItem,
 	getInventoryItem,
 	createMovement,
 	listMovements,
@@ -297,8 +287,7 @@ describe('inventory flow — end-to-end', () => {
 
 		it('finds the paste execution', async () => {
 			const exec = await db.query.pm_executions.findFirst({
-				where: (e, { and, eq }) =>
-					and(eq(e.plan_id, planId), eq(e.tarea_id, taskIdPaste))
+				where: (e, { and, eq }) => and(eq(e.plan_id, planId), eq(e.tarea_id, taskIdPaste))
 			});
 			expect(exec).toBeDefined();
 			expect(exec!.resultado).toBe('pendiente');
@@ -307,8 +296,7 @@ describe('inventory flow — end-to-end', () => {
 
 		it('finds the fan execution', async () => {
 			const exec = await db.query.pm_executions.findFirst({
-				where: (e, { and, eq }) =>
-					and(eq(e.plan_id, planId), eq(e.tarea_id, taskIdFan))
+				where: (e, { and, eq }) => and(eq(e.plan_id, planId), eq(e.tarea_id, taskIdFan))
 			});
 			expect(exec).toBeDefined();
 			execIdFan = exec!.id;
@@ -423,8 +411,7 @@ describe('inventory flow — end-to-end', () => {
 			expect(schedResult.ok).toBe(true);
 
 			const exec = await db.query.pm_executions.findFirst({
-				where: (e, { and, eq }) =>
-					and(eq(e.plan_id, ssdPlanId), eq(e.tarea_id, ssdTaskId))
+				where: (e, { and, eq }) => and(eq(e.plan_id, ssdPlanId), eq(e.tarea_id, ssdTaskId))
 			});
 			expect(exec).toBeDefined();
 

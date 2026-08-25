@@ -271,8 +271,6 @@ export async function seedInventoryTestData(): Promise<InventorySeedIds> {
 	const pasteId = itemByName.get('Pasta Térmica MX-4')!;
 	const fanId = itemByName.get('Ventilador 120mm PWM')!;
 	const ssdId = itemByName.get('SSD NVMe 1TB')!;
-	const hepaId = itemByName.get('Filtro HEPA')!;
-	const toId = itemByName.get('Tóner HP 305A')!;
 
 	// ── Stock movements ──
 	await db.insert(inventory_movements).values([

@@ -97,14 +97,14 @@ Como administrador podés revisar tus propias sesiones activas y revocarlas. Cad
 
 ## 9. Resumen de permisos
 
-| Acción                                          | ¿Podés? |
-| ----------------------------------------------- | :-----: |
-| Todo lo del rol técnico                         |    ✔    |
-| Gestionar usuarios (con preguntas de seguridad) |    ✔    |
-| Gestionar tipos de equipo                       |    ✔    |
-| Gestionar proveedores (alta/edición/baja)       |    ✔    |
-| Editar configuración del sistema                |    ✔    |
-| Ver reportes                                    |    ✔    |
-| Cerrar / cancelar / reabrir tickets             |    ✔    |
-| Dar de baja equipos                             |    ✔    |
-| Gestionar inventario completo (CRUD + movimientos) | ✔    |
+| Acción                                             | ¿Podés? |
+| -------------------------------------------------- | :-----: |
+| Todo lo del rol técnico                            |    ✔    |
+| Gestionar usuarios (con preguntas de seguridad)    |    ✔    |
+| Gestionar tipos de equipo                          |    ✔    |
+| Gestionar proveedores (alta/edición/baja)          |    ✔    |
+| Editar configuración del sistema                   |    ✔    |
+| Ver reportes                                       |    ✔    |
+| Cerrar / cancelar / reabrir tickets                |    ✔    |
+| Dar de baja equipos                                |    ✔    |
+| Gestionar inventario completo (CRUD + movimientos) |    ✔    |

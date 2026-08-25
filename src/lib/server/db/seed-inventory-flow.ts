@@ -14,9 +14,6 @@
  */
 import { db } from './index';
 import {
-	users,
-	equipment_types,
-	equipment,
 	inventory_items,
 	inventory_movements,
 	preventive_maintenance_plans,
@@ -24,23 +21,12 @@ import {
 	pm_executions,
 	pm_execution_parts
 } from './schema';
-import { eq, sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function log(emoji: string, msg: string) {
 	console.log(`  ${emoji} ${msg}`);
-}
-
-async function getOrCreate<T extends { id: string }>(
-	table: typeof inventory_items,
-	condition: (row: T) => boolean,
-	finder: () => Promise<T | undefined>,
-	creator: () => Promise<T>
-): Promise<T> {
-	const existing = await finder();
-	if (existing) return existing;
-	return creator();
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
@@ -191,15 +177,12 @@ export async function seedInventoryFlow() {
 			log('⏭️', `Item "${item.nombre}" already exists`);
 			createdItems.push(existing);
 		} else {
-			const [row] = await db
-				.insert(inventory_items)
-				.values(item)
-				.returning({
-					id: inventory_items.id,
-					nombre: inventory_items.nombre,
-					stock_actual: inventory_items.stock_actual,
-					stock_minimo: inventory_items.stock_minimo
-				});
+			const [row] = await db.insert(inventory_items).values(item).returning({
+				id: inventory_items.id,
+				nombre: inventory_items.nombre,
+				stock_actual: inventory_items.stock_actual,
+				stock_minimo: inventory_items.stock_minimo
+			});
 			createdItems.push(row);
 			log('✅', `Item "${row.nombre}" created (stock: ${row.stock_actual})`);
 		}
@@ -373,13 +356,13 @@ export async function seedInventoryFlow() {
 					orden: 3,
 					inventory_item_id: null
 				},
-			{
-				plan_id: planPC.id,
-				nombre: 'Verificar fuente de poder',
-				descripcion: 'Medir voltajes con multimetro, verificar estabilidad',
-				orden: 4,
-				inventory_item_id: fuente.id
-			}
+				{
+					plan_id: planPC.id,
+					nombre: 'Verificar fuente de poder',
+					descripcion: 'Medir voltajes con multimetro, verificar estabilidad',
+					orden: 4,
+					inventory_item_id: fuente.id
+				}
 			])
 			.returning({ id: pm_tasks.id, nombre: pm_tasks.nombre });
 
@@ -650,10 +633,7 @@ export async function seedInventoryFlow() {
 						});
 					});
 
-					log(
-						'✅',
-						`PSU replacement completed (stock: ${stockBeforePSU} → ${stockBeforePSU - 1})`
-					);
+					log('✅', `PSU replacement completed (stock: ${stockBeforePSU} → ${stockBeforePSU - 1})`);
 				}
 			}
 
@@ -681,8 +661,7 @@ export async function seedInventoryFlow() {
 
 				// Complete SSD verification with part
 				const ssdExec = serverExecs.find(
-					(e) =>
-						e.tarea_id === serverTasks.find((t) => t.nombre.includes('SSD'))?.id
+					(e) => e.tarea_id === serverTasks.find((t) => t.nombre.includes('SSD'))?.id
 				);
 				if (ssdExec) {
 					const ssdBefore = await db.query.inventory_items.findFirst({
@@ -726,10 +705,7 @@ export async function seedInventoryFlow() {
 						});
 					});
 
-					log(
-						'✅',
-						`SSD replacement completed (stock: ${stockBeforeSSD} → ${stockBeforeSSD - 1})`
-					);
+					log('✅', `SSD replacement completed (stock: ${stockBeforeSSD} → ${stockBeforeSSD - 1})`);
 				}
 
 				// Complete RAM test — no parts needed
@@ -825,8 +801,7 @@ export async function seedInventoryFlow() {
 
 				// Complete toner replacement
 				const tonerExec = printerExecs.find(
-					(e) =>
-						e.tarea_id === printerTasks.find((t) => t.nombre.includes('tóner'))?.id
+					(e) => e.tarea_id === printerTasks.find((t) => t.nombre.includes('tóner'))?.id
 				);
 				if (tonerExec) {
 					const tonerBefore = await db.query.inventory_items.findFirst({
@@ -840,8 +815,7 @@ export async function seedInventoryFlow() {
 							.set({
 								fecha_ejecucion: '2026-08-18T10:00:00.000Z',
 								resultado: 'completado',
-								observaciones:
-									'Tóner vacío reemplazado. Cartucho nuevo instalado y calibrado.'
+								observaciones: 'Tóner vacío reemplazado. Cartucho nuevo instalado y calibrado.'
 							})
 							.where(eq(pm_executions.id, tonerExec.id));
 
@@ -878,8 +852,7 @@ export async function seedInventoryFlow() {
 
 				// Complete rodillo cleaning — no parts needed
 				const rodilloExec = printerExecs.find(
-					(e) =>
-						e.tarea_id === printerTasks.find((t) => t.nombre.includes('rodillos'))?.id
+					(e) => e.tarea_id === printerTasks.find((t) => t.nombre.includes('rodillos'))?.id
 				);
 				if (rodilloExec) {
 					await db
@@ -905,10 +878,7 @@ export async function seedInventoryFlow() {
 
 	const totalItems = await db.select({ cnt: sql<number>`count(*)` }).from(inventory_items);
 	const totalMovements = await db.select({ cnt: sql<number>`count(*)` }).from(inventory_movements);
-	const totalExecutions = await db
-		.select({ cnt: sql<number>`count(*)` })
-		.from(pm_executions);
-	const totalParts = await db.select({ cnt: sql<number>`count(*)` }).from(pm_execution_parts);
+	const totalExecutions = await db.select({ cnt: sql<number>`count(*)` }).from(pm_executions);
 
 	const lowStockItems = await db
 		.select({
@@ -924,18 +894,24 @@ export async function seedInventoryFlow() {
 		.from(pm_executions)
 		.where(sql`${pm_executions.resultado} = 'completado'`);
 
-	const execsWithParts = await db
-		.select({ cnt: sql<number>`count(*)` })
-		.from(pm_execution_parts);
+	const execsWithParts = await db.select({ cnt: sql<number>`count(*)` }).from(pm_execution_parts);
 
 	console.log('  ┌─────────────────────────────────────────┐');
 	console.log('  │       INVENTORY FLOW SUMMARY            │');
 	console.log('  ├─────────────────────────────────────────┤');
 	console.log(`  │  Items in catalog:     ${String(totalItems[0].cnt).padStart(4)}            │`);
-	console.log(`  │  Stock movements:      ${String(totalMovements[0].cnt).padStart(4)}            │`);
-	console.log(`  │  PM executions:        ${String(totalExecutions[0].cnt).padStart(4)}            │`);
-	console.log(`  │  Parts used (records): ${String(execsWithParts[0].cnt).padStart(4)}            │`);
-	console.log(`  │  Completed executions: ${String(completedExecs[0].cnt).padStart(4)}            │`);
+	console.log(
+		`  │  Stock movements:      ${String(totalMovements[0].cnt).padStart(4)}            │`
+	);
+	console.log(
+		`  │  PM executions:        ${String(totalExecutions[0].cnt).padStart(4)}            │`
+	);
+	console.log(
+		`  │  Parts used (records): ${String(execsWithParts[0].cnt).padStart(4)}            │`
+	);
+	console.log(
+		`  │  Completed executions: ${String(completedExecs[0].cnt).padStart(4)}            │`
+	);
 	console.log('  └─────────────────────────────────────────┘');
 
 	if (lowStockItems.length > 0) {

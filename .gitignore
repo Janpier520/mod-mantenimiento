@@ -31,3 +31,5 @@ coverage
 
 # Uploaded attachments
 uploads/
+
+.playwright-mcp/
