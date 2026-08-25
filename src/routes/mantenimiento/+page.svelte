@@ -421,13 +421,16 @@
 								<Badge text={`Cada ${plan.frecuencia_dias} días`} variant="info" />
 								<Badge text={`${(plan.tareas ?? []).length} tareas`} variant="default" />
 							</div>
-							<p class="mt-1 truncate text-sm text-muted-foreground">
-								{getPlanEquipoLabel(plan)}
-								{#if plan.descripcion}
-									<span class="mx-1.5">&middot;</span>
-									{plan.descripcion}
-								{/if}
-							</p>
+						<p class="mt-1 truncate text-sm text-muted-foreground">
+							{getPlanEquipoLabel(plan)}
+							{#if plan.descripcion}
+								<span class="mx-1.5">&middot;</span>
+								{plan.descripcion}
+							{/if}
+						</p>
+						<p class="mt-0.5 text-xs text-muted-foreground/60">
+							Creado el {formatDate(plan.created_at)}
+						</p>
 						</div>
 						<div class="ml-4 flex shrink-0 items-center gap-2">
 							{#if !isConsultor}

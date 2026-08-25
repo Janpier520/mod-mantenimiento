@@ -626,6 +626,17 @@ export async function seed() {
 		console.log('  ⏭️  Inventory items already exist — skipping');
 	}
 
+	// ─── Inventory Flow (movements, PM-linked tasks, executions with parts) ──
+	const hasInventoryItems = await db.query.inventory_items.findFirst();
+	if (hasInventoryItems) {
+		try {
+			const { seedInventoryFlow } = await import('./seed-inventory-flow');
+			await seedInventoryFlow();
+		} catch (err) {
+			console.log('  ⚠️  Inventory flow seed skipped (import error):', (err as Error).message);
+		}
+	}
+
 	console.log('✅ Seed complete!');
 }
 
