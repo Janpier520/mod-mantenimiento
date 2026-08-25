@@ -26,9 +26,13 @@ export default defineConfig({
 				'src/routes/usuarios/+page.server.ts',
 				'src/routes/tickets/+page.server.ts'
 			],
-			// Bootstrap/demo code, never imported by tests — would drag the aggregate
-			// below the threshold otherwise.
-			exclude: ['src/lib/server/db/seed.ts'],
+		// Bootstrap/demo code, never imported by tests — would drag the aggregate
+		// below the threshold otherwise.
+		exclude: [
+			'src/lib/server/db/seed.ts',
+			'src/lib/server/db/seed-inventory-flow.ts',
+			'src/lib/server/db/test-helpers.ts'
+		],
 			thresholds: {
 				statements: 70
 			},

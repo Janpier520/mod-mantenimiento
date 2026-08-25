@@ -1,6 +1,6 @@
 # Módulo Mantenimiento de Equipos
 
-Sistema de gestión de equipos informáticos (ERP de mantenimiento): inventario de equipos, tickets de soporte, mantenimiento preventivo con planes y ejecuciones, proveedores, reportes, y administración de usuarios y configuración. Construido con SvelteKit 5, Drizzle ORM sobre SQLite (libSQL), Tailwind CSS v4 y shadcn-svelte, con autenticación por sesión y control de acceso por roles (`admin`, `tecnico`, `consultor`).
+Sistema de gestión de equipos informáticos (ERP de mantenimiento): inventario de equipos, tickets de soporte, mantenimiento preventivo con planes y ejecuciones, inventario de repuestos con trazabilidad de uso en PM, proveedores, reportes, y administración de usuarios y configuración. Construido con SvelteKit 5, Drizzle ORM sobre SQLite (libSQL), Tailwind CSS v4 y shadcn-svelte, con autenticación por sesión y control de acceso por roles (`admin`, `tecnico`, `consultor`).
 
 Este README es la puerta de entrada al proyecto. La fuente de verdad de arquitectura, convenciones y comandos es [`AGENTS.md`](./AGENTS.md); el sistema de diseño vive en [`DESIGN.md`](./DESIGN.md).
 
@@ -86,7 +86,7 @@ Los 17 scripts de `package.json`:
 
 **Estrategia de DB en tests**: cada archivo de test usa SQLite en memoria (`DATABASE_URL=file::memory:`, seteado en `src/lib/server/db/test-setup.ts` antes de que cargue el grafo de imports). El helper `src/lib/server/db/test-helpers.ts` expone `initTestDb()` (idempotente por archivo), que hace push programático del esquema con `drizzle-kit/api` y siembra un dataset mínimo con `seedTestData()` (usuarios, tipos, proveedores y equipos en todos los estados).
 
-**Estado a 2026-08-19**: 233 tests (13 archivos) pasando, cobertura de statements 82.7%.
+**Estado a 2026-08-25**: 292 tests (15 archivos) pasando, cobertura de statements 83.16%.
 
 ## CI
 
@@ -102,7 +102,7 @@ Además sube el reporte de cobertura como artifact. ESLint es un gate obligatori
 
 ## Arquitectura
 
-- **Sin capa de API REST/tRPC**: cada ruta expone server load functions (`+page.server.ts`) y form actions con `use:enhance`. Los adaptadores de ruta son delgados: validan la entrada y delegan la lógica en la capa de servicios `src/lib/server/services/` (`equipos.ts`, `tickets.ts`, `mantenimiento.ts`, `usuarios.ts`, `attachments.ts`, `activity.ts`).
+- **Sin capa de API REST/tRPC**: cada ruta expone server load functions (`+page.server.ts`) y form actions con `use:enhance`. Los adaptadores de ruta son delgados: validan la entrada y delegan la lógica en la capa de servicios `src/lib/server/services/` (`equipos.ts`, `tickets.ts`, `mantenimiento.ts`, `usuarios.ts`, `attachments.ts`, `activity.ts`, `inventory.ts`).
 - **Auth en `src/hooks.server.ts`**: validación de sesión (cookie httponly, sliding window) + role guard por prefijo de ruta vía `ROLE_ROUTES`.
 - **Schema en un solo archivo**: `src/lib/server/db/schema.ts` con relaciones declarativas; init de la DB en `src/lib/server/db/index.ts` (PRAGMA WAL + busy_timeout).
 - **Layout único**: sidebar fija con navegación filtrada por rol y topbar con logout + toggle de dark mode (clase `.dark` persistida en localStorage).
@@ -116,6 +116,7 @@ Además sube el reporte de cobertura como artifact. ESLint es un gate obligatori
 | `/equipos` (+ `/equipos/tipos`)                           | todos                |
 | `/tickets`                                                | todos                |
 | `/mantenimiento`                                          | todos                |
+| `/inventario` (+ `/inventario/movimientos`)               | todos                |
 | `/sessions`                                               | todos                |
 | `/proveedores`                                            | admin, consultor     |
 | `/reportes`                                               | admin, consultor     |
@@ -131,14 +132,15 @@ Además sube el reporte de cobertura como artifact. ESLint es un gate obligatori
 │   ├── routes/                  # páginas: load functions + form actions
 │   │   ├── +layout.svelte       # layout único (sidebar + topbar)
 │   │   ├── login/ auth/         # rutas públicas
-│   │   ├── equipos/ tickets/ mantenimiento/
+│   │   ├── equipos/ tickets/ mantenimiento/ inventario/
 │   │   ├── proveedores/ reportes/ sessions/ usuarios/ config/
 │   │   └── +page.server.ts      # adaptadores → capa de servicios
 │   └── lib/
 │       ├── server/
 │       │   ├── db/              # schema.ts, index.ts, seed.ts, test-helpers.ts
-│       │   ├── services/        # capa de servicios (equipos, tickets, mantenimiento, usuarios, attachments, activity)
+│       │   ├── services/        # capa de servicios (equipos, tickets, mantenimiento, usuarios, attachments, activity, inventory)
 │       │   └── auth.ts          # hash de passwords + sesiones
+│       ├── domain/              # state machines (client-importable)
 │       └── test/mocks/$app      # mocks de $app para vitest
 ├── scripts/
 │   └── db-reset.mjs             # respalda a npm run db:reset
@@ -166,6 +168,7 @@ Flujo de artefactos: `proposal → spec → design → tasks → apply → verif
 - **Tickets con SLA**: `fecha_limite` auto-calculada por prioridad (crítica=1d, alta=3d, media=7d, baja=14d), badge "Vencido" en listas y detalle, historial de actividad por ticket (`activity_log`).
 - **Adjuntos en tickets**: upload con filtro MIME y límite de 5 MB (`uploads/` gitignored), descarga con `Content-Disposition`, borrado por propietario/admin (los archivos se eliminan del disco al borrar el ticket).
 - **Mantenimiento preventivo**: planes con frecuencia en días, tareas secuenciadas, programación de ejecuciones, completar con resultado (completado/fallido/omitido) y auto-programación de la siguiente ejecución; cancelar y reprogramar ejecuciones pendientes; alerta de ejecuciones vencidas en la página del módulo.
+- **Inventario de repuestos**: CRUD de ítems con stock actual/mínimo, ubicación y categoría; movimientos de stock (entrada/salida/ajuste); vinculación con PM: las ejecuciones de mantenimiento pueden registrar piezas utilizadas con deducción atómica de stock; detección de bajo stock; historial de movimientos.
 - **Historial de actividad**: `activity_log` registra crear/transiciones/comentarios/adjuntos/eliminaciones en tickets y cambios de estado de equipos (`equipment_status_history`).
 - **Control por roles**: `consultor` es solo lectura en toda la app (acciones ocultas en UI y 403 en servidor); `tecnico` ejecuta mantenimiento y trabaja tickets; `admin` administra usuarios, proveedores, tipos y configuración.
 - **Seguridad**: hashes bcrypt (passwords y respuestas de seguridad), rate limit de login por usuario, renovación deslizante de sesión, cookies httpOnly+SameSite, foreign keys activas, número de serie de equipos único.
