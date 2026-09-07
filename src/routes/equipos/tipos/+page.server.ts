@@ -26,7 +26,6 @@ export const actions: Actions = {
 		const id = (form.get('id') as string) ?? '';
 		const nombre = (form.get('nombre') as string) ?? '';
 		const descripcion = (form.get('descripcion') as string) ?? '';
-		const icono = (form.get('icono') as string) ?? '';
 
 		if (_action === 'create' || _action === 'update') {
 			if (!nombre || nombre.trim().length === 0) {
@@ -41,8 +40,7 @@ export const actions: Actions = {
 
 			await db.insert(equipment_types).values({
 				nombre: nombre.trim(),
-				descripcion: descripcion.trim(),
-				icono: icono.trim()
+				descripcion: descripcion.trim()
 			});
 			return { success: true, _action };
 		}
@@ -65,8 +63,7 @@ export const actions: Actions = {
 				.update(equipment_types)
 				.set({
 					nombre: nombre.trim(),
-					descripcion: descripcion.trim(),
-					icono: icono.trim()
+					descripcion: descripcion.trim()
 				})
 				.where(eq(equipment_types.id, id));
 			return { success: true, _action };

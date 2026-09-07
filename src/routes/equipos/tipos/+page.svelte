@@ -27,22 +27,19 @@
 
 	let formNombre = $state('');
 	let formDescripcion = $state('');
-	let formIcono = $state('');
 
 	let isEditing = $derived(editingTipo !== null);
 	let modalTitle = $derived(isEditing ? 'Editar Tipo de Equipo' : 'Nuevo Tipo de Equipo');
 
 	const columns = [
 		{ key: 'nombre', label: 'Nombre' },
-		{ key: 'descripcion', label: 'Descripción' },
-		{ key: 'icono', label: 'Icono' }
+		{ key: 'descripcion', label: 'Descripción' }
 	];
 
 	function openCreate() {
 		editingTipo = null;
 		formNombre = '';
 		formDescripcion = '';
-		formIcono = '';
 		formError = '';
 		showModal = true;
 	}
@@ -51,7 +48,6 @@
 		editingTipo = t;
 		formNombre = t.nombre ?? '';
 		formDescripcion = t.descripcion ?? '';
-		formIcono = t.icono ?? '';
 		formError = '';
 		showModal = true;
 	}
@@ -156,7 +152,6 @@
 					type="textarea"
 					bind:value={formDescripcion}
 				/>
-				<FormField label="Icono" name="icono" bind:value={formIcono} placeholder="Ej: 🔬" />
 
 				{#if formError && formNombre}
 					<p class="text-xs text-red-500">{formError}</p>

@@ -13,18 +13,19 @@ import {
 	inventory_items
 } from './schema';
 import { hashPassword } from '../auth';
+import { eq } from 'drizzle-orm';
 
 const DEFAULT_EQUIPMENT_TYPES = [
-	{ nombre: 'PC', descripcion: 'Computadora de escritorio', icono: '🖥️' },
-	{ nombre: 'Notebook', descripcion: 'Computadora portátil', icono: '💻' },
-	{ nombre: 'Impresora', descripcion: 'Impresora láser/tinta', icono: '🖨️' },
-	{ nombre: 'Monitor', descripcion: 'Monitor de escritorio', icono: '🖥️' },
-	{ nombre: 'Router', descripcion: 'Router de red', icono: '🌐' },
-	{ nombre: 'Switch', descripcion: 'Switch de red', icono: '🔀' },
-	{ nombre: 'Servidor', descripcion: 'Servidor físico o virtual', icono: '🗄️' },
-	{ nombre: 'UPS', descripcion: 'Fuente de alimentación ininterrumpida', icono: '🔋' },
-	{ nombre: 'Escáner', descripcion: 'Escáner de documentos', icono: '📄' },
-	{ nombre: 'Teléfono', descripcion: 'Teléfono IP o analógico', icono: '📞' }
+	{ nombre: 'PC', descripcion: 'Computadora de escritorio' },
+	{ nombre: 'Notebook', descripcion: 'Computadora portátil' },
+	{ nombre: 'Impresora', descripcion: 'Impresora láser/tinta' },
+	{ nombre: 'Monitor', descripcion: 'Monitor de escritorio' },
+	{ nombre: 'Router', descripcion: 'Router de red' },
+	{ nombre: 'Switch', descripcion: 'Switch de red' },
+	{ nombre: 'Servidor', descripcion: 'Servidor físico o virtual' },
+	{ nombre: 'UPS', descripcion: 'Fuente de alimentación ininterrumpida' },
+	{ nombre: 'Escáner', descripcion: 'Escáner de documentos' },
+	{ nombre: 'Teléfono', descripcion: 'Teléfono IP o analógico' }
 ];
 
 const DEFAULT_PROVEEDORES = [
@@ -142,12 +143,6 @@ export async function seed() {
 			tipo: 'tel' as const
 		},
 		{
-			key: 'direccion_sede',
-			value: 'Av. Siempre Viva 742, CABA',
-			descripcion: 'Dirección de la sede',
-			tipo: 'text' as const
-		},
-		{
 			key: 'alerta_dias_mantenimiento',
 			value: '7',
 			descripcion: 'Días de anticipación para alerta de mantenimiento',
@@ -162,6 +157,8 @@ export async function seed() {
 			await db.insert(config).values(c);
 		}
 	}
+	// Remove deprecated config key
+	await db.delete(config).where(eq(config.key, 'direccion_sede'));
 	console.log(`  ✅ ${DEFAULT_CONFIG.length} config settings created`);
 
 	// ─── Demo Data ──────────────────────────────────────────────────────────

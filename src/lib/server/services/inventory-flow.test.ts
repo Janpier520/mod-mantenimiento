@@ -8,6 +8,13 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest';
 import { initTestDb, type SeedIds } from '$lib/server/db/test-helpers';
+
+/** Returns a YYYY-MM-DD date N days from now */
+function futureDate(days: number): string {
+	const d = new Date();
+	d.setDate(d.getDate() + days);
+	return d.toISOString().slice(0, 10);
+}
 import { db } from '$lib/server/db';
 import {
 	createInventoryItem,
@@ -277,7 +284,7 @@ describe('inventory flow — end-to-end', () => {
 				{
 					plan_id: planId,
 					ejecutado_por: ids.tecnicoId,
-					fecha_programada: '2026-09-01'
+					fecha_programada: futureDate(1)
 				},
 				{ id: ids.adminId, rol: 'admin' }
 			);
@@ -404,7 +411,7 @@ describe('inventory flow — end-to-end', () => {
 				{
 					plan_id: ssdPlanId,
 					ejecutado_por: ids.tecnicoId,
-					fecha_programada: '2026-09-05'
+					fecha_programada: futureDate(3)
 				},
 				{ id: ids.adminId, rol: 'admin' }
 			);

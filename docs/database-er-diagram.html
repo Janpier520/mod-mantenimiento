@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Diagrama ER — Módulo Mantenimiento de Equipos</title>
+		<style>
+			body {
+				font-family:
+					'Segoe UI',
+					system-ui,
+					-apple-system,
+					sans-serif;
+				background: #0f172a;
+				color: #e2e8f0;
+				margin: 0;
+				padding: 2rem;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+			h1 {
+				font-size: 1.5rem;
+				margin-bottom: 0.25rem;
+				color: #f8fafc;
+			}
+			.subtitle {
+				color: #94a3b8;
+				font-size: 0.85rem;
+				margin-bottom: 1.5rem;
+			}
+			.mermaid {
+				background: #1e293b;
+				border-radius: 12px;
+				padding: 2rem;
+				box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+				max-width: 100%;
+				overflow: auto;
+			}
+			.legend {
+				margin-top: 1.5rem;
+				display: flex;
+				gap: 1.5rem;
+				flex-wrap: wrap;
+				justify-content: center;
+				font-size: 0.8rem;
+				color: #94a3b8;
+			}
+			.legend span {
+				display: flex;
+				align-items: center;
+				gap: 0.4rem;
+			}
+			.legend .dot {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+				display: inline-block;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Diagrama Entidad-Relación</h1>
+		<p class="subtitle">Módulo Mantenimiento de Equipos — SQLite + Drizzle ORM</p>
+
+		<div class="mermaid">
+			erDiagram USERS { text id PK text username UK text email UK text password_hash text nombre
+			text apellido text rol "admin|tecnico|consultor" boolean activo text security_question_1 text
+			security_answer_hash_1 text security_question_2 text security_answer_hash_2 text created_at
+			text updated_at } SESSIONS { text id PK text user_id FK text token UK text expires_at text
+			created_at } EQUIPMENT_TYPES { text id PK text nombre UK text descripcion text icono text
+			created_at text updated_at } EQUIPMENT { text id PK text tipo_id FK text numero_serie UK text
+			modelo text marca text estado "operativo|en_reparacion|dado_de_baja|prestado" text ubicacion
+			text fecha_adquisicion text proveedor_id FK text notas text created_at text updated_at }
+			EQUIPMENT_STATUS_HISTORY { text id PK text equipo_id FK text estado_anterior text estado_nuevo
+			text cambiado_por FK text created_at } TICKETS { text id PK text numero_ticket UK text titulo
+			text descripcion text estado "abierto|en_proceso|resuelto|cerrado|cancelado" text prioridad
+			"baja|media|alta|critica" text fecha_limite text usuario_reporta FK text tecnico_asignado FK
+			text equipo_id FK text created_at text updated_at } TICKET_COMMENTS { text id PK text
+			ticket_id FK text usuario_id FK text contenido text created_at } TICKET_ATTACHMENTS { text id
+			PK text ticket_id FK text filename text filepath text mime_type text uploaded_by FK text
+			created_at } PREVENTIVE_MAINTENANCE_PLANS { text id PK text nombre text descripcion text
+			equipo_id FK text tipo_equipo_id FK integer frecuencia_dias text created_at text updated_at }
+			PM_TASKS { text id PK text plan_id FK text nombre text descripcion integer orden text
+			inventory_item_id FK } PM_EXECUTIONS { text id PK text plan_id FK text tarea_id FK text
+			ejecutado_por FK text fecha_programada text fecha_ejecucion text resultado
+			"pendiente|completado|fallido|omitido|cancelada" text observaciones text created_at }
+			PM_EXECUTION_PARTS { text id PK text pm_execution_id FK text inventory_item_id FK text accion
+			"instalado|removido|reemplazado" integer cantidad text observaciones text created_at }
+			INVENTORY_ITEMS { text id PK text nombre text descripcion text codigo_parte UK text categoria
+			text tipo_equipo_id FK integer stock_actual integer stock_minimo text ubicacion text
+			created_at text updated_at } INVENTORY_MOVEMENTS { text id PK text inventory_item_id FK text
+			tipo "entrada|salida|ajuste" integer cantidad text motivo text usuario_id FK text
+			referencia_tipo text referencia_id text created_at } ACTIVITY_LOG { text id PK text usuario_id
+			FK text accion text entidad_tipo text entidad_id json metadata text created_at } PROVEEDORES {
+			text id PK text nombre text contacto text telefono text email text direccion text created_at
+			text updated_at } CONFIG { text key PK text value text descripcion text tipo
+			"text|number|email|tel" text updated_at } LOGIN_ATTEMPTS { text id PK text username text
+			ip_address text created_at } %% ── Relaciones ── USERS ||--o{ SESSIONS : "tiene" USERS ||--o{
+			TICKETS : "reporta" USERS ||--o{ TICKETS : "asignado a" USERS ||--o{ TICKET_COMMENTS :
+			"escribe" USERS ||--o{ TICKET_ATTACHMENTS : "sube" USERS ||--o{ PM_EXECUTIONS : "ejecuta"
+			USERS ||--o{ EQUIPMENT_STATUS_HISTORY : "cambia" USERS ||--o{ INVENTORY_MOVEMENTS : "registra"
+			USERS ||--o{ ACTIVITY_LOG : "genera" EQUIPMENT_TYPES ||--o{ EQUIPMENT : "clasifica"
+			EQUIPMENT_TYPES ||--o{ INVENTORY_ITEMS : "asociado a" EQUIPMENT_TYPES ||--o{
+			PREVENTIVE_MAINTENANCE_PLANS : "plan para" PROVEEDORES ||--o{ EQUIPMENT : "suministra"
+			EQUIPMENT ||--o{ EQUIPMENT_STATUS_HISTORY : "historial" EQUIPMENT ||--o{ TICKETS : "reportado
+			en" EQUIPMENT ||--o{ PREVENTIVE_MAINTENANCE_PLANS : "plan de" TICKETS ||--o{ TICKET_COMMENTS :
+			"tiene" TICKETS ||--o{ TICKET_ATTACHMENTS : "adjuntos" PREVENTIVE_MAINTENANCE_PLANS ||--o{
+			PM_TASKS : "define" PREVENTIVE_MAINTENANCE_PLANS ||--o{ PM_EXECUTIONS : "se ejecuta" PM_TASKS
+			||--o{ PM_EXECUTIONS : "ejecuta" PM_TASKS }o--|| INVENTORY_ITEMS : "requiere" PM_EXECUTIONS
+			||--o{ PM_EXECUTION_PARTS : "usa piezas" INVENTORY_ITEMS ||--o{ INVENTORY_MOVEMENTS :
+			"movimientos" INVENTORY_ITEMS ||--o{ PM_EXECUTION_PARTS : "pieza usada"
+		</div>
+
+		<div class="legend">
+			<span><span class="dot" style="background: #38bdf8"></span> PK = Primary Key</span>
+			<span><span class="dot" style="background: #a78bfa"></span> FK = Foreign Key</span>
+			<span><span class="dot" style="background: #f472b6"></span> UK = Unique Key</span>
+			<span>||--o{ = Uno a muchos</span>
+			<span>}o--|| = Muchos a uno</span>
+		</div>
+
+		<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+		<script>
+			mermaid.initialize({
+				startOnLoad: true,
+				theme: 'dark',
+				er: {
+					useMaxWidth: false,
+					layoutDirection: 'TB',
+					minEntityWidth: 180,
+					minEntityHeight: 75,
+					entityPadding: 15,
+					useHtmlLabels: true
+				},
+				themeVariables: {
+					darkMode: true,
+					background: '#1e293b',
+					primaryColor: '#38bdf8',
+					primaryTextColor: '#f8fafc',
+					lineColor: '#64748b'
+				}
+			});
+		</script>
+	</body>
+</html>

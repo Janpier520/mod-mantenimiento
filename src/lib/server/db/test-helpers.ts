@@ -120,8 +120,8 @@ export async function seedTestData(): Promise<SeedIds> {
 	const typeRows = await db
 		.insert(equipment_types)
 		.values([
-			{ nombre: 'PC', descripcion: 'Computadora de escritorio', icono: 'PC' },
-			{ nombre: 'Notebook', descripcion: 'Computadora portátil', icono: 'NB' }
+			{ nombre: 'PC', descripcion: 'Computadora de escritorio' },
+			{ nombre: 'Notebook', descripcion: 'Computadora portátil' }
 		])
 		.returning({ id: equipment_types.id, nombre: equipment_types.nombre });
 

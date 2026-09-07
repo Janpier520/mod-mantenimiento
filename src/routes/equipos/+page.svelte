@@ -507,7 +507,22 @@
 						]}
 						error={fieldErrors['estado']}
 					/>
-					<FormField label="Ubicación" name="ubicacion" bind:value={formUbicacion} />
+					<FormField
+						label="Ubicación"
+						name="ubicacion"
+						type="select"
+						bind:value={formUbicacion}
+						options={[
+							{ value: '', label: 'Sin ubicación' },
+							{ value: 'Oficina 101', label: 'Oficina 101' },
+							{ value: 'Oficina 102', label: 'Oficina 102' },
+							{ value: 'Oficina 103', label: 'Oficina 103' },
+							{ value: 'Sala de servidores', label: 'Sala de servidores' },
+							{ value: 'Taller', label: 'Taller' },
+							{ value: 'Depósito', label: 'Depósito' },
+							{ value: 'Entrada principal', label: 'Entrada principal' }
+						]}
+					/>
 					<FormField
 						label="Fecha Adquisición"
 						name="fecha_adquisicion"
