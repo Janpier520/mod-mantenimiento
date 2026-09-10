@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { tick } from 'svelte';
 	import {
 		Chart,
 		BarController,
@@ -92,150 +92,188 @@
 	let priorityCanvas: HTMLCanvasElement | undefined = $state();
 	let tipoCanvas: HTMLCanvasElement | undefined = $state();
 
-	let charts: Chart[] = [];
+	// ── Chart creation (deferred to avoid Svelte 5 hydration timing issues) ──
+	$effect(() => {
+		// Capture reactive deps so $effect re-runs when data changes
+		const _deps = [
+			data.equipmentByStatus,
+			data.ticketsByMonth,
+			data.ticketsByPriority,
+			data.equipmentByType
+		];
+		const charts: Chart[] = [];
 
-	onMount(() => {
-		// Equipos por Estado
-		if (estadoCanvas && data.equipmentByStatus.length) {
-			const sorted = [...data.equipmentByStatus].sort((a, b) => (a.estado < b.estado ? -1 : 1));
-			charts.push(
-				new Chart(estadoCanvas, {
-					type: 'doughnut',
-					data: {
-						labels: sorted.map((s) => estadoLabel[s.estado] ?? s.estado),
-						datasets: [
-							{
-								data: sorted.map((s) => s.count),
-								backgroundColor: sorted.map((s) => estadoColor[s.estado] ?? '#9ca3af'),
-								borderWidth: 0
-							}
-						]
-					},
-					options: {
-						responsive: true,
-						maintainAspectRatio: false,
-						plugins: {
-							legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } },
-							tooltip: { backgroundColor: '#1e1b2e', titleColor: '#fff', bodyColor: '#c4bcd8' }
-						}
-					}
-				})
-			);
-		}
-
-		// Tickets por Mes
-		if (monthCanvas && data.ticketsByMonth.length) {
-			charts.push(
-				new Chart(monthCanvas, {
-					type: 'bar',
-					data: {
-						labels: data.ticketsByMonth.map((m) => m.month),
-						datasets: [
-							{
-								label: 'Tickets',
-								data: data.ticketsByMonth.map((m) => m.count),
-								backgroundColor: '#7c3aed',
-								borderRadius: 4
-							}
-						]
-					},
-					options: {
-						responsive: true,
-						maintainAspectRatio: false,
-						plugins: {
-							legend: { display: false },
-							tooltip: { backgroundColor: '#1e1b2e', titleColor: '#fff', bodyColor: '#c4bcd8' }
+		tick().then(() => {
+			// Equipos por Estado
+			if (estadoCanvas && data.equipmentByStatus.length) {
+				const sorted = [...data.equipmentByStatus].sort(
+					(a, b) => (a.estado < b.estado ? -1 : 1)
+				);
+				charts.push(
+					new Chart(estadoCanvas, {
+						type: 'doughnut',
+						data: {
+							labels: sorted.map((s) => estadoLabel[s.estado] ?? s.estado),
+							datasets: [
+								{
+									data: sorted.map((s) => s.count),
+									backgroundColor: sorted.map((s) => estadoColor[s.estado] ?? '#9ca3af'),
+									borderWidth: 0
+								}
+							]
 						},
-						scales: {
-							y: {
-								beginAtZero: true,
-								ticks: { stepSize: 1, color: '#9ca3af' },
-								grid: { color: 'rgba(156,163,175,0.15)' }
-							},
-							x: {
-								ticks: { color: '#9ca3af' },
-								grid: { display: false }
+						options: {
+							responsive: true,
+							maintainAspectRatio: false,
+							plugins: {
+								legend: {
+									position: 'bottom',
+									labels: { padding: 16, usePointStyle: true }
+								},
+								tooltip: {
+									backgroundColor: '#1e1b2e',
+									titleColor: '#fff',
+									bodyColor: '#c4bcd8'
+								}
 							}
 						}
-					}
-				})
-			);
-		}
+					})
+				);
+			}
 
-		// Tickets por Prioridad
-		if (priorityCanvas && data.ticketsByPriority.length) {
-			const order = ['critica', 'alta', 'media', 'baja'];
-			const sorted = [...data.ticketsByPriority].sort(
-				(a, b) => order.indexOf(a.prioridad) - order.indexOf(b.prioridad)
-			);
-			charts.push(
-				new Chart(priorityCanvas, {
-					type: 'doughnut',
-					data: {
-						labels: sorted.map((p) => prioridadLabel[p.prioridad] ?? p.prioridad),
-						datasets: [
-							{
-								data: sorted.map((p) => p.count),
-								backgroundColor: sorted.map((p) => prioridadColor[p.prioridad] ?? '#9ca3af'),
-								borderWidth: 0
-							}
-						]
-					},
-					options: {
-						responsive: true,
-						maintainAspectRatio: false,
-						plugins: {
-							legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } },
-							tooltip: { backgroundColor: '#1e1b2e', titleColor: '#fff', bodyColor: '#c4bcd8' }
-						}
-					}
-				})
-			);
-		}
-
-		// Equipos por Tipo
-		if (tipoCanvas && data.equipmentByType.length) {
-			charts.push(
-				new Chart(tipoCanvas, {
-					type: 'bar',
-					data: {
-						labels: data.equipmentByType.map((t) => t.tipo_nombre ?? 'Sin tipo'),
-						datasets: [
-							{
-								label: 'Equipos',
-								data: data.equipmentByType.map((t) => t.count),
-								backgroundColor: data.equipmentByType.map((_, i) => palette[i % palette.length]),
-								borderRadius: 4
-							}
-						]
-					},
-					options: {
-						indexAxis: 'y',
-						responsive: true,
-						maintainAspectRatio: false,
-						plugins: {
-							legend: { display: false },
-							tooltip: { backgroundColor: '#1e1b2e', titleColor: '#fff', bodyColor: '#c4bcd8' }
+			// Tickets por Mes
+			if (monthCanvas && data.ticketsByMonth.length) {
+				charts.push(
+					new Chart(monthCanvas, {
+						type: 'bar',
+						data: {
+							labels: data.ticketsByMonth.map((m) => m.month),
+							datasets: [
+								{
+									label: 'Tickets',
+									data: data.ticketsByMonth.map((m) => m.count),
+									backgroundColor: '#7c3aed',
+									borderRadius: 4
+								}
+							]
 						},
-						scales: {
-							x: {
-								beginAtZero: true,
-								ticks: { stepSize: 1, color: '#9ca3af' },
-								grid: { color: 'rgba(156,163,175,0.15)' }
+						options: {
+							responsive: true,
+							maintainAspectRatio: false,
+							plugins: {
+								legend: { display: false },
+								tooltip: {
+									backgroundColor: '#1e1b2e',
+									titleColor: '#fff',
+									bodyColor: '#c4bcd8'
+								}
 							},
-							y: {
-								ticks: { color: '#9ca3af' },
-								grid: { display: false }
+							scales: {
+								y: {
+									beginAtZero: true,
+									ticks: { stepSize: 1, color: '#9ca3af' },
+									grid: { color: 'rgba(156,163,175,0.15)' }
+								},
+								x: {
+									ticks: { color: '#9ca3af' },
+									grid: { display: false }
+								}
 							}
 						}
-					}
-				})
-			);
-		}
-	});
+					})
+				);
+			}
 
-	onDestroy(() => {
-		charts.forEach((c) => c.destroy());
+			// Tickets por Prioridad
+			if (priorityCanvas && data.ticketsByPriority.length) {
+				const order = ['critica', 'alta', 'media', 'baja'];
+				const sorted = [...data.ticketsByPriority].sort(
+					(a, b) => order.indexOf(a.prioridad) - order.indexOf(b.prioridad)
+				);
+				charts.push(
+					new Chart(priorityCanvas, {
+						type: 'doughnut',
+						data: {
+							labels: sorted.map((p) => prioridadLabel[p.prioridad] ?? p.prioridad),
+							datasets: [
+								{
+									data: sorted.map((p) => p.count),
+									backgroundColor: sorted.map(
+										(p) => prioridadColor[p.prioridad] ?? '#9ca3af'
+									),
+									borderWidth: 0
+								}
+							]
+						},
+						options: {
+							responsive: true,
+							maintainAspectRatio: false,
+							plugins: {
+								legend: {
+									position: 'bottom',
+									labels: { padding: 16, usePointStyle: true }
+								},
+								tooltip: {
+									backgroundColor: '#1e1b2e',
+									titleColor: '#fff',
+									bodyColor: '#c4bcd8'
+								}
+							}
+						}
+					})
+				);
+			}
+
+			// Equipos por Tipo
+			if (tipoCanvas && data.equipmentByType.length) {
+				charts.push(
+					new Chart(tipoCanvas, {
+						type: 'bar',
+						data: {
+							labels: data.equipmentByType.map((t) => t.tipo_nombre ?? 'Sin tipo'),
+							datasets: [
+								{
+									label: 'Equipos',
+									data: data.equipmentByType.map((t) => t.count),
+									backgroundColor: data.equipmentByType.map(
+										(_, i) => palette[i % palette.length]
+									),
+									borderRadius: 4
+								}
+							]
+						},
+						options: {
+							indexAxis: 'y',
+							responsive: true,
+							maintainAspectRatio: false,
+							plugins: {
+								legend: { display: false },
+								tooltip: {
+									backgroundColor: '#1e1b2e',
+									titleColor: '#fff',
+									bodyColor: '#c4bcd8'
+								}
+							},
+							scales: {
+								x: {
+									beginAtZero: true,
+									ticks: { stepSize: 1, color: '#9ca3af' },
+									grid: { color: 'rgba(156,163,175,0.15)' }
+								},
+								y: {
+									ticks: { color: '#9ca3af' },
+									grid: { display: false }
+								}
+							}
+						}
+					})
+				);
+			}
+		});
+
+		return () => {
+			charts.forEach((c) => c.destroy());
+		};
 	});
 </script>
 
