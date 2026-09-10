@@ -3,10 +3,23 @@
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import gsap from 'gsap';
+	import { browser } from '$app/environment';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
+	import SunIcon from '@lucide/svelte/icons/sun';
+	import MoonIcon from '@lucide/svelte/icons/moon';
 
 	let { form } = $props();
+
+	let darkMode = $state(browser ? localStorage.getItem('overhaul-theme') !== 'light' : true);
+
+	function toggleDarkMode() {
+		darkMode = !darkMode;
+		if (browser) {
+			document.documentElement.classList.toggle('dark', darkMode);
+			localStorage.setItem('overhaul-theme', darkMode ? 'dark' : 'light');
+		}
+	}
 
 	let username = $state('');
 	let password = $state('');
@@ -35,6 +48,19 @@
 </script>
 
 <div class="w-full max-w-sm px-4">
+	<!-- Dark mode toggle -->
+	<button
+		onclick={toggleDarkMode}
+		class="fixed right-4 top-4 rounded-xl border border-border bg-card p-2 text-muted-foreground shadow-sm transition-colors hover:text-foreground"
+		aria-label={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+	>
+		{#if darkMode}
+			<SunIcon class="h-4 w-4" />
+		{:else}
+			<MoonIcon class="h-4 w-4" />
+		{/if}
+	</button>
+
 	<!-- Logo -->
 	<div bind:this={logoEl} class="mb-10 text-center">
 		<div
