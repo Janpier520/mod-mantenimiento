@@ -266,12 +266,13 @@
 
 		showCancelExec = false;
 
-		if (res.ok) {
+		const body = await res.json().catch(() => ({}));
+		const d = unwrapActionData(body as { data?: unknown });
+
+		if (d.success) {
 			addToast('Ejecución cancelada correctamente');
 			await invalidateAll();
 		} else {
-			const body = await res.json().catch(() => ({}));
-			const d = unwrapActionData(body as { data?: unknown });
 			const msg = typeof d.error === 'string' ? d.error : 'Error al cancelar la ejecución';
 			addToast(msg, 'error');
 		}
@@ -305,15 +306,16 @@
 			body: formData
 		});
 
-		if (res.ok) {
+		const body = await res.json().catch(() => ({}));
+		const d = unwrapActionData(body as { data?: unknown });
+
+		if (d.success) {
 			editingExecDateId = null;
 			editingExecDateValue = '';
 			editingExecDateError = '';
 			addToast('Fecha reprogramada correctamente');
 			await invalidateAll();
 		} else {
-			const body = await res.json().catch(() => ({}));
-			const d = unwrapActionData(body as { data?: unknown });
 			const msg = typeof d.error === 'string' ? d.error : 'Error al reprogramar';
 			editingExecDateError = msg;
 		}
@@ -1151,15 +1153,16 @@
 
 			showDeletePlan = false;
 
-			if (res.ok) {
+			const body = await res.json().catch(() => ({}));
+			const d = unwrapActionData(body as { data?: unknown });
+
+			if (d.success) {
 				if (expandedPlanId === targetPlanId) expandedPlanId = null;
 				// optimistic: drop the plan from the list immediately
 				plans = plans.filter((p) => p.id !== targetPlanId);
 				addToast('Plan eliminado correctamente');
 				await invalidateAll();
 			} else {
-				const body = await res.json().catch(() => ({}));
-				const d = unwrapActionData(body as { data?: unknown });
 				const msg = typeof d.error === 'string' ? d.error : 'Error al eliminar el plan';
 				addToast(msg, 'error');
 			}
@@ -1191,12 +1194,13 @@
 
 			showDeleteTask = false;
 
-			if (res.ok) {
+			const body = await res.json().catch(() => ({}));
+			const d = unwrapActionData(body as { data?: unknown });
+
+			if (d.success) {
 				addToast('Tarea eliminada correctamente');
 				await invalidateAll();
 			} else {
-				const body = await res.json().catch(() => ({}));
-				const d = unwrapActionData(body as { data?: unknown });
 				const msg = typeof d.error === 'string' ? d.error : 'Error al eliminar la tarea';
 				addToast(msg, 'error');
 			}
