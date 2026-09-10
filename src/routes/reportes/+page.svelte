@@ -26,6 +26,7 @@
 		Tooltip,
 		Legend
 	);
+	Chart.defaults.animation = false;
 
 	let { data } = $props();
 
