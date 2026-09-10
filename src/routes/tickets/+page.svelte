@@ -26,18 +26,21 @@
 
 	type TicketRow = (typeof data.tickets)[number];
 
-	// svelte-ignore state_referenced_locally
-	let tickets = $state(data.tickets);
-	// svelte-ignore state_referenced_locally
-	let tecnicos = $state(data.tecnicos);
-	// svelte-ignore state_referenced_locally
-	let equipos = $state(data.equipos);
-	// svelte-ignore state_referenced_locally
-	let total = $state(data.total);
+	// ── Server-backed (derived, no sync needed) ─────────────────────────────
+	let tecnicos = $derived(data.tecnicos);
+	let equipos = $derived(data.equipos);
+	let total = $derived(data.total);
+	let totalPages = $derived(data.totalPages);
+
+	// ── Optimistic delete tracking ──────────────────────────────────────────
+	let excludedTicketIds = $state(new Set<string>());
+	let tickets = $derived(
+		data.tickets.filter((t) => !excludedTicketIds.has(t.id))
+	);
+
+	// ── Locally mutated (user controls, not synced from server) ─────────────
 	// svelte-ignore state_referenced_locally
 	let currentPage = $state(data.page);
-	// svelte-ignore state_referenced_locally
-	let totalPages = $state(data.totalPages);
 	// svelte-ignore state_referenced_locally
 	let search = $state(data.search);
 	// svelte-ignore state_referenced_locally
@@ -221,18 +224,6 @@
 		currentPage = newPage;
 		await reload();
 	}
-
-	$effect(() => {
-		tickets = data.tickets;
-		tecnicos = data.tecnicos;
-		equipos = data.equipos;
-		total = data.total;
-		currentPage = data.page;
-		totalPages = data.totalPages;
-		search = data.search;
-		filterEstado = data.filterEstado;
-		filterPrioridad = data.filterPrioridad;
-	});
 
 	$effect(() => {
 		if ($page.url.searchParams.get('nuevo') === 'true') {
@@ -892,9 +883,10 @@
 
 						if (d.success) {
 							if (wasSelected) selectedId = null;
-							if (targetId) tickets = tickets.filter((t) => t.id !== targetId);
+							if (targetId) excludedTicketIds = new Set([targetId]);
 							addToast('Ticket eliminado correctamente');
 							await invalidateAll();
+							excludedTicketIds = new Set();
 						} else {
 							addToast((d.error as string) ?? 'Error al eliminar el ticket', 'error');
 						}
