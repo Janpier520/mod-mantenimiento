@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount, onDestroy } from 'svelte';
 	import {
 		Chart,
 		BarController,
@@ -91,142 +92,150 @@
 	let priorityCanvas: HTMLCanvasElement | undefined = $state();
 	let tipoCanvas: HTMLCanvasElement | undefined = $state();
 
-	// ── Chart: Equipos por Estado ──────────────────────────────────────────────
-	$effect(() => {
-		if (!estadoCanvas || !data.equipmentByStatus.length) return;
-		const sorted = [...data.equipmentByStatus].sort((a, b) => (a.estado < b.estado ? -1 : 1));
-		const chart = new Chart(estadoCanvas, {
-			type: 'doughnut',
-			data: {
-				labels: sorted.map((s) => estadoLabel[s.estado] ?? s.estado),
-				datasets: [
-					{
-						data: sorted.map((s) => s.count),
-						backgroundColor: sorted.map((s) => estadoColor[s.estado] ?? '#9ca3af'),
-						borderWidth: 0
-					}
-				]
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				plugins: {
-					legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } },
-					tooltip: { backgroundColor: '#1e1b2e', titleColor: '#fff', bodyColor: '#c4bcd8' }
-				}
-			}
-		});
-		return () => chart.destroy();
-	});
+	let charts: Chart[] = [];
 
-	// ── Chart: Tickets por Mes ─────────────────────────────────────────────────
-	$effect(() => {
-		if (!monthCanvas || !data.ticketsByMonth.length) return;
-		const chart = new Chart(monthCanvas, {
-			type: 'bar',
-			data: {
-				labels: data.ticketsByMonth.map((m) => m.month),
-				datasets: [
-					{
-						label: 'Tickets',
-						data: data.ticketsByMonth.map((m) => m.count),
-						backgroundColor: '#7c3aed',
-						borderRadius: 4
-					}
-				]
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				plugins: {
-					legend: { display: false },
-					tooltip: { backgroundColor: '#1e1b2e', titleColor: '#fff', bodyColor: '#c4bcd8' }
-				},
-				scales: {
-					y: {
-						beginAtZero: true,
-						ticks: { stepSize: 1, color: '#9ca3af' },
-						grid: { color: 'rgba(156,163,175,0.15)' }
+	onMount(() => {
+		// Equipos por Estado
+		if (estadoCanvas && data.equipmentByStatus.length) {
+			const sorted = [...data.equipmentByStatus].sort((a, b) => (a.estado < b.estado ? -1 : 1));
+			charts.push(
+				new Chart(estadoCanvas, {
+					type: 'doughnut',
+					data: {
+						labels: sorted.map((s) => estadoLabel[s.estado] ?? s.estado),
+						datasets: [
+							{
+								data: sorted.map((s) => s.count),
+								backgroundColor: sorted.map((s) => estadoColor[s.estado] ?? '#9ca3af'),
+								borderWidth: 0
+							}
+						]
 					},
-					x: {
-						ticks: { color: '#9ca3af' },
-						grid: { display: false }
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						plugins: {
+							legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } },
+							tooltip: { backgroundColor: '#1e1b2e', titleColor: '#fff', bodyColor: '#c4bcd8' }
+						}
 					}
-				}
-			}
-		});
-		return () => chart.destroy();
-	});
+				})
+			);
+		}
 
-	// ── Chart: Tickets por Prioridad ───────────────────────────────────────────
-	$effect(() => {
-		if (!priorityCanvas || !data.ticketsByPriority.length) return;
-		const order = ['critica', 'alta', 'media', 'baja'];
-		const sorted = [...data.ticketsByPriority].sort(
-			(a, b) => order.indexOf(a.prioridad) - order.indexOf(b.prioridad)
-		);
-		const chart = new Chart(priorityCanvas, {
-			type: 'doughnut',
-			data: {
-				labels: sorted.map((p) => prioridadLabel[p.prioridad] ?? p.prioridad),
-				datasets: [
-					{
-						data: sorted.map((p) => p.count),
-						backgroundColor: sorted.map((p) => prioridadColor[p.prioridad] ?? '#9ca3af'),
-						borderWidth: 0
-					}
-				]
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				plugins: {
-					legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } },
-					tooltip: { backgroundColor: '#1e1b2e', titleColor: '#fff', bodyColor: '#c4bcd8' }
-				}
-			}
-		});
-		return () => chart.destroy();
-	});
-
-	// ── Chart: Equipos por Tipo ────────────────────────────────────────────────
-	$effect(() => {
-		if (!tipoCanvas || !data.equipmentByType.length) return;
-		const chart = new Chart(tipoCanvas, {
-			type: 'bar',
-			data: {
-				labels: data.equipmentByType.map((t) => t.tipo_nombre ?? 'Sin tipo'),
-				datasets: [
-					{
-						label: 'Equipos',
-						data: data.equipmentByType.map((t) => t.count),
-						backgroundColor: data.equipmentByType.map((_, i) => palette[i % palette.length]),
-						borderRadius: 4
-					}
-				]
-			},
-			options: {
-				indexAxis: 'y',
-				responsive: true,
-				maintainAspectRatio: false,
-				plugins: {
-					legend: { display: false },
-					tooltip: { backgroundColor: '#1e1b2e', titleColor: '#fff', bodyColor: '#c4bcd8' }
-				},
-				scales: {
-					x: {
-						beginAtZero: true,
-						ticks: { stepSize: 1, color: '#9ca3af' },
-						grid: { color: 'rgba(156,163,175,0.15)' }
+		// Tickets por Mes
+		if (monthCanvas && data.ticketsByMonth.length) {
+			charts.push(
+				new Chart(monthCanvas, {
+					type: 'bar',
+					data: {
+						labels: data.ticketsByMonth.map((m) => m.month),
+						datasets: [
+							{
+								label: 'Tickets',
+								data: data.ticketsByMonth.map((m) => m.count),
+								backgroundColor: '#7c3aed',
+								borderRadius: 4
+							}
+						]
 					},
-					y: {
-						ticks: { color: '#9ca3af' },
-						grid: { display: false }
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						plugins: {
+							legend: { display: false },
+							tooltip: { backgroundColor: '#1e1b2e', titleColor: '#fff', bodyColor: '#c4bcd8' }
+						},
+						scales: {
+							y: {
+								beginAtZero: true,
+								ticks: { stepSize: 1, color: '#9ca3af' },
+								grid: { color: 'rgba(156,163,175,0.15)' }
+							},
+							x: {
+								ticks: { color: '#9ca3af' },
+								grid: { display: false }
+							}
+						}
 					}
-				}
-			}
-		});
-		return () => chart.destroy();
+				})
+			);
+		}
+
+		// Tickets por Prioridad
+		if (priorityCanvas && data.ticketsByPriority.length) {
+			const order = ['critica', 'alta', 'media', 'baja'];
+			const sorted = [...data.ticketsByPriority].sort(
+				(a, b) => order.indexOf(a.prioridad) - order.indexOf(b.prioridad)
+			);
+			charts.push(
+				new Chart(priorityCanvas, {
+					type: 'doughnut',
+					data: {
+						labels: sorted.map((p) => prioridadLabel[p.prioridad] ?? p.prioridad),
+						datasets: [
+							{
+								data: sorted.map((p) => p.count),
+								backgroundColor: sorted.map((p) => prioridadColor[p.prioridad] ?? '#9ca3af'),
+								borderWidth: 0
+							}
+						]
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						plugins: {
+							legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } },
+							tooltip: { backgroundColor: '#1e1b2e', titleColor: '#fff', bodyColor: '#c4bcd8' }
+						}
+					}
+				})
+			);
+		}
+
+		// Equipos por Tipo
+		if (tipoCanvas && data.equipmentByType.length) {
+			charts.push(
+				new Chart(tipoCanvas, {
+					type: 'bar',
+					data: {
+						labels: data.equipmentByType.map((t) => t.tipo_nombre ?? 'Sin tipo'),
+						datasets: [
+							{
+								label: 'Equipos',
+								data: data.equipmentByType.map((t) => t.count),
+								backgroundColor: data.equipmentByType.map((_, i) => palette[i % palette.length]),
+								borderRadius: 4
+							}
+						]
+					},
+					options: {
+						indexAxis: 'y',
+						responsive: true,
+						maintainAspectRatio: false,
+						plugins: {
+							legend: { display: false },
+							tooltip: { backgroundColor: '#1e1b2e', titleColor: '#fff', bodyColor: '#c4bcd8' }
+						},
+						scales: {
+							x: {
+								beginAtZero: true,
+								ticks: { stepSize: 1, color: '#9ca3af' },
+								grid: { color: 'rgba(156,163,175,0.15)' }
+							},
+							y: {
+								ticks: { color: '#9ca3af' },
+								grid: { display: false }
+							}
+						}
+					}
+				})
+			);
+		}
+	});
+
+	onDestroy(() => {
+		charts.forEach((c) => c.destroy());
 	});
 </script>
 
@@ -353,7 +362,7 @@
 		<div class="rounded-xl border bg-card p-5">
 			<h3 class="mb-3 text-sm font-semibold text-foreground">Equipos por Estado</h3>
 			<div class="relative h-64" role="img" aria-label="Equipos por estado">
-				<canvas bind:this={estadoCanvas}></canvas>
+				<canvas bind:this={estadoCanvas} style="width:100%;height:100%"></canvas>
 			</div>
 		</div>
 
@@ -361,7 +370,7 @@
 		<div class="rounded-xl border bg-card p-5">
 			<h3 class="mb-3 text-sm font-semibold text-foreground">Tickets por Mes</h3>
 			<div class="relative h-64" role="img" aria-label="Tickets creados por mes">
-				<canvas bind:this={monthCanvas}></canvas>
+				<canvas bind:this={monthCanvas} style="width:100%;height:100%"></canvas>
 			</div>
 		</div>
 
@@ -369,7 +378,7 @@
 		<div class="rounded-xl border bg-card p-5">
 			<h3 class="mb-3 text-sm font-semibold text-foreground">Tickets por Prioridad</h3>
 			<div class="relative h-64" role="img" aria-label="Tickets por prioridad">
-				<canvas bind:this={priorityCanvas}></canvas>
+				<canvas bind:this={priorityCanvas} style="width:100%;height:100%"></canvas>
 			</div>
 		</div>
 
@@ -377,7 +386,7 @@
 		<div class="rounded-xl border bg-card p-5">
 			<h3 class="mb-3 text-sm font-semibold text-foreground">Equipos por Tipo</h3>
 			<div class="relative h-64" role="img" aria-label="Equipos por tipo">
-				<canvas bind:this={tipoCanvas}></canvas>
+				<canvas bind:this={tipoCanvas} style="width:100%;height:100%"></canvas>
 			</div>
 		</div>
 	</div>
