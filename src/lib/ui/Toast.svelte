@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import gsap from 'gsap';
 	import { getToasts, type ToastType } from '$lib/stores/toast.svelte';
 	import X from '@lucide/svelte/icons/x';
@@ -87,6 +87,11 @@
 		resumeAutoDismiss(toast.id);
 	}
 
+	onDestroy(() => {
+		progressTween?.kill();
+		gsap.killTweensOf(el);
+	});
+
 	// ── Swipe-to-dismiss gesture ────────────────────────────────────
 	let isSwiping = $state(false);
 	let swipeStartX = 0;
@@ -116,6 +121,9 @@
 		} else {
 			isSwiping = false;
 			el.releasePointerCapture(e.pointerId);
+			// Resume timer — user scrolled instead of swiping
+			progressTween?.resume();
+			resumeAutoDismiss(toast.id);
 		}
 	}
 
