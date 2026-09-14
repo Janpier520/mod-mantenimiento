@@ -295,7 +295,7 @@ export async function seed() {
 			.insert(tickets)
 			.values([
 				{
-					numero_ticket: 'TKT-20260728-001',
+					numero_ticket: 'TKT-20260825-001',
 					titulo: 'PC no enciende',
 					descripcion:
 						'Al presionar el botón de encendido no hay respuesta. No se encienden luces ni ventiladores.',
@@ -303,10 +303,10 @@ export async function seed() {
 					prioridad: 'alta',
 					usuario_reporta: adminId,
 					equipo_id: equipoPc,
-					created_at: '2026-07-28T10:15:00.000Z'
+					created_at: '2026-08-25T10:15:00.000Z'
 				},
 				{
-					numero_ticket: 'TKT-20260729-001',
+					numero_ticket: 'TKT-20260901-001',
 					titulo: 'Notebook con pantalla rota',
 					descripcion:
 						'La pantalla muestra líneas verticales y zonas oscuras. Probablemente golpe en la tapa.',
@@ -315,10 +315,10 @@ export async function seed() {
 					usuario_reporta: adminId,
 					tecnico_asignado: tecId,
 					equipo_id: equipoNotebook,
-					created_at: '2026-07-29T09:00:00.000Z'
+					created_at: '2026-09-01T09:00:00.000Z'
 				},
 				{
-					numero_ticket: 'TKT-20260729-002',
+					numero_ticket: 'TKT-20260905-001',
 					titulo: 'Impresora no jala papel',
 					descripcion:
 						'La impresora hace ruido pero no toma el papel de la bandeja. Ya se revisaron los rodillos.',
@@ -327,10 +327,10 @@ export async function seed() {
 					usuario_reporta: tecId,
 					tecnico_asignado: tecId,
 					equipo_id: equipoImpresora,
-					created_at: '2026-07-29T14:30:00.000Z'
+					created_at: '2026-09-05T14:30:00.000Z'
 				},
 				{
-					numero_ticket: 'TKT-20260730-001',
+					numero_ticket: 'TKT-20260910-001',
 					titulo: 'Servidor sobrecalentado',
 					descripcion:
 						'La temperatura del servidor principal llegó a 85°C. Se apagó automáticamente por seguridad.',
@@ -339,16 +339,16 @@ export async function seed() {
 					usuario_reporta: adminId,
 					tecnico_asignado: tecId,
 					equipo_id: equipoServidor,
-					created_at: '2026-07-30T08:45:00.000Z'
+					created_at: '2026-09-10T08:45:00.000Z'
 				}
 			])
 			.returning({ id: tickets.id, numero_ticket: tickets.numero_ticket });
 
 		console.log(`  ✅ ${ticketsCreated.length} tickets created`);
 
-		const tkNotebook = ticketsCreated.find((t) => t.numero_ticket === 'TKT-20260729-001')!.id;
-		const tkImpresora = ticketsCreated.find((t) => t.numero_ticket === 'TKT-20260729-002')!.id;
-		const tkServidor = ticketsCreated.find((t) => t.numero_ticket === 'TKT-20260730-001')!.id;
+		const tkNotebook = ticketsCreated.find((t) => t.numero_ticket === 'TKT-20260901-001')!.id;
+		const tkImpresora = ticketsCreated.find((t) => t.numero_ticket === 'TKT-20260905-001')!.id;
+		const tkServidor = ticketsCreated.find((t) => t.numero_ticket === 'TKT-20260910-001')!.id;
 
 		// ── Comments ──
 		await db.insert(ticket_comments).values([
@@ -356,21 +356,21 @@ export async function seed() {
 				ticket_id: tkNotebook,
 				usuario_id: tecId,
 				contenido: 'Ya pedí el repuesto al proveedor. Estimado 3 días hábiles para la entrega.',
-				created_at: '2026-07-29T15:20:00.000Z'
+				created_at: '2026-09-02T15:20:00.000Z'
 			},
 			{
 				ticket_id: tkImpresora,
 				usuario_id: tecId,
 				contenido:
 					'Se reemplazaron los rodillos y se calibró la bandeja. Impresora funcionando correctamente.',
-				created_at: '2026-07-30T11:10:00.000Z'
+				created_at: '2026-09-06T11:10:00.000Z'
 			},
 			{
 				ticket_id: tkServidor,
 				usuario_id: tecId,
 				contenido:
 					'Se limpiaron los filtros y se reaplicó pasta térmica. Temperatura estable en 55°C. Se recomienda revisar el sistema de refrigeración del rack.',
-				created_at: '2026-07-30T12:00:00.000Z'
+				created_at: '2026-09-10T12:00:00.000Z'
 			}
 		]);
 
@@ -430,8 +430,8 @@ export async function seed() {
 				plan_id: planServidor,
 				tarea_id: tareaLimpiar,
 				ejecutado_por: tecId,
-				fecha_programada: '2026-04-01',
-				fecha_ejecucion: '2026-04-02',
+				fecha_programada: '2026-08-01',
+				fecha_ejecucion: '2026-08-02',
 				resultado: 'completado',
 				observaciones: 'Filtros lavados y ventiladores sin obstrucciones.'
 			},
@@ -439,8 +439,8 @@ export async function seed() {
 				plan_id: planServidor,
 				tarea_id: tareaDiscos,
 				ejecutado_por: tecId,
-				fecha_programada: '2026-04-01',
-				fecha_ejecucion: '2026-04-02',
+				fecha_programada: '2026-08-01',
+				fecha_ejecucion: '2026-08-02',
 				resultado: 'completado',
 				observaciones: 'Todos los discos en estado óptimo. RAID 5 consistente.'
 			},
@@ -448,7 +448,7 @@ export async function seed() {
 				plan_id: planPcs,
 				tarea_id: tareas.find((t) => t.nombre.includes('Limpiar interior'))!.id,
 				ejecutado_por: tecId,
-				fecha_programada: '2026-07-15',
+				fecha_programada: '2026-09-15',
 				resultado: 'pendiente',
 				observaciones: ''
 			}
